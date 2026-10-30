@@ -4,7 +4,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 
 | Category | Status | Scope |
 | --- | --- | --- |
-| Statistics | Tested | `mean` only: native tests passed on macOS with GSL 2.8; Linux CI pending. All other statistics not evaluated. |
+| Statistics | Tested | `mean` only: native tests passed on macOS with GSL 2.8 and Linux CI for the initial commit; updated tests require a fresh CI run. All other statistics not evaluated. |
 | Running statistics | Planned | Future stateful operations |
 | Moving statistics and filters | Planned | Future work |
 | FFT and wavelets | Planned | Future work |

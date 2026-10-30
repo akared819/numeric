@@ -11,20 +11,23 @@ enum class Shape { Scalar, Array };
 struct Descriptor { Type type; Shape shape; };
 struct Input { const double* data; std::size_t count; std::size_t capacity; std::size_t stride; Type type; Shape shape; };
 struct Output { double* data; std::size_t capacity; std::size_t count; Type type; Shape shape; };
-enum class Status { Ok, InvalidArgument, NumericalError };
+enum class Status { Ok, InvalidArgument, NumericalError, NotInitialized };
 struct Result { Status status; const char* message; };
 struct Metadata {
-    const char* name; const char* category;
+    std::string name; std::string category;
     std::vector<Descriptor> inputs, outputs;
-    const char* parameters; bool stateful;
-    const char* lifecycle; const char* errors;
+    std::string parameters; bool stateful;
+    std::string lifecycle; std::string errors;
 };
 class Operation {
 public:
     virtual ~Operation() {}
-    virtual Result execute(const Input* inputs, std::size_t inputCount,
-                           Output* outputs, std::size_t outputCount) = 0;
+    Result execute(const Input* inputs, std::size_t inputCount,
+                   Output* outputs, std::size_t outputCount);
     virtual void reset() = 0;
+protected:
+    virtual Result executeImpl(const Input* inputs, std::size_t inputCount,
+                               Output* outputs, std::size_t outputCount) = 0;
 };
 using Factory = std::unique_ptr<Operation> (*)();
 class Registry {
