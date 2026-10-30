@@ -1,0 +1,2 @@
+# Optional GSL installation prefix. Empty uses the compiler's system paths.
+GSL_DIR ?=

@@ -1,0 +1,7 @@
+O.*/
+bin/
+lib/
+include/
+db/
+dbd/
+configure/RELEASE.local

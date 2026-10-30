@@ -1,0 +1,3 @@
+# Licensing decision pending
+
+No project license has been selected. GSL is distributed under the GNU GPL; linking and distributing a combined application may impose GPL obligations on the distributed work. Dynamic linking should not be assumed to remove those obligations. EPICS Base has its own license; verify compatibility and distribution requirements before choosing a license or distributing binaries. Seek appropriate legal advice for the intended distribution. See [GSL licensing](https://www.gnu.org/software/gsl/) and the [GNU GPL FAQ](https://www.gnu.org/licenses/gpl-faq.html). No third-party source is vendored here.
