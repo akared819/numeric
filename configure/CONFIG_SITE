@@ -1,2 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Optional GSL installation prefix. Empty uses the compiler's system paths.
 GSL_DIR ?=

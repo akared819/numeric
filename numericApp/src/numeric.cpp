@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "numeric.h"
 #include <gsl/gsl_errno.h>
 #include <atomic>

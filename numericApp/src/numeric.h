@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef NUMERIC_H
 #define NUMERIC_H
 #include <cstddef>

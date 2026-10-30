@@ -15,3 +15,7 @@ make GSL_DIR=/absolute/path/to/gsl
 Omit `GSL_DIR` when headers and libraries are in standard compiler paths. For a custom shared-library installation, configure the platform's runtime library search path as needed (e.g. `LD_LIBRARY_PATH` on Linux). `make clean` removes build products; installed headers and libraries appear under `include/` and `lib/<arch>/`.
 
 The test executable is a minimal native test application; there is no IOC application or aSub support yet. See [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+
+## License
+
+The numeric project is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE) and [licensing considerations](docs/licensing.md). GSL and EPICS Base are separate external dependencies with their own licenses.
