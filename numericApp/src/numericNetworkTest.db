@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Test-only synchronous delay forces the client to time out during processing.
+record(waveform, "numericNet:event") {
+    field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "numericNet:delay")
+}
+record(aSub, "numericNet:delay") {
+    field(SNAM, "numericTestDelay") field(FLNK, "numericNet:stats")
+}
+record(aSub, "numericNet:stats") {
+    field(SNAM, "numericAcknowledgedStats")
+    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "numericNet:event NPP NMS")
+    field(FTVL, "DOUBLE") field(NOVL, "11")
+}

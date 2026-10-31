@@ -60,4 +60,11 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 - Added `numericAckSend` with bounded retries, acknowledgment checks and explicit uncertain outcomes; see [streaming transport](streaming-transport.md).
 - [x] macOS arm64 build and native tests, 194 initialized and 25 uninitialized IOC assertions, and 28 loopback CA assertions passed with GSL 2.8 and the supplied EPICS Base development checkout.
-- [ ] Verify Linux CI for this increment. A test injects a delayed old event after a newer acknowledgment. Network-level response-loss fault injection, deployment-specific integration, and IOC-wide GSL handler agreement remain outstanding. The sender does not implement durable recovery or multiple-producer arbitration.
+- [x] Linux CI passed for the sender increment (PR #8).
+- [ ] Deployment-specific integration and IOC-wide GSL handler agreement remain outstanding. The sender does not implement durable recovery or multiple-producer arbitration.
+
+## Phase 2 increment: separate-process CA timeout test
+
+- Added a test IOC with a deliberately slow synchronous processing chain and a separate CA client. The client disconnects after a timeout, checks the IOC completed the original event, retries it, and verifies the count and next sample.
+- [x] macOS arm64: native build and all five separate-process CA assertions passed with the supplied EPICS Base development checkout and GSL 2.8.
+- [ ] Verify Linux CI for this increment. The test does not simulate a network partition, IOC crash, multiple producers, or durable recovery.

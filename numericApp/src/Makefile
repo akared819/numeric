@@ -33,4 +33,10 @@ numericAckCaTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericAckSend
 numericAckSend_SRCS += numericAckSend.cpp numericAckClient.cpp
 numericAckSend_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
+PROD_HOST += numericNetworkIoc
+numericNetworkIoc_SRCS += numericNetworkIoc.cpp numericIocTest_registerRecordDeviceDriver.cpp
+numericNetworkIoc_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
+PROD_HOST += numericNetworkTest
+numericNetworkTest_SRCS += numericNetworkTest.cpp numericAckClient.cpp
+numericNetworkTest_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES
