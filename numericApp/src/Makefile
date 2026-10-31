@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 TOP=../..
 include $(TOP)/configure/CONFIG
+# numeric uses C++14; do not rely on the compiler default.
+USR_CXXFLAGS += -std=c++14
 LIBRARY_HOST += numeric
 INC += numeric.h
 INC += numericAck.h

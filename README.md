@@ -4,7 +4,7 @@ Native C++ scientific computing foundation for EPICS, using external GNU Scienti
 
 ## Build and test
 
-Target: Linux with EPICS Base 7.0.10, GSL 2.7.1 (Ubuntu 24.04), GNU C++ (C++11 or newer), GNU make and Perl. CI is configured to build those versions; other configurations are not yet claimed as supported. Build EPICS Base first ([EPICS installation instructions](https://docs.epics-controls.org/projects/base/en/b7.0.10/README.html)) and install GSL with headers and libraries. For Debian/Ubuntu, `sudo apt-get install build-essential libreadline-dev libgsl-dev` supplies build dependencies; the distribution GSL version may differ.
+Target: Linux with EPICS Base 7.0.10, GSL 2.7.1 (Ubuntu 24.04), GNU C++ (C++14 or newer), GNU make and Perl. CI is configured to build those versions; other configurations are not yet claimed as supported. Build EPICS Base first ([EPICS installation instructions](https://docs.epics-controls.org/projects/base/en/b7.0.10/README.html)) and install GSL with headers and libraries. For Debian/Ubuntu, `sudo apt-get install build-essential libreadline-dev libgsl-dev` supplies build dependencies; the distribution GSL version may differ.
 
 ```sh
 printf 'EPICS_BASE = /absolute/path/to/base-7.0.10\n' > configure/RELEASE.local
@@ -32,7 +32,7 @@ The `numericIocTest` application loads `numericApp/src/numericIocTest.db`; the d
 
 A native mean benchmark and its measurement boundaries are documented in [benchmarks](docs/benchmarks.md).
 
-The CI workflows validate Linux (Ubuntu 24.04) and macOS arm64 using the clean EPICS Base 7.0.10 release and GSL; the macOS job runs native and IOC tests and the loopback example and network tests. The Linux-only GDB notification stress checks are not repeated on macOS.
+The module requires a C++14-capable GCC or Clang toolchain. The CI workflows validate Linux (Ubuntu 24.04) and macOS arm64 using the clean EPICS Base 7.0.10 release and GSL; the macOS job runs native and IOC tests and the loopback example and network tests. The Linux-only GDB notification stress checks are not repeated on macOS.
 
 ## Example IOC
 
