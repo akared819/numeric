@@ -33,6 +33,7 @@ USR_LDFLAGS += -L$(GSL_DIR)/lib
 endif
 LIBRARY_IOC += numericIoc
 numericIoc_SRCS += numericAsub.cpp
+numericIoc_SRCS += numericRealFftAsub.cpp
 numericIoc_SRCS += numericWindowAsub.cpp
 numericIoc_SRCS += numericAckAsub.cpp
 numericIoc_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
