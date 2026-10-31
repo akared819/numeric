@@ -11,3 +11,16 @@ record(aSub, "numericNet:stats") {
     field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "numericNet:event NPP NMS")
     field(FTVL, "DOUBLE") field(NOVL, "11")
 }
+# Test-only chain: inspect the coherent output before allowing the put to finish.
+record(waveform, "numericPost:event") {
+    field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "numericPost:stats")
+}
+record(aSub, "numericPost:stats") {
+    field(SNAM, "numericAcknowledgedStats") field(FLNK, "numericPost:delay")
+    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "numericPost:event NPP NMS")
+    field(FTVL, "DOUBLE") field(NOVL, "11")
+}
+record(aSub, "numericPost:delay") {
+    field(SNAM, "numericTestAfterUpdate")
+    field(FTA, "DOUBLE") field(NOA, "11") field(INPA, "numericPost:stats.VALL NPP NMS")
+}
