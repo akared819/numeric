@@ -20,9 +20,10 @@ Run the IOC integration tests from the repository root after building:
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 ./tests/network-ack.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
+./tests/network-interruption.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ```
 
-The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test script runs clients against a separate test IOC, including a controlled kill and restart, uses loopback ports 25064 and 25065, and stops that IOC on exit; those ports must be available. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against a separate test IOC, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 The build also installs `numericAckSend`, a native Channel Access sender for the acknowledged streaming example. Its usage, retry behavior, and single-producer requirements are described in the [streaming transport guide](docs/streaming-transport.md#native-channel-access-sender).
 
