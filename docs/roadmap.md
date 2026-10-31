@@ -4,6 +4,8 @@ Phase 2 is complete for the general-purpose module and bundled example IOC, with
 
 Phase 3 is complete for the general-purpose batch interfaces and example IOC described in [Phase 3 acceptance](phase3-acceptance.md), subject to the stated boundaries. Phase 4 is complete for the dedicated scalar and array record scope described in [Phase 4 acceptance](phase4-acceptance.md), subject to its documented limits and required Linux checks.
 
+Phase 5 is complete for the agreed representative-category scope documented in [Phase 5 acceptance](phase5-acceptance.md), subject to its stated limits.
+
 ## This increment: Phase 0 and minimal Phase 1
 
 - [x] EPICS module layout, configurable Base and GSL, native test application, Linux CI definition.
@@ -17,7 +19,7 @@ Local verification: `make GSL_DIR=/tmp/numeric-gsl-install` and `./bin/darwin-aa
 
 ## Next work
 
-Phase 3 provides the documented FFT and batch window operations; Phase 4 provides the dedicated scalar and array records. Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies.
+Phase 3 provides the documented FFT and batch window operations; Phase 4 provides the dedicated scalar and array records. Phase 5 has representative coverage across the listed GSL categories; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies.
 
 ## Phase 2 increment: aSub mean prototype
 
