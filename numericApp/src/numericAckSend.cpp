@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numericAckClient.h"
+#include "numericAckParse.h"
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
@@ -24,8 +25,7 @@ int main(int argc, char** argv) {
     const std::string kind(argv[5]);
     if (kind == "reset" && argc == 6) { event.kind = numeric::EventKind::Reset; event.value = 0; }
     else if (kind == "sample" && argc == 7) {
-        char* end = nullptr; errno = 0; event.value = std::strtod(argv[6], &end);
-        if (errno || end == argv[6] || *end || !std::isfinite(event.value)) { std::cerr << "Invalid sample\n"; return 1; }
+        if (!numericParseSample(argv[6], event.value)) { std::cerr << "Invalid sample\n"; return 1; }
         event.kind = numeric::EventKind::Sample;
     } else { std::cerr << "Invalid event kind or arguments\n"; return 1; }
     const numeric::SendResult result = numeric::sendAcknowledged(argv[1], argv[2], event, 3, 5.0);

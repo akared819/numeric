@@ -28,6 +28,7 @@ extern "C" long numericAcknowledgedStats(aSubRecord* rec) {
     if (!rec) return -1;
     rec->neva = rec->nevb = rec->nevc = rec->nevd = rec->neve = 0;
     rec->nevf = rec->nevg = rec->nevh = rec->nevi = rec->nevj = rec->nevk = 0;
+    rec->nevl = 0;
     try {
         if (!numericIocReady() || rec->fta != DBF_DOUBLE || !rec->a || rec->noa < 5 || rec->nea != 4 ||
             rec->ftva != DBF_DOUBLE || rec->ftvb != DBF_DOUBLE || rec->ftvc != DBF_DOUBLE ||
@@ -64,6 +65,17 @@ extern "C" long numericAcknowledgedStats(aSubRecord* rec) {
         *static_cast<double*>(values[8]) = static_cast<double>(acknowledgment.event.sequence);
         *static_cast<double*>(rec->valj) = acknowledgment.event.kind == numeric::EventKind::Sample ? 0.0 : 1.0;
         *static_cast<double*>(rec->valk) = acknowledgment.event.value;
+        // VAL L is optional for existing databases. When configured as a DOUBLE
+        // array, one CA get reads the full response under the record lock.
+        if (rec->ftvl == DBF_DOUBLE && rec->novl >= 11 && rec->vall) {
+            double* snapshot = static_cast<double*>(rec->vall);
+            for (std::size_t i = 0; i < 7; ++i) snapshot[i] = acknowledgment.statistics[i];
+            snapshot[7] = static_cast<double>(acknowledgment.event.session);
+            snapshot[8] = static_cast<double>(acknowledgment.event.sequence);
+            snapshot[9] = acknowledgment.event.kind == numeric::EventKind::Sample ? 0.0 : 1.0;
+            snapshot[10] = acknowledgment.event.value;
+            rec->nevl = 11;
+        }
         rec->neva = rec->nevb = rec->nevc = rec->nevd = rec->neve = 1;
         rec->nevf = rec->nevg = rec->nevh = rec->nevi = rec->nevj = rec->nevk = 1;
         rec->udf = FALSE;

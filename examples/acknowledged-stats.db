@@ -5,6 +5,7 @@ record(ao, "$(P)ackSession") {}
 record(ao, "$(P)ackSequence") {}
 record(aSub, "$(P)acknowledgedStats") {
     field(SNAM, "numericAcknowledgedStats")
+    field(FTVL, "DOUBLE") field(NOVL, "11")
     field(FTA, "DOUBLE") field(NOA, "5")
     field(INPA, "$(P)event NPP NMS")
     field(OUTH, "$(P)ackSession PP NMS")

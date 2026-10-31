@@ -59,5 +59,5 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 ## Phase 2 increment: native acknowledged sender
 
 - Added `numericAckSend` with bounded retries, acknowledgment checks and explicit uncertain outcomes; see [streaming transport](streaming-transport.md).
-- [x] macOS arm64 build and native tests, 194 initialized and 25 uninitialized IOC assertions, and 18 loopback CA assertions passed with GSL 2.8 and the supplied EPICS Base development checkout.
+- [x] macOS arm64 build and native tests, 194 initialized and 25 uninitialized IOC assertions, and 25 loopback CA assertions passed with GSL 2.8 and the supplied EPICS Base development checkout.
 - [ ] Verify Linux CI for this increment. A test injects a delayed old event after a newer acknowledgment. Network-level response-loss fault injection, deployment-specific integration, and IOC-wide GSL handler agreement remain outstanding. The sender does not implement durable recovery or multiple-producer arbitration.

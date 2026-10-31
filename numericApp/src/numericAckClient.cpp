@@ -17,8 +17,24 @@ void complete(event_handler_args args) {
     pending->status.store(args.status);
     epicsEventSignal(pending->done);
 }
+struct Snapshot {
+    Pending pending;
+    double values[11]{};
+};
+void getComplete(event_handler_args args) {
+    Snapshot* snapshot = static_cast<Snapshot*>(args.usr);
+    int status = args.status;
+    if (status == ECA_NORMAL && args.count == 11 && args.dbr) {
+        const dbr_double_t* values = static_cast<const dbr_double_t*>(args.dbr);
+        for (unsigned i = 0; i < 11; ++i) snapshot->values[i] = values[i];
+    } else {
+        status = ECA_GETFAIL;
+    }
+    snapshot->pending.status.store(status);
+    epicsEventSignal(snapshot->pending.done);
+}
 struct Context {
-    chid channels[13]{};
+    chid channels[2]{};
     bool created = false;
     ~Context() {
         if (created) {
@@ -37,14 +53,13 @@ Attempt sendOnce(const std::string& eventPv, const std::string& record, const nu
                  double timeout, std::array<double, 7>& statistics) {
     // Pending callbacks remain alive until the CA context has been destroyed.
     Pending payloadDone;
+    Snapshot snapshot;
     Context context;
-    if (!payloadDone.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL)
+    if (!payloadDone.done || !snapshot.pending.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL)
         return Attempt::Uncertain;
     context.created = true;
-    std::string names[13] = {eventPv, record + ".VAL", record + ".VALA", record + ".VALB",
-        record + ".VALC", record + ".VALD", record + ".VALE", record + ".VALF", record + ".VALG",
-        record + ".VALH", record + ".VALI", record + ".VALJ", record + ".VALK"};
-    for (unsigned i = 0; i < 13; ++i)
+    std::string names[2] = {eventPv, record + ".VALL"};
+    for (unsigned i = 0; i < 2; ++i)
         if (ca_create_channel(names[i].c_str(), nullptr, nullptr, CA_PRIORITY_DEFAULT, &context.channels[i]) != ECA_NORMAL)
             return Attempt::Uncertain;
     if (ca_pend_io(timeout) != ECA_NORMAL) return Attempt::Uncertain;
@@ -52,15 +67,12 @@ Attempt sendOnce(const std::string& eventPv, const std::string& record, const nu
         event.kind == numeric::EventKind::Sample ? 0.0 : 1.0, event.value};
     // The waveform's local forward link processes the aSub while its lock set is held.
     if (!put(context.channels[0], DBR_DOUBLE, 4, payload, payloadDone, timeout)) return Attempt::Uncertain;
-    dbr_long_t status = -1;
-    if (ca_get(DBR_LONG, context.channels[1], &status) != ECA_NORMAL || ca_pend_io(timeout) != ECA_NORMAL)
-        return Attempt::Uncertain;
-    // A late earlier event may have changed VAL after this event completed.
-    if (status != 0) return Attempt::Uncertain;
-    double output[11]{};
-    for (unsigned i = 0; i < 11; ++i)
-        if (ca_get(DBR_DOUBLE, context.channels[i + 2], &output[i]) != ECA_NORMAL) return Attempt::Uncertain;
-    if (ca_pend_io(timeout) != ECA_NORMAL || output[7] != static_cast<double>(event.session) ||
+    if (ca_element_count(context.channels[1]) < 11 ||
+        ca_array_get_callback(DBR_DOUBLE, 0, context.channels[1], getComplete, &snapshot) != ECA_NORMAL ||
+        ca_flush_io() != ECA_NORMAL || epicsEventWaitWithTimeout(snapshot.pending.done, timeout) != epicsEventWaitOK ||
+        snapshot.pending.status.load() != ECA_NORMAL) return Attempt::Uncertain;
+    const double* output = snapshot.values;
+    if (output[7] != static_cast<double>(event.session) ||
         output[8] != static_cast<double>(event.sequence) || output[9] != payload[2] || output[10] != event.value)
         return Attempt::Uncertain;
     for (unsigned i = 0; i < 7; ++i) statistics[i] = output[i];

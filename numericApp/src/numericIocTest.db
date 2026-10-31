@@ -43,8 +43,10 @@ record(aSub, "stats") {
 }
 record(waveform, "ackEvent") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(waveform, "ackSafeEvent") { field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "ackSafeStats") }
+record(waveform, "ackNoForward") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(aSub, "ackSafeStats") {
     field(SNAM, "numericAcknowledgedStats")
+    field(FTVL, "DOUBLE") field(NOVL, "11")
     field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "ackSafeEvent NPP NMS")
 }
 record(ao, "ackSessionOut") {}
