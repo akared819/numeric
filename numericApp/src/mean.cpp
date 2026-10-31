@@ -124,6 +124,7 @@ void registerSpecialFunctions(Registry&);
 void registerLinearAlgebra(Registry&);
 void registerProbability(Registry&);
 void registerPolynomial(Registry&);
+void registerInterpolation(Registry&);
 void registerElementary(Registry&);
 void registerHistogram(Registry&);
 void registerWindowOperations(Registry&);
@@ -160,6 +161,7 @@ void registerBuiltins(Registry& r) {
     registerLinearAlgebra(r);
     registerProbability(r);
     registerPolynomial(r);
+    registerInterpolation(r);
     registerElementary(r);
     registerHistogram(r);
     registerWindowOperations(r);

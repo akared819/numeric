@@ -10,6 +10,7 @@ numeric_SRCS += special.cpp
 numeric_SRCS += linear.cpp
 numeric_SRCS += probability.cpp
 numeric_SRCS += polynomial.cpp
+numeric_SRCS += interpolation.cpp
 numeric_SRCS += elementary.cpp
 numeric_SRCS += histogram.cpp
 numeric_SRCS += fft.cpp
@@ -50,6 +51,7 @@ numericIoc_SRCS += numericScalarRecord.cpp
 numericIoc_SRCS += numericArrayRecord.cpp
 numericIoc_SRCS += numericRealFftAsub.cpp
 numericIoc_SRCS += numericWindowAsub.cpp
+numericIoc_SRCS += numericInterpolationAsub.cpp
 numericIoc_SRCS += numericAckAsub.cpp
 numericIoc_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
 DBD += numericSupport.dbd
@@ -110,4 +112,8 @@ numericBaseNotifyTest_LIBS += $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericLocalAckRegression
 numericLocalAckRegression_SRCS += numericLocalAckRegression.cpp numericAckClient.cpp numericIocTest_registerRecordDeviceDriver.cpp
 numericLocalAckRegression_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
+PROD_HOST += numericInterpolationIocTest
+numericInterpolationIocTest_SRCS += numericInterpolationIocTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
+numericInterpolationIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
+
 include $(TOP)/configure/RULES

@@ -20,3 +20,5 @@ function(numericRunningMean)
 function(numericRunningStats)
 function(numericAcknowledgedStats)
 registrar(registerSetup)
+
+function(numericInterpLinear)

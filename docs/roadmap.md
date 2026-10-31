@@ -229,3 +229,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add GSL uniform batch histogram counts through the native registry and numericArray record. See [histograms](histograms.md).
 - Acceptance: bin boundaries, out-of-range rejection, invalid parameters, count/output capacity, unrepresentable edges, workspace reuse, IOC alarm/recovery, standalone Channel Access and Linux CI.
 - Local and Linux validation results are recorded in the pull request. Weighted, nonuniform and streaming histograms remain open.
+
+## Phase 5 increment: linear interpolation
+
+- Add one-dimensional `interp_linear` using GSL, with per-instance interpolation and accelerator workspaces and an aSub interface. See [interpolation](interpolation.md).
+- Acceptance: numerical results and endpoints; invalid data, query and buffers; reset and repeated use; IOC alarms, truncation, recovery and missing initialization; Linux CI.
+- Local macOS arm64 with GSL 2.8 and the supplied EPICS Base checkout: build and native core tests, 28 initialized and 5 uninitialized IOC assertions passed. Linux results are recorded in the PR. Other interpolation methods and extrapolation remain future work.

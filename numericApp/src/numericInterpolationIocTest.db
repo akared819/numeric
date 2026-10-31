@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(aSub, "interpSmall") {
+    field(SNAM, "numericInterpLinear") field(FTA, "DOUBLE") field(NOA, "3") field(INPA, "interpX NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "5") field(INPB, "interpY NPP NMS")
+    field(FTC, "DOUBLE") field(INPC, "interpQuery NPP NMS") field(FTVA, "DOUBLE")
+}
+record(waveform, "interpLong") { field(FTVL, "LONG") field(NELM, "4") }
+record(aSub, "interpBadType") {
+    field(SNAM, "numericInterpLinear") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "interpLong NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "5") field(INPB, "interpY NPP NMS")
+    field(FTC, "DOUBLE") field(INPC, "interpQuery NPP NMS") field(FTVA, "DOUBLE")
+}

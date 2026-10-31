@@ -38,6 +38,8 @@ jobs:
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericWindowIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericInterpolationIocTest
+          NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericInterpolationIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericPolynomialIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericPolynomialIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericScalarIocTest
