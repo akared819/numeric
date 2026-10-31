@@ -21,6 +21,8 @@ MAIN(numericNetworkIoc) {
     registryFunctionAdd("numericTestDelay", reinterpret_cast<REGISTRYFUNCTION>(delayEvent));
     testdbReadDatabase("numericApp/src/numericIocTest.db", nullptr, nullptr);
     testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=demo:");
+    testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=restart:");
+    testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=ambiguous:");
     testdbReadDatabase("numericApp/src/numericNetworkTest.db", nullptr, nullptr);
     iocshCmd("numericInitialize");
     if (iocInit()) return 1;
