@@ -5,7 +5,7 @@
 #include <cmath>
 
 int main() {
-    testPlan(10);
+    testPlan(11);
     chid input = nullptr, process = nullptr, result = nullptr;
     chid pairs = nullptr, pairsProcess = nullptr, pairsResult = nullptr;
     const bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL &&
@@ -70,6 +70,18 @@ int main() {
         ca_array_get(DBR_DOUBLE, 1, erfResult, &erfValue) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
         std::fabs(erfValue - 0.8427007929497149) < 1e-12;
     testOk(erfComputed, "example record computes erf over Channel Access");
+    chid cdfProcess = nullptr, cdfResult = nullptr;
+    const bool cdfConnected = connected &&
+        ca_create_channel("demo:normalCdf.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &cdfProcess) == ECA_NORMAL &&
+        ca_create_channel("demo:normalCdf.VAL", nullptr, nullptr, CA_PRIORITY_DEFAULT, &cdfResult) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    double cdfValue = 0;
+    const bool cdfComputed = cdfConnected && ca_put(DBR_LONG, cdfProcess, &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 1, cdfResult, &cdfValue) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
+        std::fabs(cdfValue - 0.8413447460685429) < 1e-12;
+    testOk(cdfComputed, "example record computes standard normal CDF over Channel Access");
+    if (cdfProcess) ca_clear_channel(cdfProcess);
+    if (cdfResult) ca_clear_channel(cdfResult);
     if (erfProcess) ca_clear_channel(erfProcess);
     if (erfResult) ca_clear_channel(erfResult);
     if (scalarInput) ca_clear_channel(scalarInput);

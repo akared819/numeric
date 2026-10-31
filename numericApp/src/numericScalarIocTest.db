@@ -15,6 +15,9 @@ record(numericScalar, "scalarWrongType") {
 record(numericScalar, "erfWrongCount") {
     field(INP, "scalarOversizedInput NPP NMS") field(OP, "erf") field(NMAX, "4")
 }
+record(numericScalar, "cdfWrongCount") {
+    field(INP, "scalarOversizedInput NPP NMS") field(OP, "normal_cdf") field(NMAX, "4")
+}
 record(numericScalar, "scalarInvalidOp") {
     field(INP, "scalarOversizedInput NPP NMS") field(OP, "fft_real_radix2_forward") field(NMAX, "4")
 }
