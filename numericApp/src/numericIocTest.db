@@ -42,6 +42,11 @@ record(aSub, "stats") {
     field(INPC, "statsReset NPP NMS")
 }
 record(waveform, "ackEvent") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(waveform, "ackSafeEvent") { field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "ackSafeStats") }
+record(aSub, "ackSafeStats") {
+    field(SNAM, "numericAcknowledgedStats")
+    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "ackSafeEvent NPP NMS")
+}
 record(ao, "ackSessionOut") {}
 record(ao, "ackSequenceOut") {}
 record(aSub, "ackStats") {

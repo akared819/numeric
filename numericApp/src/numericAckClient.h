@@ -6,7 +6,7 @@
 #include <string>
 
 namespace numeric {
-enum class SendStatus { Acknowledged, Rejected, Uncertain, InvalidArgument };
+enum class SendStatus { Acknowledged, Uncertain, InvalidArgument };
 struct SendResult { SendStatus status; std::array<double, 7> statistics{}; };
 // Call from a thread without a CA context. The caller must serialize producers.
 SendResult sendAcknowledged(const std::string& eventPv, const std::string& record,

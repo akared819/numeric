@@ -37,6 +37,6 @@ int main(int argc, char** argv) {
     if (result.status == numeric::SendStatus::Uncertain) {
         std::cerr << "Outcome uncertain: retry the identical event before advancing the sequence.\n"; return 2;
     }
-    std::cerr << (result.status == numeric::SendStatus::Rejected ? "IOC rejected event; inspect its state.\n" : "Invalid arguments or CA context.\n");
+    std::cerr << "Invalid arguments or CA context.\n";
     return 1;
 }

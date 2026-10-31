@@ -30,7 +30,7 @@ static bool getDouble(chid channel, double& value) {
     return ca_get(DBR_DOUBLE, channel, &value) == ECA_NORMAL && ca_pend_io(5.0) == ECA_NORMAL;
 }
 MAIN(numericAckCaTest) {
-    testPlan(14);
+    testPlan(18);
     epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST", "NO");
     epicsEnvSet("EPICS_CA_ADDR_LIST", "127.0.0.1");
     epicsEnvSet("EPICS_CAS_INTF_ADDR_LIST", "127.0.0.1");
@@ -42,7 +42,7 @@ MAIN(numericAckCaTest) {
     testIocInitOk();
     putResult.done = epicsEventCreate(epicsEventEmpty);
     if (!putResult.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL) {
-        testFail("CA context creation"); testSkip(13, "CA context unavailable");
+        testFail("CA context creation"); testSkip(17, "CA context unavailable");
         if (putResult.done) epicsEventDestroy(putResult.done);
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
@@ -81,23 +81,42 @@ MAIN(numericAckCaTest) {
     testOk(reset, "ordered reset is acknowledged");
     ca_context_destroy();
     epicsEventDestroy(putResult.done);
-    numeric::Event clientEvent{57, 3, numeric::EventKind::Sample, 9};
-    auto sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    numeric::Event clientEvent{61, 0, numeric::EventKind::Sample, 9};
+    auto sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[0] == 9 && sent.statistics[6] == 1,
            "sender confirms sample and statistics");
-    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[6] == 1, "sender replay does not double count");
-    clientEvent.sequence = 5;
-    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
-    testOk(sent.status == numeric::SendStatus::Rejected, "sender reports rejected sequence gap");
-    clientEvent.sequence = 4; clientEvent.kind = numeric::EventKind::Reset; clientEvent.value = 0;
-    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    clientEvent.value = 10;
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 5.0);
+    testOk(sent.status == numeric::SendStatus::Uncertain, "sender does not acknowledge a conflicting duplicate");
+    clientEvent.value = 9;
+    clientEvent.sequence = 2;
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 5.0);
+    testOk(sent.status == numeric::SendStatus::Uncertain, "sender reports sequence gap as uncertain");
+    clientEvent.sequence = 1; clientEvent.kind = numeric::EventKind::Reset; clientEvent.value = 0;
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[6] == 0, "sender confirms reset");
     clientEvent.session = 0;
-    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::InvalidArgument, "sender rejects invalid session locally");
-    clientEvent.session = 57;
+    clientEvent.session = 61;
     sent = numeric::sendAcknowledged("numeric:missing:event", "numeric:missing:record", clientEvent, 1, 0.2);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender reports unavailable IOC as uncertain");
+    // Deliver an old request after a newer event has already been acknowledged.
+    putResult.done = epicsEventCreate(epicsEventEmpty);
+    bool lateConnected = putResult.done && ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
+    chid late = nullptr, lateStatus = nullptr;
+    lateConnected = lateConnected && connect("ackSafeEvent", late) && connect("ackSafeStats.VAL", lateStatus);
+    double oldEvent[] = {61, 0, 0, 9};
+    bool lateWritten = lateConnected && putWait(late, DBR_DOUBLE, 4, oldEvent);
+    testOk(lateWritten, "delayed old waveform write completes");
+    testOk(lateWritten && getDouble(lateStatus, value) && value == -1, "late old event is rejected");
+    if (ca_current_context()) ca_context_destroy();
+    if (putResult.done) epicsEventDestroy(putResult.done);
+    clientEvent.sequence = 2; clientEvent.kind = numeric::EventKind::Sample; clientEvent.value = 7;
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
+    testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[0] == 7 && sent.statistics[6] == 1,
+           "next event succeeds after delayed old write");
     testIocShutdownOk(); testdbCleanup(); return testDone();
 }
