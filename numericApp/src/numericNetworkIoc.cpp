@@ -48,12 +48,24 @@ static long delayAfterUpdate(aSubRecord* record) {
     epicsThreadSleep(30.0);
     return 0;
 }
+static long partitionDelay(aSubRecord*) {
+    const char* marker = std::getenv("NUMERIC_TEST_PARTITION_MARKER");
+    if (marker) {
+        FILE* output = std::fopen(marker, "w");
+        if (!output) return -1;
+        std::fputs("entered\n", output);
+        std::fclose(output);
+    }
+    epicsThreadSleep(2.0);
+    return 0;
+}
 MAIN(numericNetworkIoc) {
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
     registryFunctionAdd("numericTestDelay", reinterpret_cast<REGISTRYFUNCTION>(delayEvent));
     registryFunctionAdd("numericTestAfterUpdate", reinterpret_cast<REGISTRYFUNCTION>(delayAfterUpdate));
+    registryFunctionAdd("numericTestPartitionDelay", reinterpret_cast<REGISTRYFUNCTION>(partitionDelay));
     testdbReadDatabase("numericApp/src/numericIocTest.db", nullptr, nullptr);
     testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=demo:");
     testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=restart:");

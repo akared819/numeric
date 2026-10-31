@@ -117,3 +117,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: native tests for positive and negative correlation, constant, non-finite, invalid and unsafe inputs; IOC tests of both layouts, truncation, alarms, recovery and the example; Linux CI. See [batch statistics](asub-mean.md) for range and input-coordination limits.
 - [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 360 initialized and 40 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
 - A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.
+
+## Phase 2 increment: controlled connection interruption
+
+- Add a test-only CA loopback relay. Cut the sender's connection after the IOC receives the event, verify the still-running IOC accepted it through an independent client, verify a new event cannot be acknowledged while disconnected, then restore the relay and verify retry and subsequent sequence behavior.
+- Acceptance: native relay and test client build, controlled disconnection and replay tests pass locally and repeatedly on Linux CI; document the fault model and remaining limits.
+- [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and core test, 360 initialized and 40 uninitialized IOC assertions, 28 same-process and 47 separate-process CA assertions passed. The relay interruption test passed, including its disconnected negative control; Linux CI results are tracked in the pull request.
+- This test covers one connection failure, not arbitrary partitions or durable recovery. Deployment-specific recovery and IOC-wide GSL handler agreement remain open.

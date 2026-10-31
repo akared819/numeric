@@ -24,3 +24,14 @@ record(aSub, "numericPost:delay") {
     field(SNAM, "numericTestAfterUpdate")
     field(FTA, "DOUBLE") field(NOA, "11") field(INPA, "numericPost:stats.VALL NPP NMS")
 }
+record(waveform, "numericPartition:event") {
+    field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "numericPartition:delay")
+}
+record(aSub, "numericPartition:delay") {
+    field(SNAM, "numericTestPartitionDelay") field(FLNK, "numericPartition:stats")
+}
+record(aSub, "numericPartition:stats") {
+    field(SNAM, "numericAcknowledgedStats")
+    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "numericPartition:event NPP NMS")
+    field(FTVL, "DOUBLE") field(NOVL, "11")
+}
