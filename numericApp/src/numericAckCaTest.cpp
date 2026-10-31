@@ -16,16 +16,25 @@ extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 
 struct PutResult { epicsEventId done; int status; };
 static PutResult putResult;
+#ifndef NUMERIC_CA_LOCAL_TEST
 static void putComplete(event_handler_args args) {
     PutResult* result = static_cast<PutResult*>(args.usr);
     result->status = args.status;
     epicsEventSignal(result->done);
 }
+#endif
 static bool putWait(chid channel, chtype type, unsigned long count, const void* value) {
+#ifdef NUMERIC_CA_LOCAL_TEST
+    // In an IOC, the local CA put calls the database synchronously. Avoid the
+    // local put-notify path that can leave a queued EPICS notification after
+    // its private state has been cleared. Network tests still use callbacks.
+    return ca_array_put(type, count, channel, value) == ECA_NORMAL && ca_flush_io() == ECA_NORMAL;
+#else
     putResult.status = ECA_TIMEOUT;
     const int status = ca_array_put_callback(type, count, channel, value, putComplete, &putResult);
     return status == ECA_NORMAL && ca_flush_io() == ECA_NORMAL &&
            epicsEventWaitWithTimeout(putResult.done, 5.0) == epicsEventWaitOK && putResult.status == ECA_NORMAL;
+#endif
 }
 static bool connect(const char* name, chid& channel) {
     return ca_create_channel(name, nullptr, nullptr, CA_PRIORITY_DEFAULT, &channel) == ECA_NORMAL &&

@@ -67,5 +67,5 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 - Added a test IOC with a deliberately slow synchronous processing chain and a separate CA client. The client disconnects after a timeout, checks the IOC completed the original event, retries it, and verifies the count and next sample.
 - [x] macOS arm64: native build and all five separate-process CA assertions passed with the supplied EPICS Base development checkout and GSL 2.8.
-- [x] Linux CI passed for commit `50dfe9d`: each of the push and pull-request runs passed 20 same-process regressions and five separate-process CA test runs. An earlier same-process test intermittently crashed in EPICS Base 7.0.10 put-notify handling; the sender now uses a plain put and polls the atomic acknowledgment. The underlying EPICS notification lifetime cause remains unconfirmed.
+- [ ] Validate repeated Linux CI after replacing the sender and same-process test helper's put-notify calls with plain puts. Earlier runs intermittently crashed in EPICS Base 7.0.10 put-notify handling even after one set of 20 same-process passes. The underlying EPICS notification lifetime cause remains unconfirmed; network tests continue to exercise put callbacks.
 - [ ] Test actual network partitions and target IOC integration. The test does not simulate an IOC crash, multiple producers, or durable recovery.
