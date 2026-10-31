@@ -1,6 +1,6 @@
 # numeric
 
-Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). The current increment provides a standalone core and one operation; it includes a prototype aSub interface for mean and a native running-mean operation. No Python runtime is needed.
+Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). It includes a standalone core and prototype aSub interfaces for batch mean and running mean. No Python runtime is needed.
 
 ## Build and test
 
@@ -21,7 +21,7 @@ Run the IOC integration tests from the repository root after building:
 NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 ```
 
-The test IOC loads `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. For setup and an example database see [aSub mean](docs/asub-mean.md). The native streaming API is described in [running mean](docs/streaming.md). See [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The test IOC loads `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. For setup and example databases see [aSub mean](docs/asub-mean.md) and [running mean](docs/streaming.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 ## License
 

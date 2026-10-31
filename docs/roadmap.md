@@ -29,6 +29,8 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 ## Running mean core increment
 
 - `running_mean` owns a GSL running-statistics workspace, returns a running mean and sample count, and supports reset. Native tests cover first sample, repeated samples, independent instances, invalid input and reset. See [streaming](streaming.md).
-- Local build and native test passed on macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout. Linux CI and EPICS streaming integration remain outstanding.
+- Local build and native test passed on macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout. Linux CI passed for the core increment.
 - [x] Implement and test core running mean, ownership, validation, sample counts and reset.
-- [ ] Define and test EPICS streaming event identity and reset behavior; implement further Phase 2 statistics.
+- [x] Define an explicitly sequenced aSub streaming prototype with reset and IOC tests; see [streaming](streaming.md).
+- [ ] Verify Linux CI for the aSub streaming prototype and expand its lifecycle and integration coverage.
+- [ ] Implement further Phase 2 statistics and a lossless, coordinated sample transport where required.
