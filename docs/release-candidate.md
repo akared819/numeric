@@ -23,11 +23,6 @@ For IOC applications using dedicated record types, rebuild record support and DB
 - GSL coverage and platform validation are limited. No hard-real-time guarantee, network-latency guarantee, arbitrary callback support or complete GSL coverage is claimed.
 - Release distribution requires review of GPL-3.0-or-later obligations and third-party notices for the exact artifacts; see [licensing](licensing.md).
 
-## Review before publication
+## Release review
 
-- [x] Select the proposed version `0.1.0-rc.1`.
-- [ ] Record the exact candidate commit, source archive checksum, dependency/compiler versions, local results and Linux/macOS CI links in the candidate review.
-- [ ] Review compatibility, known limitations and distribution obligations for the intended release artifacts and target IOCs.
-- [ ] Review the final notes and artifacts with the release owner before creating a tag or publishing a release.
-
-See the complete [release-readiness checklist](release-readiness.md). No tag or release is created by preparing this candidate.
+The candidate review records the exact commit, source archive checksum, dependency and compiler versions, local results and Linux/macOS CI links. Reviewers assess compatibility, known limitations and distribution obligations for the intended artifacts and target IOCs. See the complete [release-readiness checklist](release-readiness.md) for the checks to perform before publication.
