@@ -20,6 +20,10 @@ int main() {
     bins = 4; CHECK(other->execute(in,4,&out,1).status == Status::Ok && counts[3] == 2);
     CHECK(op->execute(in,4,&out,1).status == Status::Ok && counts[3] == 2);
     op->reset(); CHECK(op->execute(in,4,&out,1).status == Status::Ok && counts[3] == 2);
+    double alias[] = {0,0.25,0.5,0.75,0.999};
+    in[0].data = alias; out.data = alias; out.capacity = 5;
+    CHECK(op->execute(in,4,&out,1).status == Status::Ok && out.count == 4 && alias[0] == 1 && alias[1] == 1 && alias[2] == 1 && alias[3] == 2);
+    in[0].data = samples; out.data = counts; out.capacity = 4;
     samples[4] = 1; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument && out.count == 0 && counts[3] == 2);
     samples[4] = -0.1; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
     samples[4] = std::numeric_limits<double>::quiet_NaN(); CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
@@ -28,6 +32,8 @@ int main() {
     bins = 2.5; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
     bins = 65537; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
     bins = 4; out.capacity = 3; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
+    out.capacity = 4; out.shape = Shape::Scalar; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
+    out.shape = Shape::Array;
     out.capacity = 4; lower = 1; CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
     lower = -std::numeric_limits<double>::max(); upper = std::numeric_limits<double>::max();
     CHECK(op->execute(in,4,&out,1).status == Status::InvalidArgument);
