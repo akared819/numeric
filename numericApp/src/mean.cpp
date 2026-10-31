@@ -36,6 +36,32 @@ public:
     }
     void reset() override {}
 };
+class BatchMinmax : public Operation {
+public:
+    void reset() override {}
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out) for (std::size_t i = 0; i < no; ++i) out[i].count = 0;
+        if (!in || !out || ni != 1 || no != 2) return {Status::InvalidArgument, "minmax requires one input and two outputs"};
+        const Input& x = in[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || !x.stride ||
+            (x.count - 1) > (std::numeric_limits<std::size_t>::max() - 1) / x.stride ||
+            (x.count - 1) * x.stride >= x.capacity)
+            return {Status::InvalidArgument, "invalid input buffer, count, stride or capacity"};
+        for (std::size_t i = 0; i < 2; ++i)
+            if (out[i].type != Type::Float64 || out[i].shape != Shape::Scalar || !out[i].data || !out[i].capacity)
+                return {Status::InvalidArgument, "invalid output"};
+        if (out[0].data == out[1].data) return {Status::InvalidArgument, "outputs overlap"};
+        for (std::size_t i = 0; i < x.count; ++i)
+            if (!std::isfinite(x.data[i * x.stride])) return {Status::InvalidArgument, "input must be finite"};
+        double minimum, maximum;
+        gsl_stats_minmax(&minimum, &maximum, x.data, x.stride, x.count);
+        *out[0].data = minimum; *out[1].data = maximum;
+        out[0].count = out[1].count = 1;
+        return {Status::Ok, "ok"};
+    }
+};
+std::unique_ptr<Operation> makeMinmax() { return std::unique_ptr<Operation>(new BatchMinmax()); }
 std::unique_ptr<Operation> makeMean() { return std::unique_ptr<Operation>(new BatchStatistic(0)); }
 std::unique_ptr<Operation> makeVariance() { return std::unique_ptr<Operation>(new BatchStatistic(1)); }
 std::unique_ptr<Operation> makeStddev() { return std::unique_ptr<Operation>(new BatchStatistic(2)); }
@@ -45,6 +71,10 @@ std::unique_ptr<Operation> makePopulationStddev() { return std::unique_ptr<Opera
 void registerRunningStatistics(Registry&);
 void registerRunningStats(Registry&);
 void registerBuiltins(Registry& r) {
+    r.add(Metadata{"minmax", "statistics", {{Type::Float64, Shape::Array}},
+                   {{Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}},
+                   "minimum and maximum; at least one finite sample", false,
+                   "per-instance object; no workspace", "invalid input or output"}, &makeMinmax);
     r.add(Metadata{"mean", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "none", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeMean);

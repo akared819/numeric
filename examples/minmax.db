@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)minmaxInput") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(ao, "$(P)minimum") { field(PREC, "3") }
+record(ao, "$(P)maximum") { field(PREC, "3") }
+record(aSub, "$(P)minmax") {
+    field(SNAM, "numericMinmax")
+    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)minmaxInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)minimum PP NMS")
+    field(FTVB, "DOUBLE") field(NOVB, "1") field(OUTB, "$(P)maximum PP NMS")
+}

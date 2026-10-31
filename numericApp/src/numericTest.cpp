@@ -36,6 +36,28 @@ int main() {
     CHECK(!AcknowledgedStream::create());
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(op->execute(&in, 1, &out, 1).status == Status::Ok && out.count == 1 && std::fabs(result - 3) < 1e-12);
+    auto minmax = r.create("minmax");
+    double extrema[] = {99, 99};
+    Output extremaOut[] = {{&extrema[0], 1, 0, Type::Float64, Shape::Scalar},
+                           {&extrema[1], 1, 0, Type::Float64, Shape::Scalar}};
+    CHECK(minmax && r.find("minmax") && r.find("minmax")->outputs.size() == 2);
+    CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::Ok && extrema[0] == 1 && extrema[1] == 5);
+    double mixed[] = {-4, 8, -4, 8}; Input mixedIn{mixed, 4, 4, 1, Type::Float64, Shape::Array};
+    CHECK(minmax->execute(&mixedIn, 1, extremaOut, 2).status == Status::Ok && extrema[0] == -4 && extrema[1] == 8);
+    in.count = 1; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::Ok && extrema[0] == 1 && extrema[1] == 1);
+    in.count = 0; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument && extremaOut[0].count == 0 && extremaOut[1].count == 0);
+    in.count = 3; in.capacity = 4; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
+    in.capacity = 5; in.stride = 0; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
+    in.stride = std::numeric_limits<std::size_t>::max(); CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
+    in.stride = 2; extremaOut[1].data = extremaOut[0].data;
+    CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
+    extremaOut[1].data = &extrema[1]; extremaOut[1].capacity = 0;
+    CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
+    extremaOut[1].capacity = 1; data[2] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument && extrema[0] == 1 && extrema[1] == 1);
+    data[2] = std::numeric_limits<double>::infinity();
+    CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
+    data[2] = 3; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::Ok && extrema[0] == 1 && extrema[1] == 5);
     auto variance = r.create("variance");
     auto popVar = r.create("population_variance"); auto popSd = r.create("population_stddev");
     CHECK(popVar && popSd);

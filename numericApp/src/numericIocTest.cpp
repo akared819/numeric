@@ -15,11 +15,12 @@ static bool readDouble(const char* name, double& value) {
 }
 MAIN(numericIocTest) {
     const bool uninitialized = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
-    testPlan(uninitialized ? 25 : 194);
+    testPlan(uninitialized ? 28 : 223);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
     testdbReadDatabase("numericApp/src/numericIocTest.db", nullptr, nullptr);
+    testdbReadDatabase("examples/minmax.db", nullptr, "P=example:");
     if (!uninitialized) iocshCmd("numericInitialize");
     testIocInitOk();
     if (uninitialized) {
@@ -33,6 +34,9 @@ MAIN(numericIocTest) {
         testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("varianceCalc.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("minmaxCalc.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("minmaxCalc.SEVR", DBF_STRING, "INVALID");
         testdbPutFieldOk("sdCalc.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("sdCalc.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("sdCalc.SEVR", DBF_STRING, "INVALID");
@@ -50,7 +54,14 @@ MAIN(numericIocTest) {
         testdbGetFieldEqual("ackStats.SEVR", DBF_STRING, "INVALID");
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
+    testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("minmaxCalc.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("minmaxCalc.SEVR", DBF_STRING, "INVALID");
     double values[] = {1, 3, 5};
+    testdbPutArrFieldOk("example:minmaxInput", DBF_DOUBLE, 3, values);
+    testdbPutFieldOk("example:minmax.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:minimum", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("example:maximum", DBF_DOUBLE, 5.0);
     testdbPutArrFieldOk("input", DBF_DOUBLE, 3, values);
     testdbGetFieldEqual("result", DBF_DOUBLE, 0.0);
     testdbPutFieldOk("calc.PROC", DBF_LONG, 1);
@@ -58,6 +69,12 @@ MAIN(numericIocTest) {
     testdbGetFieldEqual("calc.NEA", DBF_ULONG, 3u);
     testdbGetFieldEqual("calc.NEVA", DBF_ULONG, 1u);
     testdbGetFieldEqual("result", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("minmaxCalc.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("minmaxMin", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("minmaxMax", DBF_DOUBLE, 5.0);
+    testdbGetFieldEqual("minmaxCalc.NEVA", DBF_ULONG, 1u);
+    testdbGetFieldEqual("minmaxCalc.NEVB", DBF_ULONG, 1u);
     testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, 0);
     testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
@@ -73,15 +90,28 @@ MAIN(numericIocTest) {
     testOk(readDouble("popSdCalc.VALA", popObserved) && std::fabs(popObserved - std::sqrt(8.0 / 3.0)) < 1e-12, "population standard deviation");
     double fullInput[] = {1, 2, 3, 4, 5, 6, 7, 8};
     testdbPutArrFieldOk("input", DBF_DOUBLE, 8, fullInput);
+    testdbPutFieldOk("minmaxSmall.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("minmaxSmall.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("minmaxSmall.SEVR", DBF_STRING, "INVALID");
     testdbPutFieldOk("varianceSmall.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("varianceSmall.VAL", DBF_LONG, -1);
     testdbGetFieldEqual("varianceSmall.SEVR", DBF_STRING, "INVALID");
     double badInput[] = {1, std::numeric_limits<double>::quiet_NaN()};
     testdbPutArrFieldOk("input", DBF_DOUBLE, 2, badInput);
+    testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("minmaxCalc.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("minmaxCalc.NEVA", DBF_ULONG, 0u);
+    testdbGetFieldEqual("minmaxCalc.NEVB", DBF_ULONG, 0u);
+    testdbGetFieldEqual("minmaxCalc.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("minmaxMin", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("minmaxMax", DBF_DOUBLE, 5.0);
     testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
     testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
     testdbPutArrFieldOk("input", DBF_DOUBLE, 1, values);
+    testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("minmaxCalc.VALA", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("minmaxCalc.VALB", DBF_DOUBLE, 1.0);
     testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
     testdbGetFieldEqual("varianceCalc.NEVA", DBF_ULONG, 0u);
@@ -96,6 +126,9 @@ MAIN(numericIocTest) {
     testdbGetFieldEqual("popSdCalc.VALA", DBF_DOUBLE, 0.0);
     testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
     testdbPutArrFieldOk("input", DBF_DOUBLE, 3, values);
+    testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("minmaxCalc.VALA", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("minmaxCalc.VALB", DBF_DOUBLE, 5.0);
     testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
     testdbPutFieldOk("small.PROC", DBF_LONG, 1);
