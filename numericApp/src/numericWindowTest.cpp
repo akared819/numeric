@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numeric.h"
 #include <cmath>
+#include <climits>
 #include <cstdio>
 #include <limits>
 using namespace numeric;
@@ -58,6 +59,11 @@ int main() {
     CHECK(mean->execute(in,2,&out,1).status == Status::InvalidArgument);
     values[2] = std::numeric_limits<double>::infinity(); CHECK(gaussian->execute(in,3,&out,1).status == Status::InvalidArgument);
     values[2] = 3;
+    const std::size_t tooLarge = static_cast<std::size_t>(INT_MAX) + 1;
+    Input oversized[] = {{values, tooLarge, tooLarge, 1, Type::Float64, Shape::Array}, in[1], in[2]};
+    Output oversizedOut{values, tooLarge, 0, Type::Float64, Shape::Array};
+    CHECK(mean->execute(oversized, 2, &oversizedOut, 1).status == Status::InvalidArgument);
+    CHECK(gaussian->execute(oversized, 3, &oversizedOut, 1).status == Status::InvalidArgument);
     double extreme[] = {std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(),
                         std::numeric_limits<double>::max(), 0, 0};
     in[0].data = extreme;

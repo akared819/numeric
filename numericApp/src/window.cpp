@@ -5,6 +5,7 @@
 #include <gsl/gsl_movstat.h>
 #include <gsl/gsl_vector.h>
 #include <cmath>
+#include <climits>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -31,7 +32,7 @@ protected:
         if (!in || !out || ni != (gaussian_ ? 3u : 2u) || no != 1)
             return {Status::InvalidArgument, "window operation has wrong input/output count"};
         const Input& x = in[0]; Output& y = out[0];
-        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count ||
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.count > INT_MAX ||
             x.stride != 1 || x.count > x.capacity || y.type != Type::Float64 ||
             y.shape != Shape::Array || !y.data || y.capacity < x.count || !scalar(in[1]) ||
             (gaussian_ && !scalar(in[2])))
