@@ -74,4 +74,4 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 - Added a separate-process test of stream state after restarting the test IOC: old nonzero sequences are not acknowledged, a new session starts empty, and a reused first event demonstrates the lack of durable identity.
 - [x] macOS arm64: build, native core tests, 194 initialized and 25 uninitialized IOC assertions, 28 same-process CA assertions, and 39 separate-process CA assertions passed with GSL 2.8 and the supplied EPICS Base development checkout.
-- [ ] Validate on Linux CI. A clean process restart is not a crash during processing, and the sender does not detect restarts or reconstruct state.
+- [x] Linux CI passed the restart test and existing regressions on the initial PR #10 commit. A clean process restart is not a crash during processing, and the sender does not detect restarts or reconstruct state.
