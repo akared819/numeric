@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numeric.h"
+#include "numericAck.h"
 #include <gsl/gsl_errno.h>
 #include <atomic>
 #include <cmath>
@@ -32,6 +33,7 @@ int main() {
     CHECK(beforeInit.execute(nullptr, 0, uninitializedOut, 2).status == Status::NotInitialized &&
           uninitializedOut[0].count == 0 && uninitializedOut[1].count == 0);
     CHECK(r.find("running_mean") && r.find("running_mean")->stateful && !r.create("running_mean"));
+    CHECK(!AcknowledgedStream::create());
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(op->execute(&in, 1, &out, 1).status == Status::Ok && out.count == 1 && std::fabs(result - 3) < 1e-12);
     auto variance = r.create("variance");
@@ -119,6 +121,28 @@ int main() {
     CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::NumericalError && statOut[0].count == 0);
     statSample = 1; CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::NumericalError);
     stats->reset(); CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok && statValues[6] == 1);
+    auto ack = AcknowledgedStream::create(); auto ackOther = AcknowledgedStream::create();
+    CHECK(ack && ackOther);
+    Acknowledgment response{}; Event event{11, 0, EventKind::Sample, 1};
+    CHECK(ackOther->submit(Event{0, 0, EventKind::Sample, 1}, response).status == Status::InvalidArgument);
+    CHECK(ackOther->submit(Event{12, 1, EventKind::Sample, 1}, response).status == Status::InvalidArgument);
+    CHECK(ackOther->submit(Event{12, 0, static_cast<EventKind>(99), 1}, response).status == Status::InvalidArgument);
+    CHECK(ack->submit(event, response).status == Status::Ok && !response.replayed && response.statistics[0] == 1 && response.statistics[6] == 1);
+    CHECK(ack->submit(event, response).status == Status::Ok && response.replayed && response.statistics[6] == 1);
+    event.value = 2; CHECK(ack->submit(event, response).status == Status::InvalidArgument);
+    event = {11, 2, EventKind::Sample, 5}; CHECK(ack->submit(event, response).status == Status::InvalidArgument);
+    event = {12, 1, EventKind::Sample, 5}; CHECK(ack->submit(event, response).status == Status::InvalidArgument);
+    event = {11, 1, EventKind::Sample, std::numeric_limits<double>::quiet_NaN()}; CHECK(ack->submit(event, response).status == Status::InvalidArgument);
+    event.value = 3; CHECK(ack->submit(event, response).status == Status::Ok && response.statistics[0] == 2 && response.statistics[6] == 2);
+    CHECK(ackOther->submit(Event{12, 0, EventKind::Sample, 3}, response).status == Status::Ok && response.statistics[6] == 1);
+    event = {11, 2, EventKind::Reset, 1}; CHECK(ack->submit(event, response).status == Status::InvalidArgument);
+    event.value = 0; CHECK(ack->submit(event, response).status == Status::Ok && response.statistics[6] == 0 && std::isnan(response.statistics[0]));
+    CHECK(ack->submit(event, response).status == Status::Ok && response.replayed && response.statistics[6] == 0);
+    event = {11, 3, EventKind::Sample, 5}; CHECK(ack->submit(event, response).status == Status::Ok && response.statistics[0] == 5 && response.statistics[6] == 1);
+    event = {11, 4, EventKind::Sample, std::numeric_limits<double>::max()};
+    CHECK(ack->submit(event, response).status == Status::NumericalError);
+    event = {11, 4, EventKind::Reset, 0};
+    CHECK(ack->submit(event, response).status == Status::Ok && response.statistics[6] == 0);
     double sample = 1, avg = -1, count = -1;
     Input sampleIn{&sample, 1, 1, 1, Type::Float64, Shape::Scalar};
     Output runningOut[] = {{&avg, 1, 0, Type::Float64, Shape::Scalar},

@@ -19,9 +19,10 @@ Run the IOC integration tests from the repository root after building:
 ```sh
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
+./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericAckCaTest
 ```
 
-The test IOC loads `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. For setup and example databases see [aSub mean](docs/asub-mean.md) and [running mean](docs/streaming.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The test IOC loads `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test starts a loopback IOC and client and requires local network sockets. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 ## License
 
