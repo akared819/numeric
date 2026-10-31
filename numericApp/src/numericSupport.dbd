@@ -24,3 +24,5 @@ registrar(registerSetup)
 function(numericInterpLinear)
 function(numericLinearFit)
 function(numericPolynomialIntegral)
+
+function(numericPolynomialRoot)
