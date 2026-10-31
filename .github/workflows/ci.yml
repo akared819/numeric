@@ -20,5 +20,7 @@ jobs:
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
-          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericAckCaTest
+          for attempt in 1 2 3 4 5; do
+            ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericAckCaTest
+          done
           ./tests/network-ack.sh $(./base-7.0.10/startup/EpicsHostArch)

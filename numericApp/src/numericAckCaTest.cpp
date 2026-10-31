@@ -58,7 +58,12 @@ MAIN(numericAckCaTest) {
     bool first = connected && putWait(payload, DBR_DOUBLE, 4, event) && putWait(proc, DBR_LONG, 1, &process) &&
         getDouble(count, value) && getDouble(session, sess) && getDouble(sequence, seq) && value == 1 && sess == 57 && seq == 0;
     testOk(first, "CA sample and acknowledgment");
-    if (connected) { ca_clear_channel(payload); ca_clear_channel(proc); ca_clear_channel(count); ca_clear_channel(session); ca_clear_channel(sequence); ca_clear_channel(status); }
+    if (payload) ca_clear_channel(payload);
+    if (proc) ca_clear_channel(proc);
+    if (count) ca_clear_channel(count);
+    if (session) ca_clear_channel(session);
+    if (sequence) ca_clear_channel(sequence);
+    if (status) ca_clear_channel(status);
     payload = proc = count = session = sequence = status = nullptr;
     connected = first && connect("ackEvent", payload) && connect("ackStats.PROC", proc) &&
         connect("ackStats.VALG", count) && connect("ackSessionOut", session) && connect("ackSequenceOut", sequence) && connect("ackStats.VAL", status);
@@ -88,6 +93,14 @@ MAIN(numericAckCaTest) {
     const double oversized[] = {70, 0, 0, 9, 123};
     testOk(exampleConnected && putWait(example, DBR_DOUBLE, 5, oversized) &&
            getDouble(exampleStatus, value) && value == -1, "example rejects an oversized event without truncating it to four elements");
+    if (payload) ca_clear_channel(payload);
+    if (proc) ca_clear_channel(proc);
+    if (count) ca_clear_channel(count);
+    if (session) ca_clear_channel(session);
+    if (sequence) ca_clear_channel(sequence);
+    if (status) ca_clear_channel(status);
+    if (example) ca_clear_channel(example);
+    if (exampleStatus) ca_clear_channel(exampleStatus);
     ca_context_destroy();
     epicsEventDestroy(putResult.done);
     const numeric::Event exampleEvent{70, 0, numeric::EventKind::Sample, 9};
@@ -127,6 +140,9 @@ MAIN(numericAckCaTest) {
     testOk(lateWritten, "delayed old waveform write completes");
     testOk(lateWritten && getDouble(lateStatus, value) && value == -1, "late old event is rejected");
     testOk(lateWritten && getDouble(snapshotCount, value) && value == 0, "rejected event clears snapshot count");
+    if (late) ca_clear_channel(late);
+    if (lateStatus) ca_clear_channel(lateStatus);
+    if (snapshotCount) ca_clear_channel(snapshotCount);
     if (ca_current_context()) ca_context_destroy();
     if (putResult.done) epicsEventDestroy(putResult.done);
     sent = numeric::sendAcknowledged("ackNoForward", "ackSafeStats", clientEvent, 1, 5.0);
@@ -144,6 +160,7 @@ MAIN(numericAckCaTest) {
     testOk(snapshotRead, "complete snapshot is readable over Channel Access");
     testOk(snapshotRead && snapshot[0] == 7 && snapshot[6] == 1 && snapshot[7] == 61 && snapshot[8] == 2 &&
            snapshot[9] == 0 && snapshot[10] == 7, "snapshot combines statistics and matching event identity");
+    if (snapshotChannel) ca_clear_channel(snapshotChannel);
     if (ca_current_context()) ca_context_destroy();
     double parsed = 0;
     testOk(numericParseSample("4.9406564584124654e-324", parsed) && parsed == std::numeric_limits<double>::denorm_min(),

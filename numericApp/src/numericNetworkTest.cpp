@@ -15,6 +15,7 @@ MAIN(numericNetworkTest) {
     chid snapshot = nullptr;
     const bool connected = connectSnapshot(snapshot);
     testOk(connected, "separate IOC process is reachable over Channel Access");
+    if (snapshot) ca_clear_channel(snapshot);
     if (ca_current_context()) ca_context_destroy();
     if (!connected) { testSkip(4, "IOC unavailable"); return testDone(); }
 
@@ -31,6 +32,7 @@ MAIN(numericNetworkTest) {
         ca_pend_io(10.0) == ECA_NORMAL && response[0] == 1 && response[6] == 1 &&
         response[7] == 81 && response[8] == 0 && response[9] == 0 && response[10] == 1;
     testOk(afterTimeout, "IOC completed the event after the sender lost its response");
+    if (snapshot) ca_clear_channel(snapshot);
     if (ca_current_context()) ca_context_destroy();
 
     const auto replay = numeric::sendAcknowledged("numericNet:event", "numericNet:stats", first, 1, 10.0);
