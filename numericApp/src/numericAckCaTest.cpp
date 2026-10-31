@@ -1,28 +1,40 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#ifdef NUMERIC_CA_LOCAL_TEST
 #include <dbAccess.h>
 #include <dbUnitTest.h>
-#include <cadef.h>
 #include <envDefs.h>
-#include <epicsEvent.h>
 #include <iocsh.h>
+extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
+#endif
+#include <cadef.h>
+#include <epicsEvent.h>
+#include <epicsUnitTest.h>
 #include <testMain.h>
 #include "numericAckClient.h"
 #include "numericAckParse.h"
 #include <limits>
 
-extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 struct PutResult { epicsEventId done; int status; };
 static PutResult putResult;
+#ifndef NUMERIC_CA_LOCAL_TEST
 static void putComplete(event_handler_args args) {
     PutResult* result = static_cast<PutResult*>(args.usr);
     result->status = args.status;
     epicsEventSignal(result->done);
 }
+#endif
 static bool putWait(chid channel, chtype type, unsigned long count, const void* value) {
+#ifdef NUMERIC_CA_LOCAL_TEST
+    // In an IOC, the local CA put calls the database synchronously. Avoid the
+    // local put-notify path that can leave a queued EPICS notification after
+    // its private state has been cleared. Network tests still use callbacks.
+    return ca_array_put(type, count, channel, value) == ECA_NORMAL && ca_flush_io() == ECA_NORMAL;
+#else
     putResult.status = ECA_TIMEOUT;
     const int status = ca_array_put_callback(type, count, channel, value, putComplete, &putResult);
     return status == ECA_NORMAL && ca_flush_io() == ECA_NORMAL &&
            epicsEventWaitWithTimeout(putResult.done, 5.0) == epicsEventWaitOK && putResult.status == ECA_NORMAL;
+#endif
 }
 static bool connect(const char* name, chid& channel) {
     return ca_create_channel(name, nullptr, nullptr, CA_PRIORITY_DEFAULT, &channel) == ECA_NORMAL &&
@@ -31,8 +43,13 @@ static bool connect(const char* name, chid& channel) {
 static bool getDouble(chid channel, double& value) {
     return ca_get(DBR_DOUBLE, channel, &value) == ECA_NORMAL && ca_pend_io(5.0) == ECA_NORMAL;
 }
+#ifdef NUMERIC_CA_LOCAL_TEST
+MAIN(numericLocalAckRegression) {
+#else
 MAIN(numericAckCaTest) {
+#endif
     testPlan(28);
+#ifdef NUMERIC_CA_LOCAL_TEST
     epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST", "NO");
     epicsEnvSet("EPICS_CA_ADDR_LIST", "127.0.0.1");
     epicsEnvSet("EPICS_CAS_INTF_ADDR_LIST", "127.0.0.1");
@@ -43,11 +60,15 @@ MAIN(numericAckCaTest) {
     testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=demo:");
     iocshCmd("numericInitialize");
     testIocInitOk();
+#endif
     putResult.done = epicsEventCreate(epicsEventEmpty);
     if (!putResult.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL) {
         testFail("CA context creation"); testSkip(27, "CA context unavailable");
         if (putResult.done) epicsEventDestroy(putResult.done);
-        testIocShutdownOk(); testdbCleanup(); return testDone();
+#ifdef NUMERIC_CA_LOCAL_TEST
+        testIocShutdownOk(); testdbCleanup();
+#endif
+        return testDone();
     }
     chid payload = nullptr, proc = nullptr, count = nullptr, session = nullptr, sequence = nullptr, status = nullptr;
     bool connected = connect("ackEvent", payload) && connect("ackStats.PROC", proc) &&
@@ -58,7 +79,12 @@ MAIN(numericAckCaTest) {
     bool first = connected && putWait(payload, DBR_DOUBLE, 4, event) && putWait(proc, DBR_LONG, 1, &process) &&
         getDouble(count, value) && getDouble(session, sess) && getDouble(sequence, seq) && value == 1 && sess == 57 && seq == 0;
     testOk(first, "CA sample and acknowledgment");
-    if (connected) { ca_clear_channel(payload); ca_clear_channel(proc); ca_clear_channel(count); ca_clear_channel(session); ca_clear_channel(sequence); ca_clear_channel(status); }
+    if (payload) ca_clear_channel(payload);
+    if (proc) ca_clear_channel(proc);
+    if (count) ca_clear_channel(count);
+    if (session) ca_clear_channel(session);
+    if (sequence) ca_clear_channel(sequence);
+    if (status) ca_clear_channel(status);
     payload = proc = count = session = sequence = status = nullptr;
     connected = first && connect("ackEvent", payload) && connect("ackStats.PROC", proc) &&
         connect("ackStats.VALG", count) && connect("ackSessionOut", session) && connect("ackSequenceOut", sequence) && connect("ackStats.VAL", status);
@@ -88,6 +114,14 @@ MAIN(numericAckCaTest) {
     const double oversized[] = {70, 0, 0, 9, 123};
     testOk(exampleConnected && putWait(example, DBR_DOUBLE, 5, oversized) &&
            getDouble(exampleStatus, value) && value == -1, "example rejects an oversized event without truncating it to four elements");
+    if (payload) ca_clear_channel(payload);
+    if (proc) ca_clear_channel(proc);
+    if (count) ca_clear_channel(count);
+    if (session) ca_clear_channel(session);
+    if (sequence) ca_clear_channel(sequence);
+    if (status) ca_clear_channel(status);
+    if (example) ca_clear_channel(example);
+    if (exampleStatus) ca_clear_channel(exampleStatus);
     ca_context_destroy();
     epicsEventDestroy(putResult.done);
     const numeric::Event exampleEvent{70, 0, numeric::EventKind::Sample, 9};
@@ -101,11 +135,11 @@ MAIN(numericAckCaTest) {
     sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[6] == 1, "sender replay does not double count");
     clientEvent.value = 10;
-    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 5.0);
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 0.25);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender does not acknowledge a conflicting duplicate");
     clientEvent.value = 9;
     clientEvent.sequence = 2;
-    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 5.0);
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 0.25);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender reports sequence gap as uncertain");
     clientEvent.sequence = 1; clientEvent.kind = numeric::EventKind::Reset; clientEvent.value = 0;
     sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
@@ -127,9 +161,12 @@ MAIN(numericAckCaTest) {
     testOk(lateWritten, "delayed old waveform write completes");
     testOk(lateWritten && getDouble(lateStatus, value) && value == -1, "late old event is rejected");
     testOk(lateWritten && getDouble(snapshotCount, value) && value == 0, "rejected event clears snapshot count");
+    if (late) ca_clear_channel(late);
+    if (lateStatus) ca_clear_channel(lateStatus);
+    if (snapshotCount) ca_clear_channel(snapshotCount);
     if (ca_current_context()) ca_context_destroy();
     if (putResult.done) epicsEventDestroy(putResult.done);
-    sent = numeric::sendAcknowledged("ackNoForward", "ackSafeStats", clientEvent, 1, 5.0);
+    sent = numeric::sendAcknowledged("ackNoForward", "ackSafeStats", clientEvent, 1, 0.25);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender rejects an empty snapshot after failed processing");
     clientEvent.sequence = 2; clientEvent.kind = numeric::EventKind::Sample; clientEvent.value = 7;
     sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
@@ -144,6 +181,7 @@ MAIN(numericAckCaTest) {
     testOk(snapshotRead, "complete snapshot is readable over Channel Access");
     testOk(snapshotRead && snapshot[0] == 7 && snapshot[6] == 1 && snapshot[7] == 61 && snapshot[8] == 2 &&
            snapshot[9] == 0 && snapshot[10] == 7, "snapshot combines statistics and matching event identity");
+    if (snapshotChannel) ca_clear_channel(snapshotChannel);
     if (ca_current_context()) ca_context_destroy();
     double parsed = 0;
     testOk(numericParseSample("4.9406564584124654e-324", parsed) && parsed == std::numeric_limits<double>::denorm_min(),
@@ -151,5 +189,8 @@ MAIN(numericAckCaTest) {
     testOk(!numericParseSample("1e9999", parsed) && !numericParseSample("1e-9999", parsed),
            "sample parser rejects overflow and underflow to zero");
     testOk(!numericParseSample("nan", parsed) && !numericParseSample("1x", parsed), "sample parser rejects invalid input");
-    testIocShutdownOk(); testdbCleanup(); return testDone();
+#ifdef NUMERIC_CA_LOCAL_TEST
+    testIocShutdownOk(); testdbCleanup();
+#endif
+    return testDone();
 }

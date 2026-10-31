@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Base-only control case: no numeric record support or GSL operations.
+record(waveform, "baseNotify:event") {
+    field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "baseNotify:target")
+}
+record(aSub, "baseNotify:target") {
+    field(SNAM, "baseNotifyCalculate")
+    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "baseNotify:event NPP NMS")
+}
