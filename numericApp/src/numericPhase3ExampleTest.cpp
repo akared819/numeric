@@ -30,12 +30,12 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(9);
+    testPlan(10);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
         "demo:movingMedianOutput", "demo:gaussianSmooth.PROC", "demo:gaussianOutput",
-        "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL"};
+        "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -82,6 +82,9 @@ int main() {
         matches(result, means, 5);
     if (!rejected) testDiag("put status %s, observed first element %.17g", ca_message(putStatus), result[0]);
     testOk(rejected, "array result rejects a Channel Access write");
+    double histogramInput[] = {0,0.25,0.5,0.75,0.999}, histogramExpected[] = {1,1,1,2};
+    testOk(connected && calculate(channels[15], channels[18], channels[19], histogramInput, 5, result, 4) &&
+           matches(result, histogramExpected, 4), "dedicated array record computes a histogram over Channel Access");
     if (subscription) ca_clear_subscription(subscription);
     for (chid channel : channels) if (channel) ca_clear_channel(channel);
     if (ca_current_context()) ca_context_destroy();

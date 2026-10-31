@@ -15,6 +15,9 @@ recordtype(numericArray) {
     field(NORD, DBF_ULONG) { prompt("Valid output elements") special(SPC_NOMOD) }
     field(WIN, DBF_DOUBLE) { prompt("Odd window length") initial("3") }
     field(ALPH, DBF_DOUBLE) { prompt("Gaussian alpha") initial("1.1774100225154747") }
+    field(HMIN, DBF_DOUBLE) { prompt("Histogram lower bound") initial("0") }
+    field(HMAX, DBF_DOUBLE) { prompt("Histogram upper bound") initial("1") }
+    field(NBIN, DBF_DOUBLE) { prompt("Histogram bin count") initial("10") }
     field(PREC, DBF_SHORT) { prompt("Display precision") initial("6") }
     field(RPVT, DBF_NOACCESS) { prompt("Record private state") special(SPC_NOMOD) extra("void *rpvt") }
 }

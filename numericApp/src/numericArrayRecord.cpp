@@ -30,6 +30,7 @@ int parameterCount(const char* name) {
         !std::strcmp(name, "fft_real_radix2_forward")) return 0;
     if (!std::strcmp(name, "moving_mean") || !std::strcmp(name, "moving_median")) return 1;
     if (!std::strcmp(name, "gaussian_smooth")) return 2;
+    if (!std::strcmp(name, "histogram_uniform")) return 3;
     return -1;
 }
 long initRecord(dbCommon* common, int pass) {
@@ -70,8 +71,9 @@ long process(dbCommon* common) {
             count > 0 && static_cast<unsigned long>(count) <= rec->nmax) {
             numeric::Input inputs[] = {
                 {state->input.data(), static_cast<std::size_t>(count), state->input.size(), 1, numeric::Type::Float64, numeric::Shape::Array},
-                {&rec->win, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar},
-                {&rec->alph, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar}};
+                {state->parameters == 3 ? &rec->hmin : &rec->win, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar},
+                {state->parameters == 3 ? &rec->hmax : &rec->alph, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar},
+                {&rec->nbin, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar}};
             numeric::Output output{state->staging.data(), state->staging.size(), 0, numeric::Type::Float64, numeric::Shape::Array};
             if (state->op->execute(inputs, 1 + state->parameters, &output, 1).status == numeric::Status::Ok) {
                 for (std::size_t i = 0; i < output.count; ++i) state->output[i] = state->staging[i];
