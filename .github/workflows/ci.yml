@@ -32,6 +32,10 @@ jobs:
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           ./tests/example-ioc.sh $(./base-7.0.10/startup/EpicsHostArch)
+          if ldd ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBaseNotifyTest | grep -Eq 'libnumeric|libgsl'; then
+            echo 'Base-only notification control unexpectedly links numeric or GSL' >&2
+            exit 1
+          fi
           gdb --batch --return-child-result -ex run -ex 'thread apply all bt full' --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBaseNotifyTest
           for attempt in $(seq 1 20); do
             gdb --batch --return-child-result -x tests/notify-debug.gdb --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericLocalAckRegression
