@@ -15,7 +15,7 @@ Local verification: `make GSL_DIR=/tmp/numeric-gsl-install` and `./bin/darwin-aa
 
 ## Next work
 
-Phase 3 covers FFT and filtering; Phase 4 evaluates dedicated records; Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies. The first Phase 3 increment exposes complex radix-2 FFTs through the native core; EPICS FFT and later-phase interfaces are not implemented yet.
+Phase 3 covers FFT and filtering; Phase 4 evaluates dedicated records; Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies. The first Phase 3 increment exposes complex radix-2 FFTs through the native core; an aSub waveform interface is also provided; other FFT variants and later-phase interfaces are not implemented yet.
 
 ## Phase 2 increment: aSub mean prototype
 
@@ -140,3 +140,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: test known signals, forward/inverse round trips at supported lengths, in-place and separate buffers, invalid sizes, overlap, non-finite inputs and numerical failure; run existing regression tests and Linux CI.
 - Initial validation on macOS arm64 with GSL 2.8 and the supplied EPICS Base checkout: native build, `numericFftTest` and `numericTest` passed. Linux results are tracked in the pull request.
 - No aSub FFT interface, mixed-radix or real FFT, windowing, filtering, or moving statistics is included. Next: review an EPICS waveform interface and its failure semantics.
+
+## Phase 3 increment: aSub complex FFT
+
+- Add forward and inverse FFT aSub functions, an example waveform database and native IOC tests; see [FFT](fft.md). Record-owned input is scratch space and output is published only after success.
+- Acceptance: exercise forward/inverse processing, length and type validation, input/output and link capacities, initialization, alarms, numerical overflow, output preservation and recovery in IOC tests; run Linux CI.
+- Local macOS arm64 validation uses GSL 2.8 and the supplied EPICS Base development checkout; commands and actual results are reported in the pull request.
+- Mixed-radix and real FFTs, windowing, moving statistics and filtering remain open. Next: choose and implement a small GSL filtering or moving-statistics operation.

@@ -16,6 +16,9 @@ numericTest_LIBS += numeric
 PROD_HOST += numericFftTest
 numericFftTest_SRCS += numericFftTest.cpp
 numericFftTest_LIBS += numeric
+PROD_HOST += numericFftIocTest
+numericFftIocTest_SRCS += numericFftIocTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
+numericFftIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 USR_SYS_LIBS += gsl gslcblas
 ifneq ($(strip $(GSL_DIR)),)
 USR_INCLUDES += -I$(GSL_DIR)/include

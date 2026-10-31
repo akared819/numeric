@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "smallDest") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(waveform, "integerDest") { field(FTVL, "LONG") field(NELM, "8") }
+record(aSub, "smallOutput") {
+    field(SNAM, "numericFftForward") field(FTA, "DOUBLE") field(NOA, "9")
+    field(INPA, "fftInput NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "4")
+}
+record(aSub, "smallLink") {
+    field(SNAM, "numericFftForward") field(FTA, "DOUBLE") field(NOA, "9")
+    field(INPA, "fftInput NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "8")
+    field(OUTA, "smallDest PP NMS")
+}
+record(aSub, "smallInput") {
+    field(SNAM, "numericFftForward") field(FTA, "DOUBLE") field(NOA, "8")
+    field(INPA, "fftInput NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "8")
+}
+record(aSub, "badOutputType") {
+    field(SNAM, "numericFftForward") field(FTA, "DOUBLE") field(NOA, "9")
+    field(INPA, "fftInput NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "8")
+    field(OUTA, "integerDest PP NMS")
+}
+record(aSub, "badType") {
+    field(SNAM, "numericFftForward") field(FTA, "LONG") field(NOA, "9")
+    field(INPA, "fftInput NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "8")
+}
+record(aSub, "constantInput") {
+    field(SNAM, "numericFftForward") field(FTA, "DOUBLE") field(NOA, "9")
+    field(FTVA, "DOUBLE") field(NOVA, "8")
+}
