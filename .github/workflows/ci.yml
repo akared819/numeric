@@ -28,6 +28,7 @@ jobs:
         run: |
           printf 'EPICS_BASE = %s/base-7.0.10\n' "$GITHUB_WORKSPACE" > configure/RELEASE.local
           make -j2
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocBenchmark 64 100 ci-runner
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBenchmark 64 100 ci-runner
           if ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBenchmark 0 100 ci-runner; then exit 1; fi
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericTest
