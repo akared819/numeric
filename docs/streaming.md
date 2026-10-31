@@ -8,7 +8,7 @@ Call `initializeGsl()` during single-threaded process startup before creating a 
 
 ## EPICS aSub prototype
 
-See [running-mean.db](../examples/running-mean.db). Configure `SNAM` as `numericRunningMean`; inputs A, B and C and outputs VALA and VALB are DOUBLE scalars with capacity 1. A is the sample, B is its sequence number, C is the reset token, VALA is the mean and VALB the count. Sequence and reset tokens must be exactly representable nonnegative integers no greater than 2^53. Every record owns an independent workspace.
+See [running-mean.db](../examples/running-mean.db). Configure `SNAM` as `numericRunningMean`; inputs A, B and C and outputs VALA and VALB are DOUBLE scalars with capacity 1. Input links must be constants or report exactly one source element; links to larger waveforms or links that cannot report their size are rejected to avoid silent truncation. A is the sample, B is its sequence number, C is the reset token, VALA is the mean and VALB the count. Sequence and reset tokens must be exactly representable nonnegative integers no greater than 2^53. Every record owns an independent workspace.
 
 The first processing accepts the sample and establishes the initial reset token. Thereafter each accepted sample requires a strictly increasing sequence number. Reprocessing the same sequence returns VAL=1, clears NEVA/NEVB, and does not update state or output links. A lower sequence is rejected with CALC/INVALID. Invalid samples or tokens return VAL=-1, set CALC/INVALID, clear output counts and do not consume the sequence; a numerical failure may require reset as described above. Consumers must check VAL and alarm state.
 

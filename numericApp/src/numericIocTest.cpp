@@ -8,7 +8,7 @@
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 MAIN(numericIocTest) {
     const bool uninitialized = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
-    testPlan(uninitialized ? 7 : 76);
+    testPlan(uninitialized ? 7 : 80);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
@@ -104,6 +104,10 @@ MAIN(numericIocTest) {
     testdbPutFieldOk("stream2.SNAM", DBF_STRING, "numericRunningMean");
     testdbPutFieldOk("stream2.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("stream2.VALB", DBF_DOUBLE, 1.0);
+    testdbPutFieldOk("streamWave.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("streamWave.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("streamWave.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("streamWave.NEVA", DBF_ULONG, 0u);
     testIocShutdownOk();
     testdbCleanup();
     return testDone();

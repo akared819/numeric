@@ -3,6 +3,7 @@
 #include <aSubRecord.h>
 #include <alarm.h>
 #include <dbFldTypes.h>
+#include <dbLink.h>
 #include <epicsExport.h>
 #include <iocsh.h>
 #include <recGbl.h>
@@ -35,6 +36,11 @@ void releaseStream(aSubRecord* rec) {
 bool token(double value) {
     return std::isfinite(value) && value >= 0 && value <= 9007199254740992.0 &&
            std::floor(value) == value;
+}
+bool scalarLink(const DBLINK& link) {
+    if (link.type == CONSTANT) return true;
+    long elements = 0;
+    return dbGetNelements(&link, &elements) == 0 && elements == 1;
 }
 void setup() {
     try {
@@ -90,7 +96,8 @@ extern "C" long numericRunningMean(aSubRecord* rec) {
             rec->noa != 1 || rec->nob != 1 || rec->noc != 1 ||
             rec->nea != 1 || rec->neb != 1 || rec->nec != 1 ||
             rec->nova < 1 || rec->novb < 1 || !rec->a || !rec->b || !rec->c ||
-            !rec->vala || !rec->valb) throw 1;
+            !rec->vala || !rec->valb || !scalarLink(rec->inpa) ||
+            !scalarLink(rec->inpb) || !scalarLink(rec->inpc)) throw 1;
         const double sample = *static_cast<double*>(rec->a);
         const double sequence = *static_cast<double*>(rec->b);
         const double reset = *static_cast<double*>(rec->c);

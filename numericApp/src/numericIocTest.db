@@ -49,3 +49,7 @@ record(aSub, "stream2") {
     field(INPB, "streamSequence NPP NMS")
     field(INPC, "streamReset NPP NMS")
 }
+record(aSub, "streamWave") {
+    field(SNAM, "numericRunningMean")
+    field(INPA, "input NPP NMS")
+}
