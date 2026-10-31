@@ -9,7 +9,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | Moving statistics and filters | Tested | Centered moving mean and median, and zeroth-order Gaussian smoothing with value-padded endpoints through the native registry, aSub and numericArray; other functions and endpoint modes are not evaluated. |
 | FFT and wavelets | Tested | Complex radix-2 forward/inverse and real-input radix-2 forward transforms through the native registry, aSub waveform interface and numericArray record. Other FFTs and wavelets are not evaluated. |
 | Histograms | Tested | `histogram_uniform` batch counts through the native registry and numericArray record; weighted, streaming and nonuniform histograms are not evaluated. |
-| Interpolation | Not evaluated | |
+| Interpolation | Tested | `interp_linear` through the native registry and aSub; other interpolation functions are not evaluated. |
 | Numerical differentiation and integration | Not evaluated | |
 | Linear algebra | Tested | `vector_norm` (real Euclidean vector norm) through the native registry and numericScalar record; matrix operations and other BLAS functions are not evaluated. |
 | Special functions | Tested | `erf` through the native registry and numericScalar record; other special functions are not evaluated. |

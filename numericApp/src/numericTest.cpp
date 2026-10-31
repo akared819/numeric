@@ -56,7 +56,34 @@ int main() {
                       {&point, 1, 1, 1, Type::Float64, Shape::Scalar}};
     Output polyOut{&polynomialValue, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(polynomial->execute(polyIn, 2, &polyOut, 1).status == Status::NotInitialized && polyOut.count == 0 && polynomialValue == 42);
+    auto interpolation = r.create("interp_linear");
+    CHECK(interpolation && r.find("interp_linear"));
+    double ix[] = {0, 1, 3}, iy[] = {0, 2, 6}, iq = 2, iv = 42;
+    Input interpolationIn[] = {{ix, 3, 3, 1, Type::Float64, Shape::Array},
+        {iy, 3, 3, 1, Type::Float64, Shape::Array}, {&iq, 1, 1, 1, Type::Float64, Shape::Scalar}};
+    Output interpolationOut{&iv, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::NotInitialized && iv == 42);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 4 && interpolationOut.count == 1);
+    iq = 0; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 0);
+    iq = 3; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 6);
+    iq = 4; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument && iv == 6 && interpolationOut.count == 0);
+    iq = 1; ix[1] = 0; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument);
+    ix[1] = 1; iy[1] = std::numeric_limits<double>::quiet_NaN(); CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument);
+    iy[1] = 2; interpolationIn[1].count = 2; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument);
+    interpolationIn[1].count = 3; interpolationOut.capacity = 0; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument);
+    interpolationOut.capacity = 1; interpolationIn[0].stride = 2;
+    CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument);
+    interpolationIn[0].stride = 1; iq = std::numeric_limits<double>::infinity();
+    CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::InvalidArgument);
+    iq = 0.5; interpolationIn[0].count = 2; interpolationIn[1].count = 2;
+    CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 1);
+    interpolationIn[0].count = 3; interpolationIn[1].count = 3; iq = 1;
+    auto interpolation2 = r.create("interp_linear");
+    CHECK(interpolation2 && interpolation2->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 2);
+    interpolation->reset();
+    for (int i=0; i<100; ++i) CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 2);
+
     CHECK(logOnePlus->execute(&erfIn, 1, &erfOut, 1).status == Status::Ok && erfValue == 0);
     erfInput = 1; CHECK(logOnePlus->execute(&erfIn, 1, &erfOut, 1).status == Status::Ok && std::fabs(erfValue - std::log(2.0)) < 1e-14);
     erfInput = -0.5; CHECK(logOnePlus->execute(&erfIn, 1, &erfOut, 1).status == Status::Ok && std::fabs(erfValue + std::log(2.0)) < 1e-14);
