@@ -13,5 +13,6 @@ dbLoadRecords("examples/scalar.db", "P=demo:")
 dbLoadRecords("examples/polynomial.db", "P=demo:")
 dbLoadRecords("examples/interpolation.db", "P=demo:")
 dbLoadRecords("examples/fitting.db", "P=demo:")
+dbLoadRecords("examples/integration.db", "P=demo:")
 dbLoadRecords("examples/array.db", "P=demo:")
 iocInit

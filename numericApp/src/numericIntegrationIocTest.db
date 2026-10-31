@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(aSub, "integralSmall") {
+    field(SNAM, "numericPolynomialIntegral") field(FTA, "DOUBLE") field(NOA, "3") field(INPA, "integralCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "integralLower NPP NMS") field(FTC, "DOUBLE") field(INPC, "integralUpper NPP NMS") field(FTVA, "DOUBLE")
+}
+record(waveform, "integralLong") { field(FTVL, "LONG") field(NELM, "4") }
+record(aSub, "integralBadType") {
+    field(SNAM, "numericPolynomialIntegral") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "integralLong NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "integralLower NPP NMS") field(FTC, "DOUBLE") field(INPC, "integralUpper NPP NMS") field(FTVA, "DOUBLE")
+}

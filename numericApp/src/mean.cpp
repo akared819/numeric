@@ -128,6 +128,7 @@ void registerInterpolation(Registry&);
 void registerElementary(Registry&);
 void registerHistogram(Registry&);
 void registerFitting(Registry&);
+void registerIntegration(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
     r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
@@ -166,6 +167,7 @@ void registerBuiltins(Registry& r) {
     registerElementary(r);
     registerHistogram(r);
     registerFitting(r);
+    registerIntegration(r);
     registerWindowOperations(r);
 }
 }
