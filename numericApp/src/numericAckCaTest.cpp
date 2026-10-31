@@ -100,11 +100,11 @@ MAIN(numericAckCaTest) {
     sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[6] == 1, "sender replay does not double count");
     clientEvent.value = 10;
-    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 5.0);
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 0.25);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender does not acknowledge a conflicting duplicate");
     clientEvent.value = 9;
     clientEvent.sequence = 2;
-    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 5.0);
+    sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 1, 0.25);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender reports sequence gap as uncertain");
     clientEvent.sequence = 1; clientEvent.kind = numeric::EventKind::Reset; clientEvent.value = 0;
     sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
@@ -131,7 +131,7 @@ MAIN(numericAckCaTest) {
     if (snapshotCount) ca_clear_channel(snapshotCount);
     if (ca_current_context()) ca_context_destroy();
     if (putResult.done) epicsEventDestroy(putResult.done);
-    sent = numeric::sendAcknowledged("ackNoForward", "ackSafeStats", clientEvent, 1, 5.0);
+    sent = numeric::sendAcknowledged("ackNoForward", "ackSafeStats", clientEvent, 1, 0.25);
     testOk(sent.status == numeric::SendStatus::Uncertain, "sender rejects an empty snapshot after failed processing");
     clientEvent.sequence = 2; clientEvent.kind = numeric::EventKind::Sample; clientEvent.value = 7;
     sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);

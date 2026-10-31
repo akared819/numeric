@@ -31,7 +31,7 @@ MAIN(numericNetworkTest) {
     afterTimeout = afterTimeout && ca_array_get(DBR_DOUBLE, 11, snapshot, response) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL && response[0] == 1 && response[6] == 1 &&
         response[7] == 81 && response[8] == 0 && response[9] == 0 && response[10] == 1;
-    testOk(afterTimeout, "IOC completed the event after the sender lost its response");
+    testOk(afterTimeout, "IOC completed the event after the sender timed out");
     if (snapshot) ca_clear_channel(snapshot);
     if (ca_current_context()) ca_context_destroy();
 

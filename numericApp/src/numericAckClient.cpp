@@ -3,8 +3,10 @@
 #include <cadef.h>
 #include <epicsEvent.h>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <string>
+#include <thread>
 
 namespace {
 struct Pending {
@@ -12,11 +14,6 @@ struct Pending {
     std::atomic<int> status{ECA_TIMEOUT};
     ~Pending() { if (done) epicsEventDestroy(done); }
 };
-void complete(event_handler_args args) {
-    Pending* pending = static_cast<Pending*>(args.usr);
-    pending->status.store(args.status);
-    epicsEventSignal(pending->done);
-}
 struct Snapshot {
     Pending pending;
     double values[11]{};
@@ -43,19 +40,13 @@ struct Context {
         }
     }
 };
-bool put(chid channel, chtype type, unsigned long count, const void* value, Pending& pending, double timeout) {
-    return pending.done && ca_array_put_callback(type, count, channel, value, complete, &pending) == ECA_NORMAL &&
-        ca_flush_io() == ECA_NORMAL && epicsEventWaitWithTimeout(pending.done, timeout) == epicsEventWaitOK &&
-        pending.status.load() == ECA_NORMAL;
-}
 enum class Attempt { Accepted, Uncertain };
 Attempt sendOnce(const std::string& eventPv, const std::string& record, const numeric::Event& event,
                  double timeout, std::array<double, 7>& statistics) {
     // Pending callbacks remain alive until the CA context has been destroyed.
-    Pending payloadDone;
     Snapshot snapshot;
     Context context;
-    if (!payloadDone.done || !snapshot.pending.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL)
+    if (!snapshot.pending.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL)
         return Attempt::Uncertain;
     context.created = true;
     std::string names[2] = {eventPv, record + ".VALL"};
@@ -65,18 +56,30 @@ Attempt sendOnce(const std::string& eventPv, const std::string& record, const nu
     if (ca_pend_io(timeout) != ECA_NORMAL) return Attempt::Uncertain;
     const double payload[4] = {static_cast<double>(event.session), static_cast<double>(event.sequence),
         event.kind == numeric::EventKind::Sample ? 0.0 : 1.0, event.value};
-    // The waveform's local forward link processes the aSub while its lock set is held.
-    if (!put(context.channels[0], DBR_DOUBLE, 4, payload, payloadDone, timeout)) return Attempt::Uncertain;
+    // The snapshot, not the write request, establishes processing completion.
+    // An unacknowledged or dropped write is safe to retry with the same event.
     if (ca_element_count(context.channels[1]) < 11 ||
-        ca_array_get_callback(DBR_DOUBLE, 0, context.channels[1], getComplete, &snapshot) != ECA_NORMAL ||
-        ca_flush_io() != ECA_NORMAL || epicsEventWaitWithTimeout(snapshot.pending.done, timeout) != epicsEventWaitOK ||
-        snapshot.pending.status.load() != ECA_NORMAL) return Attempt::Uncertain;
-    const double* output = snapshot.values;
-    if (output[7] != static_cast<double>(event.session) ||
-        output[8] != static_cast<double>(event.sequence) || output[9] != payload[2] || output[10] != event.value)
+        ca_array_put(DBR_DOUBLE, 4, context.channels[0], payload) != ECA_NORMAL || ca_flush_io() != ECA_NORMAL)
         return Attempt::Uncertain;
-    for (unsigned i = 0; i < 7; ++i) statistics[i] = output[i];
-    return Attempt::Accepted;
+    using Clock = std::chrono::steady_clock;
+    const Clock::time_point deadline = Clock::now() +
+        std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(timeout));
+    while (Clock::now() < deadline) {
+        snapshot.pending.status.store(ECA_TIMEOUT);
+        if (ca_array_get_callback(DBR_DOUBLE, 0, context.channels[1], getComplete, &snapshot) != ECA_NORMAL ||
+            ca_flush_io() != ECA_NORMAL) return Attempt::Uncertain;
+        const double remaining = std::chrono::duration<double>(deadline - Clock::now()).count();
+        if (remaining <= 0 || epicsEventWaitWithTimeout(snapshot.pending.done, remaining) != epicsEventWaitOK)
+            return Attempt::Uncertain;
+        const double* output = snapshot.values;
+        if (snapshot.pending.status.load() == ECA_NORMAL && output[7] == static_cast<double>(event.session) &&
+            output[8] == static_cast<double>(event.sequence) && output[9] == payload[2] && output[10] == event.value) {
+            for (unsigned i = 0; i < 7; ++i) statistics[i] = output[i];
+            return Attempt::Accepted;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    return Attempt::Uncertain;
 }
 }
 namespace numeric {
@@ -85,7 +88,7 @@ SendResult sendAcknowledged(const std::string& eventPv, const std::string& recor
     SendResult result{SendStatus::InvalidArgument, {}};
     const std::uint64_t limit = UINT64_C(9007199254740992);
     if (eventPv.empty() || record.empty() || !event.session || event.session > limit || event.sequence > limit ||
-        !attempts || !std::isfinite(timeout) || timeout <= 0 || ca_current_context() ||
+        !attempts || !std::isfinite(timeout) || timeout <= 0 || timeout > 86400 || ca_current_context() ||
         (event.kind != EventKind::Sample && event.kind != EventKind::Reset) || !std::isfinite(event.value) ||
         (event.kind == EventKind::Reset && event.value != 0)) return result;
     for (unsigned i = 0; i < attempts; ++i) {
