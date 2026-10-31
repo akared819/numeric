@@ -6,12 +6,16 @@ INC += numeric.h
 INC += numericAck.h
 numeric_SRCS += numeric.cpp
 numeric_SRCS += mean.cpp
+numeric_SRCS += fft.cpp
 numeric_SRCS += runningMean.cpp
 numeric_SRCS += runningStats.cpp
 numeric_SRCS += numericAck.cpp
 PROD_HOST += numericTest
 numericTest_SRCS += numericTest.cpp
 numericTest_LIBS += numeric
+PROD_HOST += numericFftTest
+numericFftTest_SRCS += numericFftTest.cpp
+numericFftTest_LIBS += numeric
 USR_SYS_LIBS += gsl gslcblas
 ifneq ($(strip $(GSL_DIR)),)
 USR_INCLUDES += -I$(GSL_DIR)/include

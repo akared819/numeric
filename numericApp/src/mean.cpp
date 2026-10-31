@@ -119,6 +119,7 @@ std::unique_ptr<Operation> makePopulationStddev() { return std::unique_ptr<Opera
 }
 void registerRunningStatistics(Registry&);
 void registerRunningStats(Registry&);
+void registerFft(Registry&);
 void registerBuiltins(Registry& r) {
     r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "Pearson correlation; at least two paired non-constant samples", false,
@@ -147,5 +148,6 @@ void registerBuiltins(Registry& r) {
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makePopulationStddev);
     registerRunningStatistics(r);
     registerRunningStats(r);
+    registerFft(r);
 }
 }
