@@ -39,4 +39,7 @@ numericNetworkIoc_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericNetworkTest
 numericNetworkTest_SRCS += numericNetworkTest.cpp numericAckClient.cpp
 numericNetworkTest_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
+PROD_HOST += numericBaseNotifyTest
+numericBaseNotifyTest_SRCS += numericBaseNotifyTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
+numericBaseNotifyTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES
