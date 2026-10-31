@@ -20,7 +20,7 @@ cleanup() {
     rm -f "$log_file"
 }
 trap cleanup EXIT HUP INT TERM
-if ! "./bin/$1/numericNetworkTest"; then
+if ! "./bin/$1/numericAckCaTest" || ! "./bin/$1/numericNetworkTest"; then
     cat "$log_file" >&2
     exit 1
 fi
