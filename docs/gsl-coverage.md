@@ -4,8 +4,8 @@ Coverage means accessible via the documented numeric API. Status describes the i
 
 | Category | Status | Scope |
 | --- | --- | --- |
-| Statistics | Tested | `mean` only: native tests passed on macOS with GSL 2.8 and Linux CI for the initial commit; updated tests require a fresh CI run. The aSub prototype has local IOC tests; Linux CI for it is pending. All other statistics not evaluated. |
-| Running statistics | Planned | Future stateful operations |
+| Statistics | Tested | `mean` only: native tests passed on macOS with GSL 2.8 and Linux CI for Phase 1 and the aSub prototype. All other statistics not evaluated. |
+| Running statistics | Implemented | `running_mean` core operation with native tests; EPICS streaming interface and other statistics are not yet implemented. |
 | Moving statistics and filters | Planned | Future work |
 | FFT and wavelets | Planned | Future work |
 | Histograms | Not evaluated | |
