@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # A local forward link processes the aSub while the event waveform lock set is held.
-record(waveform, "$(P)event") { field(FTVL, "DOUBLE") field(NELM, "4") field(FLNK, "$(P)acknowledgedStats") }
+record(waveform, "$(P)event") { field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "$(P)acknowledgedStats") }
 record(ao, "$(P)ackSession") {}
 record(ao, "$(P)ackSequence") {}
 record(aSub, "$(P)acknowledgedStats") {

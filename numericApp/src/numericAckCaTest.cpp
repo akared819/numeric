@@ -32,7 +32,7 @@ static bool getDouble(chid channel, double& value) {
     return ca_get(DBR_DOUBLE, channel, &value) == ECA_NORMAL && ca_pend_io(5.0) == ECA_NORMAL;
 }
 MAIN(numericAckCaTest) {
-    testPlan(25);
+    testPlan(28);
     epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST", "NO");
     epicsEnvSet("EPICS_CA_ADDR_LIST", "127.0.0.1");
     epicsEnvSet("EPICS_CAS_INTF_ADDR_LIST", "127.0.0.1");
@@ -40,11 +40,12 @@ MAIN(numericAckCaTest) {
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
     testdbReadDatabase("numericApp/src/numericIocTest.db", nullptr, nullptr);
+    testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=demo:");
     iocshCmd("numericInitialize");
     testIocInitOk();
     putResult.done = epicsEventCreate(epicsEventEmpty);
     if (!putResult.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL) {
-        testFail("CA context creation"); testSkip(24, "CA context unavailable");
+        testFail("CA context creation"); testSkip(27, "CA context unavailable");
         if (putResult.done) epicsEventDestroy(putResult.done);
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
@@ -81,8 +82,18 @@ MAIN(numericAckCaTest) {
     bool reset = second && putWait(payload, DBR_DOUBLE, 4, event) && putWait(proc, DBR_LONG, 1, &process) &&
         getDouble(count, value) && getDouble(sequence, seq) && value == 0 && seq == 2;
     testOk(reset, "ordered reset is acknowledged");
+    chid example = nullptr, exampleStatus = nullptr;
+    const bool exampleConnected = connect("demo:event", example) && connect("demo:acknowledgedStats.VAL", exampleStatus);
+    testOk(exampleConnected, "example database channels connect");
+    const double oversized[] = {70, 0, 0, 9, 123};
+    testOk(exampleConnected && putWait(example, DBR_DOUBLE, 5, oversized) &&
+           getDouble(exampleStatus, value) && value == -1, "example rejects an oversized event without truncating it to four elements");
     ca_context_destroy();
     epicsEventDestroy(putResult.done);
+    const numeric::Event exampleEvent{70, 0, numeric::EventKind::Sample, 9};
+    const auto exampleSent = numeric::sendAcknowledged("demo:event", "demo:acknowledgedStats", exampleEvent, 1, 5.0);
+    testOk(exampleSent.status == numeric::SendStatus::Acknowledged && exampleSent.statistics[6] == 1,
+           "example accepts the first valid event after rejecting the oversized packet");
     numeric::Event clientEvent{61, 0, numeric::EventKind::Sample, 9};
     auto sent = numeric::sendAcknowledged("ackSafeEvent", "ackSafeStats", clientEvent, 2, 5.0);
     testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[0] == 9 && sent.statistics[6] == 1,
