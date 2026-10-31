@@ -49,6 +49,10 @@ if ! "./bin/$1/numericRestartTest" after; then
     cat "$log_file" >&2
     exit 1
 fi
+if ! "./bin/$1/numericCrashTest" prepare; then
+    cat "$log_file" >&2
+    exit 1
+fi
 # Arm the test-only delay, then wait until the IOC enters it before killing it.
 touch "$NUMERIC_TEST_CRASH_MARKER.arm"
 "./bin/$1/numericCrashTest" inflight >"$test_dir/client.log" 2>&1 &

@@ -5,13 +5,23 @@
 #include <cstring>
 
 int main(int argc, char** argv) {
-    if (argc != 2 || (std::strcmp(argv[1], "inflight") && std::strcmp(argv[1], "recovery"))) {
-        std::fprintf(stderr, "Usage: numericCrashTest inflight|recovery\n");
+    if (argc != 2 || (std::strcmp(argv[1], "prepare") && std::strcmp(argv[1], "inflight") && std::strcmp(argv[1], "recovery"))) {
+        std::fprintf(stderr, "Usage: numericCrashTest prepare|inflight|recovery\n");
         return 2;
     }
-    if (!std::strcmp(argv[1], "inflight")) {
+    if (!std::strcmp(argv[1], "prepare")) {
+        testPlan(2);
+        const numeric::Event first{81, 0, numeric::EventKind::Sample, 1};
+        const auto one = numeric::sendAcknowledged("numericNet:event", "numericNet:stats", first, 1, 10.0);
+        testOk(one.status == numeric::SendStatus::Acknowledged && one.statistics[6] == 1,
+               "crash stream accepts its first sample after the earlier restart");
+        const numeric::Event second{81, 1, numeric::EventKind::Sample, 3};
+        const auto two = numeric::sendAcknowledged("numericNet:event", "numericNet:stats", second, 1, 10.0);
+        testOk(two.status == numeric::SendStatus::Acknowledged && two.statistics[6] == 2,
+               "crash stream accepts its second sample before the fault");
+    } else if (!std::strcmp(argv[1], "inflight")) {
         testPlan(1);
-        // The preceding network test accepted sequence 1 in session 81.
+        // The prepare phase accepted sequence 1 in session 81 on this IOC.
         const numeric::Event event{81, 2, numeric::EventKind::Sample, 42};
         const auto result = numeric::sendAcknowledged("numericNet:event", "numericNet:stats", event, 1, 10.0);
         testOk(result.status == numeric::SendStatus::Uncertain,
