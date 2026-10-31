@@ -110,3 +110,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: verify the existing core with two views of one buffer; IOC tests for normal, empty, odd, short, non-finite and full inputs, truncated aSub buffers, alarms, recovery and the example; Linux CI. The producer must publish complete paired updates and arrange processing as described in [batch statistics](asub-mean.md).
 - [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 303 initialized and 34 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
 - A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.
+
+## Phase 2 increment: Pearson correlation
+
+- Add `correlation`, `numericCorrelation`, and `numericCorrelationPairs` using GSL's Pearson correlation. Both input layouts share the covariance buffer validation, with extra checks for constant inputs and conservatively unsafe numerical ranges.
+- Acceptance: native tests for positive and negative correlation, constant, non-finite, invalid and unsafe inputs; IOC tests of both layouts, truncation, alarms, recovery and the example; Linux CI. See [batch statistics](asub-mean.md) for range and input-coordination limits.
+- [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 360 initialized and 40 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
+- A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.

@@ -25,6 +25,7 @@ std::unique_ptr<numeric::Operation> stddev;
 std::unique_ptr<numeric::Operation> populationVariance, populationStddev;
 std::unique_ptr<numeric::Operation> minmax;
 std::unique_ptr<numeric::Operation> covariance;
+std::unique_ptr<numeric::Operation> correlation;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -60,7 +61,8 @@ void setup() {
             auto popSdOperation = registry.create("population_stddev");
             auto minmaxOperation = registry.create("minmax");
             auto covarianceOperation = registry.create("covariance");
-            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation) throw std::bad_alloc();
+            auto correlationOperation = registry.create("correlation");
+            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
             stddev = std::move(stddevOperation);
@@ -68,6 +70,7 @@ void setup() {
             populationStddev = std::move(popSdOperation);
             minmax = std::move(minmaxOperation);
             covariance = std::move(covarianceOperation);
+            correlation = std::move(correlationOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -137,7 +140,7 @@ extern "C" long numericMinmax(aSubRecord* rec) {
     }
 }
 epicsRegisterFunction(numericMinmax);
-extern "C" long numericCovariance(aSubRecord* rec) {
+static long numericTwoArrayStatistic(aSubRecord* rec, bool useCorrelation) {
     if (!rec) return -1;
     rec->neva = 0;
     try {
@@ -148,7 +151,8 @@ extern "C" long numericCovariance(aSubRecord* rec) {
             {static_cast<const double*>(rec->a), rec->nea, rec->noa, 1, numeric::Type::Float64, numeric::Shape::Array},
             {static_cast<const double*>(rec->b), rec->neb, rec->nob, 1, numeric::Type::Float64, numeric::Shape::Array}};
         numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar};
-        if (covariance->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
+        numeric::Operation* operation = useCorrelation ? correlation.get() : covariance.get();
+        if (operation->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
         rec->neva = 1; rec->udf = FALSE;
         return 0;
     } catch (...) {
@@ -156,8 +160,11 @@ extern "C" long numericCovariance(aSubRecord* rec) {
         return -1;
     }
 }
+extern "C" long numericCovariance(aSubRecord* rec) { return numericTwoArrayStatistic(rec, false); }
+extern "C" long numericCorrelation(aSubRecord* rec) { return numericTwoArrayStatistic(rec, true); }
 epicsRegisterFunction(numericCovariance);
-extern "C" long numericCovariancePairs(aSubRecord* rec) {
+epicsRegisterFunction(numericCorrelation);
+static long numericPairedStatistic(aSubRecord* rec, bool useCorrelation) {
     if (!rec) return -1;
     rec->neva = 0;
     try {
@@ -169,7 +176,8 @@ extern "C" long numericCovariancePairs(aSubRecord* rec) {
             {data, count, rec->noa, 2, numeric::Type::Float64, numeric::Shape::Array},
             {data + 1, count, rec->noa - 1, 2, numeric::Type::Float64, numeric::Shape::Array}};
         numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar};
-        if (covariance->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
+        numeric::Operation* operation = useCorrelation ? correlation.get() : covariance.get();
+        if (operation->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
         rec->neva = 1; rec->udf = FALSE;
         return 0;
     } catch (...) {
@@ -177,7 +185,10 @@ extern "C" long numericCovariancePairs(aSubRecord* rec) {
         return -1;
     }
 }
+extern "C" long numericCovariancePairs(aSubRecord* rec) { return numericPairedStatistic(rec, false); }
+extern "C" long numericCorrelationPairs(aSubRecord* rec) { return numericPairedStatistic(rec, true); }
 epicsRegisterFunction(numericCovariancePairs);
+epicsRegisterFunction(numericCorrelationPairs);
 long numericRunning(aSubRecord* rec, bool statistics) {
     if (!rec) return -1;
     rec->neva = rec->nevb = 0;
