@@ -27,6 +27,7 @@ std::unique_ptr<numeric::Operation> minmax;
 std::unique_ptr<numeric::Operation> covariance;
 std::unique_ptr<numeric::Operation> correlation;
 std::unique_ptr<numeric::Operation> fftForward, fftInverse;
+std::unique_ptr<numeric::Operation> polynomial;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -65,7 +66,8 @@ void setup() {
             auto correlationOperation = registry.create("correlation");
             auto fftForwardOperation = registry.create("fft_complex_radix2_forward");
             auto fftInverseOperation = registry.create("fft_complex_radix2_inverse");
-            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation || !fftForwardOperation || !fftInverseOperation) throw std::bad_alloc();
+            auto polynomialOperation = registry.create("polynomial_eval");
+            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation || !fftForwardOperation || !fftInverseOperation || !polynomialOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
             stddev = std::move(stddevOperation);
@@ -76,6 +78,7 @@ void setup() {
             correlation = std::move(correlationOperation);
             fftForward = std::move(fftForwardOperation);
             fftInverse = std::move(fftInverseOperation);
+            polynomial = std::move(polynomialOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -87,6 +90,25 @@ void setupCall(const iocshArgBuf*) { setup(); }
 void registerSetup() { iocshRegister(&setupDef, setupCall); }
 }
 bool numericIocReady() { return ready.load(std::memory_order_acquire); }
+extern "C" long numericPolynomial(aSubRecord* rec) {
+    if (!rec) return -1;
+    rec->neva = 0;
+    try {
+        if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE || rec->ftb != DBF_DOUBLE ||
+            rec->ftva != DBF_DOUBLE || !rec->a || !rec->b || !rec->vala || rec->nova < 1 ||
+            rec->nea >= rec->noa || rec->nob != 1 || rec->neb != 1 || !scalarLink(rec->inpb)) throw 1;
+        numeric::Input inputs[] = {
+            {static_cast<const double*>(rec->a), rec->nea, rec->noa, 1, numeric::Type::Float64, numeric::Shape::Array},
+            {static_cast<const double*>(rec->b), 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar}};
+        numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar};
+        if (polynomial->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
+        rec->neva = output.count; rec->udf = FALSE;
+        return 0;
+    } catch (...) {
+        recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
+    }
+}
+epicsRegisterFunction(numericPolynomial);
 static long numericFft(aSubRecord* rec, bool inverse) {
     if (!rec) return -1;
     rec->neva = 0;

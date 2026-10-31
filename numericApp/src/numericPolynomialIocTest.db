@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(aSub, "polySmall") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "3") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "polyBadType") {
+    field(SNAM, "numericPolynomial") field(FTA, "LONG") field(NOA, "5") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "polyBadScalar") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "1") field(INPB, "polyCoefficients NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}

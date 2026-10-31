@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)polyCoefficients") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(ao, "$(P)polyPoint") { field(VAL, "2") }
+record(ao, "$(P)polyResult") { field(PREC, "6") }
+record(aSub, "$(P)polyEval") {
+    field(SNAM, "numericPolynomial")
+    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "$(P)polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "1") field(INPB, "$(P)polyPoint NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)polyResult PP NMS")
+}

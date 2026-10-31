@@ -13,7 +13,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | Numerical differentiation and integration | Not evaluated | |
 | Linear algebra | Tested | `vector_norm` (real Euclidean vector norm) through the native registry and numericScalar record; matrix operations and other BLAS functions are not evaluated. |
 | Special functions | Tested | `erf` through the native registry and numericScalar record; other special functions are not evaluated. |
-| Polynomials | Not evaluated | |
+| Polynomials | Tested | `polynomial_eval` for real coefficients and a real evaluation point through the native registry and aSub; other polynomial functions are not evaluated. |
 | Random numbers and probability distributions | Tested | `normal_cdf` (standard normal lower-tail probability) through the native registry and numericScalar record; random-number generators and other distributions are not evaluated. |
 | Least squares and fitting | Not evaluated | |
 | Roots, optimization, and ODE solvers | Not evaluated | |

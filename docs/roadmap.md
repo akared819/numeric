@@ -211,3 +211,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add GSL standard normal lower-tail cumulative probability through the registry and numericScalar record. See [probability](probability.md).
 - Acceptance: analytical central and tail values, invalid scalar and buffers, missing initialization, IOC alarm/recovery, standalone Channel Access and Linux CI.
 - Local and Linux validation results are recorded in the pull request. Other distributions, inverse CDFs and random-number generators remain open.
+
+## Phase 5 increment: polynomial evaluation
+
+- Add GSL real polynomial evaluation through a two-input registry operation and aSub interface. See [polynomials](polynomials.md).
+- Acceptance: analytical and constant polynomials, invalid dimensions and values, GSL integer length bound, overflow, IOC alarm/recovery, standalone Channel Access and Linux CI.
+- Local and Linux validation results are recorded in the pull request. Polynomial roots and other polynomial functions remain open.
