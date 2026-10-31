@@ -271,3 +271,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a native isolated test IOC benchmark for synchronous `numericScalar` mean processing with a local waveform link. See [benchmarks](benchmarks.md).
 - Acceptance: validate against GSL, report input size, type, hardware, processing time and allocation/IOC/network boundaries; run smoke checks on Linux and macOS without speed thresholds.
 - Local Apple M3 macOS arm64: build and runs at 1,024 and 65,536 elements and rejection above the record's capacity passed using GSL 2.8 and the supplied EPICS Base checkout. CI results are recorded in the PR. Timed allocations are not instrumented and production networking is outside this measurement.
+
+## Phase 6 increment: release-readiness checklist
+
+- Add a candidate-specific checklist for compatibility, clean builds, platform validation, safety, coverage, benchmarks, licensing, artifact provenance and release approval. See [release readiness](release-readiness.md).
+- Acceptance: documented, actionable checks and evidence requirements; all checklist items remain decisions for a future candidate. A release or tag is not created by this increment.
+- Validation: documentation links and instructions are reviewed locally; Linux and macOS CI results are recorded in the PR. The Base notification issue, deployment-specific integration and release versioning remain open.
