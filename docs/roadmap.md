@@ -96,3 +96,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: native numerical and invalid-input tests; IOC tests for initialization, empty and truncated input, two outputs, alarms and recovery; Linux CI. The example and public contract are described in [batch statistics](asub-mean.md).
 - [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 223 initialized and 28 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
 - A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.
+
+## Phase 2 increment: batch sample covariance
+
+- Add `covariance` and `numericCovariance`, using GSL for sample covariance on two equal-length finite DOUBLE arrays. Each input is checked independently for capacity and truncation; the stateless operation owns no workspace.
+- Acceptance: native numerical, stride, dimension and invalid-input tests; IOC tests for both inputs, truncation, alarms, recovery and the example database; Linux CI. Inputs are fetched separately and require producer coordination as documented in [batch statistics](asub-mean.md).
+- [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 260 initialized and 31 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
+- A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.

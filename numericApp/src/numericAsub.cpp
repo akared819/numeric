@@ -24,6 +24,7 @@ std::unique_ptr<numeric::Operation> variance;
 std::unique_ptr<numeric::Operation> stddev;
 std::unique_ptr<numeric::Operation> populationVariance, populationStddev;
 std::unique_ptr<numeric::Operation> minmax;
+std::unique_ptr<numeric::Operation> covariance;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -58,13 +59,15 @@ void setup() {
             auto popVarOperation = registry.create("population_variance");
             auto popSdOperation = registry.create("population_stddev");
             auto minmaxOperation = registry.create("minmax");
-            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation) throw std::bad_alloc();
+            auto covarianceOperation = registry.create("covariance");
+            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
             stddev = std::move(stddevOperation);
             populationVariance = std::move(popVarOperation);
             populationStddev = std::move(popSdOperation);
             minmax = std::move(minmaxOperation);
+            covariance = std::move(covarianceOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -134,6 +137,26 @@ extern "C" long numericMinmax(aSubRecord* rec) {
     }
 }
 epicsRegisterFunction(numericMinmax);
+extern "C" long numericCovariance(aSubRecord* rec) {
+    if (!rec) return -1;
+    rec->neva = 0;
+    try {
+        if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE || rec->ftb != DBF_DOUBLE ||
+            rec->ftva != DBF_DOUBLE || !rec->a || !rec->b || !rec->vala || rec->nova < 1 ||
+            rec->nea >= rec->noa || rec->neb >= rec->nob) throw 1;
+        numeric::Input inputs[] = {
+            {static_cast<const double*>(rec->a), rec->nea, rec->noa, 1, numeric::Type::Float64, numeric::Shape::Array},
+            {static_cast<const double*>(rec->b), rec->neb, rec->nob, 1, numeric::Type::Float64, numeric::Shape::Array}};
+        numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar};
+        if (covariance->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
+        rec->neva = 1; rec->udf = FALSE;
+        return 0;
+    } catch (...) {
+        recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM);
+        return -1;
+    }
+}
+epicsRegisterFunction(numericCovariance);
 long numericRunning(aSubRecord* rec, bool statistics) {
     if (!rec) return -1;
     rec->neva = rec->nevb = 0;

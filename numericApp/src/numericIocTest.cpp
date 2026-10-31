@@ -15,12 +15,14 @@ static bool readDouble(const char* name, double& value) {
 }
 MAIN(numericIocTest) {
     const bool uninitialized = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
-    testPlan(uninitialized ? 28 : 223);
+    testPlan(uninitialized ? 31 : 260);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
     testdbReadDatabase("numericApp/src/numericIocTest.db", nullptr, nullptr);
     testdbReadDatabase("examples/minmax.db", nullptr, "P=example:");
+    testdbReadDatabase("examples/covariance.db", nullptr, "P=example:");
+    testdbReadDatabase("numericApp/src/numericCovarianceTest.db", nullptr, nullptr);
     if (!uninitialized) iocshCmd("numericInitialize");
     testIocInitOk();
     if (uninitialized) {
@@ -37,6 +39,9 @@ MAIN(numericIocTest) {
         testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("minmaxCalc.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("minmaxCalc.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("example:covariance.SEVR", DBF_STRING, "INVALID");
         testdbPutFieldOk("sdCalc.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("sdCalc.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("sdCalc.SEVR", DBF_STRING, "INVALID");
@@ -54,6 +59,46 @@ MAIN(numericIocTest) {
         testdbGetFieldEqual("ackStats.SEVR", DBF_STRING, "INVALID");
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("example:covariance.SEVR", DBF_STRING, "INVALID");
+    double covX[] = {1, 3, 5}, covY[] = {2, 4, 6};
+    testdbPutArrFieldOk("example:covarianceX", DBF_DOUBLE, 3, covX);
+    testdbPutArrFieldOk("example:covarianceY", DBF_DOUBLE, 3, covY);
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("example:covarianceResult", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("covSmallA.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("covSmallA.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("covSmallA.SEVR", DBF_STRING, "INVALID");
+    testdbPutFieldOk("covSmallB.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("covSmallB.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("covSmallB.SEVR", DBF_STRING, "INVALID");
+    testdbPutArrFieldOk("example:covarianceY", DBF_DOUBLE, 2, covY);
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("example:covariance.NEVA", DBF_ULONG, 0u);
+    testdbGetFieldEqual("example:covariance.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("example:covarianceResult", DBF_DOUBLE, 4.0);
+    double covBad[] = {2, std::numeric_limits<double>::quiet_NaN(), 6};
+    testdbPutArrFieldOk("example:covarianceY", DBF_DOUBLE, 3, covBad);
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, -1);
+    testdbPutArrFieldOk("example:covarianceX", DBF_DOUBLE, 1, covX);
+    testdbPutArrFieldOk("example:covarianceY", DBF_DOUBLE, 1, covY);
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, -1);
+    double covFull[] = {0, 1, 2, 3, 4, 5, 6, 7};
+    testdbPutArrFieldOk("example:covarianceX", DBF_DOUBLE, 8, covFull);
+    testdbPutArrFieldOk("example:covarianceY", DBF_DOUBLE, 8, covFull);
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covarianceResult", DBF_DOUBLE, 6.0);
+    testdbPutArrFieldOk("example:covarianceX", DBF_DOUBLE, 3, covX);
+    testdbPutArrFieldOk("example:covarianceY", DBF_DOUBLE, 3, covY);
+    testdbPutFieldOk("example:covariance.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("example:covariance.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("example:covarianceResult", DBF_DOUBLE, 4.0);
+    testdbGetFieldEqual("example:covariance.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("minmaxCalc.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("minmaxCalc.VAL", DBF_LONG, -1);
     testdbGetFieldEqual("minmaxCalc.SEVR", DBF_STRING, "INVALID");
