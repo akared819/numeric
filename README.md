@@ -4,7 +4,7 @@
 
 `numeric` is a native C++ EPICS support module. It connects GSL calculations to scalar and waveform process variables through a small numerical core, aSub routines, and dedicated `numericScalar` and `numericArray` records. It requires no Python runtime.
 
-> **Release candidate:** the proposed first release is `0.1.0-rc.1`. See the [candidate notes](docs/release-candidate.md) for validation and open decisions. No release has been published.
+> **Release candidate:** `0.1.0-rc.1` is the first candidate. See the [candidate notes](docs/release-candidate.md) for validation and limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for publication status.
 
 ## What it provides
 

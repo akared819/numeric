@@ -1,6 +1,6 @@
 # numeric 0.1.0-rc.1 — release candidate
 
-**Status: proposed for review.** This document prepares the first candidate; it is not a published release or a tag. The candidate commit and actual CI results are recorded in its pull request and must be rechecked if the commit changes.
+This document describes the first candidate. See [GitHub releases](https://github.com/akared819/numeric/releases) for publication status. The candidate commit and actual CI results are recorded in its pull request and must be rechecked if the commit changes.
 
 ## What is included
 
