@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)input") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+record(ao, "$(P)result") {
+    field(PREC, "3")
+}
+record(aSub, "$(P)mean") {
+    field(SNAM, "numericMean")
+    field(FTA, "DOUBLE")
+    field(NOA, "8")
+    field(INPA, "$(P)input NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)result PP NMS")
+}
