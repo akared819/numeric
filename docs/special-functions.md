@@ -1,0 +1,7 @@
+# Special functions
+
+`erf` computes the Gaussian error function of one finite DOUBLE scalar using GSL's [`gsl_sf_erf_e`](https://www.gnu.org/software/gsl/doc/html/specfunc.html#error-function). The input and output descriptors are scalar, with one valid element each; the input stride must be one and both capacities at least one. It returns a scalar value, not an error estimate. For example, erf(0) = 0, erf(1) is approximately 0.8427007929497149, and erf(-1) is its negative.
+
+The adapter checks the GSL status and that both the value and GSL's absolute-error estimate are finite. Invalid inputs, including NaN and infinities, return `InvalidArgument`; GSL errors or non-finite results return `NumericalError`. On failure the output count is zero and the existing output value is unchanged. GSL's error estimate is checked but not exposed as a separate output. This operation is stateless, makes no execution-time allocation and owns no workspace. Call `numeric::initializeGsl()` before using the registry, as described in [architecture](architecture.md#gsl-setup-for-an-ioc).
+
+The [numericScalar record](numeric-scalar.md) exposes `erf` with a scalar DOUBLE INP and OP `erf`; it rejects input links containing more than one element. The standalone IOC loads [scalar.db](../examples/scalar.db), which supplies `demo:erfInput` and `demo:erf`. After writing `demo:erfInput`, explicitly process `demo:erf` and inspect VAL and SEVR. On errors the previous value is preserved, NORD is zero and CALC/INVALID is raised. Input changes do not automatically schedule processing.

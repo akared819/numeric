@@ -2,9 +2,10 @@
 #include "numericAckClient.h"
 #include <cadef.h>
 #include <epicsUnitTest.h>
+#include <cmath>
 
 int main() {
-    testPlan(8);
+    testPlan(9);
     chid input = nullptr, process = nullptr, result = nullptr;
     chid pairs = nullptr, pairsProcess = nullptr, pairsResult = nullptr;
     const bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL &&
@@ -47,6 +48,18 @@ int main() {
         ca_array_get(DBR_DOUBLE, 1, scalarResult, &scalarValue) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL && scalarValue == 2.5;
     testOk(scalarComputed, "example dedicated scalar record computes mean over Channel Access");
+    chid erfProcess = nullptr, erfResult = nullptr;
+    const bool erfConnected = connected &&
+        ca_create_channel("demo:erf.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &erfProcess) == ECA_NORMAL &&
+        ca_create_channel("demo:erf.VAL", nullptr, nullptr, CA_PRIORITY_DEFAULT, &erfResult) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    double erfValue = 0;
+    const bool erfComputed = erfConnected && ca_put(DBR_LONG, erfProcess, &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 1, erfResult, &erfValue) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
+        std::fabs(erfValue - 0.8427007929497149) < 1e-12;
+    testOk(erfComputed, "example record computes erf over Channel Access");
+    if (erfProcess) ca_clear_channel(erfProcess);
+    if (erfResult) ca_clear_channel(erfResult);
     if (scalarInput) ca_clear_channel(scalarInput);
     if (scalarProcess) ca_clear_channel(scalarProcess);
     if (scalarResult) ca_clear_channel(scalarResult);

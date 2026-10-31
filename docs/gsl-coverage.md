@@ -12,7 +12,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | Interpolation | Not evaluated | |
 | Numerical differentiation and integration | Not evaluated | |
 | Linear algebra | Not evaluated | |
-| Special functions | Not evaluated | |
+| Special functions | Tested | `erf` through the native registry and numericScalar record; other special functions are not evaluated. |
 | Polynomials | Not evaluated | |
 | Random numbers and probability distributions | Not evaluated | |
 | Least squares and fitting | Not evaluated | |

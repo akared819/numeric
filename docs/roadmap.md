@@ -193,3 +193,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Exercise EPICS exit callbacks after the scalar and array IOC tests and document their precise lifecycle. [Phase 4 acceptance](phase4-acceptance.md) records the general-purpose scope, evidence and remaining limitations.
 - Acceptance: both record types, native and IOC validation, separate-client example and Linux CI pass; output/link, monitor, alarm, timestamp and resource behavior are documented.
 - Actual local and Linux results are recorded in the pull request. Additional operations, runtime database deletion and the EPICS Base notification crash remain outside the completed scope.
+
+## Phase 5 increment: error function
+
+- Add GSL `erf` through the native registry and extend `numericScalar` to compatible scalar-input operations. See [special functions](special-functions.md) and the [Phase 5 plan](phase5-plan.md).
+- Acceptance: analytical positive, negative, zero and large-input results; invalid values and descriptors; missing initialization; IOC alarm and recovery; standalone Channel Access example; Linux CI.
+- Local and Linux validation results are recorded in the pull request. Other special functions and the other unevaluated coverage categories remain open.
