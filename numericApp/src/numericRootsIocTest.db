@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(aSub, "rootSmall") {
+    field(SNAM, "numericPolynomialRoot") field(FTA, "DOUBLE") field(NOA, "3") field(INPA, "rootCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "rootLower NPP NMS") field(FTC, "DOUBLE") field(INPC, "rootUpper NPP NMS") field(FTVA, "DOUBLE")
+}
+record(waveform, "rootLong") { field(FTVL, "LONG") field(NELM, "4") }
+record(aSub, "rootBadType") {
+    field(SNAM, "numericPolynomialRoot") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "rootLong NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "rootLower NPP NMS") field(FTC, "DOUBLE") field(INPC, "rootUpper NPP NMS") field(FTVA, "DOUBLE")
+}

@@ -245,3 +245,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add bounded polynomial integration using GSL fixed Gauss–Legendre quadrature and an aSub scalar-output interface. See [integration](integration.md).
 - Acceptance: analytical, reversed and zero-width integrals; invalid and overflow input; workspace reuse and cleanup; IOC alarms, output preservation, recovery and initialization; Linux CI.
 - Local macOS arm64 with GSL 2.8 and the supplied EPICS Base checkout: build and native integration test, 22 initialized and 4 uninitialized IOC assertions passed. Linux results are recorded in the PR. Arbitrary callbacks and adaptive methods remain future work.
+
+## Phase 5 increment: bracketed polynomial root
+
+- Add bounded GSL Brent root finding for a polynomial with an aSub scalar-output interface. See [roots](roots.md).
+- Acceptance: quadratic and endpoint roots, non-bracketing and non-finite inputs, bounded iteration, workspace reuse, IOC alarm/output preservation/recovery and Linux CI.
+- Local macOS arm64 with GSL 2.8 and the supplied EPICS Base checkout: build and native root tests, 26 initialized and 4 uninitialized IOC assertions passed. Linux results are recorded in the PR. Arbitrary callbacks, optimization and ODEs remain future work.
