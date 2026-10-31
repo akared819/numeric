@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(aSub, "polySmall") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "3") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "polyBadType") {
+    field(SNAM, "numericPolynomial") field(FTA, "LONG") field(NOA, "5") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "polyBadScalar") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "1") field(INPB, "polyCoefficients NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(waveform, "polyLongCoefficients") { field(FTVL, "LONG") field(NELM, "4") }
+record(longout, "polyLongPoint") { field(VAL, "2") }
+record(longout, "polyLongOutput") {}
+record(aSub, "polyLongInput") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "polyLongCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "polyLongScalar") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyLongPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "polyLongTarget") {
+    field(SNAM, "numericPolynomial") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "polyCoefficients NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "polyPoint NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "polyLongOutput PP NMS")
+}

@@ -5,7 +5,7 @@
 #include <cmath>
 
 int main() {
-    testPlan(11);
+    testPlan(12);
     chid input = nullptr, process = nullptr, result = nullptr;
     chid pairs = nullptr, pairsProcess = nullptr, pairsResult = nullptr;
     const bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL &&
@@ -82,6 +82,20 @@ int main() {
     testOk(cdfComputed, "example record computes standard normal CDF over Channel Access");
     if (cdfProcess) ca_clear_channel(cdfProcess);
     if (cdfResult) ca_clear_channel(cdfResult);
+    chid polyCoefficients = nullptr, polyProcess = nullptr, polyResult = nullptr;
+    const bool polyConnected = connected &&
+        ca_create_channel("demo:polyCoefficients", nullptr, nullptr, CA_PRIORITY_DEFAULT, &polyCoefficients) == ECA_NORMAL &&
+        ca_create_channel("demo:polyEval.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &polyProcess) == ECA_NORMAL &&
+        ca_create_channel("demo:polyResult", nullptr, nullptr, CA_PRIORITY_DEFAULT, &polyResult) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    double coefficients[] = {2,3,4}, polyValue = 0;
+    const bool polyComputed = polyConnected && ca_array_put(DBR_DOUBLE, 3, polyCoefficients, coefficients) == ECA_NORMAL &&
+        ca_put(DBR_LONG, polyProcess, &trigger) == ECA_NORMAL && ca_array_get(DBR_DOUBLE, 1, polyResult, &polyValue) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL && polyValue == 24;
+    testOk(polyComputed, "example IOC evaluates a polynomial over Channel Access");
+    if (polyCoefficients) ca_clear_channel(polyCoefficients);
+    if (polyProcess) ca_clear_channel(polyProcess);
+    if (polyResult) ca_clear_channel(polyResult);
     if (erfProcess) ca_clear_channel(erfProcess);
     if (erfResult) ca_clear_channel(erfResult);
     if (scalarInput) ca_clear_channel(scalarInput);
