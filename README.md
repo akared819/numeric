@@ -1,91 +1,101 @@
 # numeric
 
-Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). It includes a standalone core and aSub interfaces for batch and running statistics, including acknowledged single-producer streaming. No Python runtime is needed.
+**Scientific computing for EPICS IOCs, powered by the GNU Scientific Library.**
+
+`numeric` is a native C++ EPICS support module. It connects GSL calculations to scalar and waveform process variables through a small numerical core, aSub routines, and dedicated `numericScalar` and `numericArray` records. It requires no Python runtime.
+
+> **Release candidate:** `0.1.0-rc.1` is the first candidate. See the [candidate notes](docs/release-candidate.md) for validation and limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for publication status.
+
+## What it provides
+
+| Capability | Examples | Guide |
+| --- | --- | --- |
+| Batch and streaming statistics | Mean, variance, covariance, correlation, running statistics | [Batch](docs/asub-mean.md), [streaming](docs/streaming.md) |
+| Waveform calculations | Radix-2 FFT, moving mean and median, Gaussian smoothing, histogram | [FFT](docs/fft.md), [windows](docs/window-statistics.md), [histograms](docs/histograms.md) |
+| Numerical functions | Interpolation, fitting, polynomial evaluation and integration, root finding, `erf`, `log1p`, normal CDF, vector norm | [GSL coverage](docs/gsl-coverage.md) |
+| EPICS interfaces | aSub functions, scalar and array records, acknowledged single-producer streaming | [Scalar record](docs/numeric-scalar.md), [array record](docs/numeric-array.md), [streaming protocol](docs/streaming-transport.md) |
+
+Coverage is a tested subset of GSL, not its complete API. See the [coverage inventory](docs/gsl-coverage.md) for exact operations and limits.
+
+## Requirements
+
+- EPICS Base **7.0.10**; Linux x86-64 and macOS arm64 are the CI targets.
+- GSL **2.8 or newer**, including headers and libraries. GSL 2.8 is the current stable release and the version selected by CI. Older versions are rejected at compile time; newer versions are not yet validated.
+- A C++14-capable GCC or Clang, GNU make, Perl, and the tools needed to build EPICS Base.
+
+GSL is an external dependency and is not bundled. [GNU's GSL page](https://www.gnu.org/software/gsl/) lists the current release and installation resources.
+
+### Install GSL 2.8
+
+On macOS, `brew install gsl` currently provides GSL 2.8; check `$(brew --prefix gsl)/bin/gsl-config --version` before building. On Linux, distribution packages may be older. To build GSL 2.8 from the official source archive into a user-writable prefix:
+
+```sh
+curl -fsSLO https://ftp.gnu.org/gnu/gsl/gsl-2.8.tar.gz
+echo '6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190  gsl-2.8.tar.gz' | sha256sum -c -
+tar -xzf gsl-2.8.tar.gz
+cd gsl-2.8
+./configure --prefix="$HOME/opt/gsl-2.8"
+make -j2
+make install
+cd ..
+```
+
+The checksum command above is for Linux. On macOS, replace `sha256sum -c -` with `shasum -a 256 -c -`. For signed-release verification, follow [GNU's instructions](https://www.gnu.org/software/gsl/#downloading).
 
 ## Build and test
 
-CI validates Linux (Ubuntu 24.04) and macOS arm64 with EPICS Base 7.0.10, external GSL, a C++14-capable GCC or Clang, GNU make and Perl. Ubuntu 24.04 provides GSL 2.7.1; on macOS the CI job uses Homebrew GSL. Other configurations are not yet claimed as supported. Build EPICS Base first ([EPICS installation instructions](https://docs.epics-controls.org/projects/base/en/b7.0.10/README.html)) and install GSL with headers and libraries. For Debian/Ubuntu, `sudo apt-get install build-essential libreadline-dev libgsl-dev` supplies build dependencies; the distribution GSL version may differ.
+First build [EPICS Base 7.0.10](https://docs.epics-controls.org/projects/base/en/b7.0.10/README.html), then configure numeric from the repository root:
 
 ```sh
 printf 'EPICS_BASE = /absolute/path/to/base-7.0.10\n' > configure/RELEASE.local
-make GSL_DIR=/absolute/path/to/gsl
+make -j2 GSL_DIR="$HOME/opt/gsl-2.8"
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericTest
 ```
 
-On macOS, install GSL with `brew install gsl` and use `make GSL_DIR="$(brew --prefix gsl)"`. Omit `GSL_DIR` when headers and libraries are in standard compiler paths. For a custom shared-library installation, configure the platform's runtime library search path as needed (e.g. `LD_LIBRARY_PATH` on Linux). `make clean` removes build products; installed headers and libraries appear under `include/` and `lib/<arch>/`.
+On macOS with Homebrew, use `make -j2 GSL_DIR="$(brew --prefix gsl)"`. Omit `GSL_DIR` only when the compiler's standard paths contain GSL 2.8 or newer. For a custom shared-library installation, configure the platform's runtime library search path—for example, `export LD_LIBRARY_PATH="$HOME/opt/gsl-2.8/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"` on Linux—before running programs. Ensure the runtime loader selects the intended GSL library as well as the matching headers.
 
-Run the IOC integration tests from the repository root after building:
+To exercise the example IOC and the separate-process Channel Access tests, from the repository root:
 
 ```sh
-./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericScalarIocTest
-NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericScalarIocTest
-./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
-NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
-./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
-NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 ./tests/example-ioc.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ./tests/network-ack.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ./tests/network-interruption.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ```
 
-The `numericIocTest` application loads `numericApp/src/numericIocTest.db`; the dedicated record tests load their own example and test databases. They use the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). The registry also provides the [error function](docs/special-functions.md), [vector norm](docs/linear-algebra.md), [standard normal CDF](docs/probability.md), [polynomial evaluation](docs/polynomials.md), [log1p](docs/elementary.md), [uniform histograms](docs/histograms.md), [linear interpolation](docs/interpolation.md), [straight-line fitting](docs/fitting.md), [polynomial integration](docs/integration.md), and [bracketed polynomial roots](docs/roots.md). The [numericScalar](docs/numeric-scalar.md) and [numericArray](docs/numeric-array.md) records provide dedicated scalar-result and array-result interfaces. See [Phase 6 acceptance](docs/phase6-acceptance.md), the [release-readiness checklist](docs/release-readiness.md), [Phase 5 acceptance](docs/phase5-acceptance.md), [Phase 4 acceptance and limits](docs/phase4-acceptance.md), [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+These tests use loopback ports 25064–25066, which must be available. The [Linux](.github/workflows/ci.yml) and [macOS](.github/workflows/macos.yml) workflows show the full native and IOC test suites. Linux additionally runs the GDB notification stress checks. Build products install under `include/`, `lib/<arch>/`, `dbd/`, and `bin/<arch>/`; `make clean` removes build products.
 
-A native mean benchmark and its measurement boundaries are documented in [benchmarks](docs/benchmarks.md).
+## Try the example IOC
 
-The module requires a C++14-capable GCC or Clang toolchain. The CI workflows validate Linux (Ubuntu 24.04) and macOS arm64 using the clean EPICS Base 7.0.10 release and GSL; the macOS job runs native and IOC tests and the loopback example and network tests. The Linux-only GDB notification stress checks are not repeated on macOS.
-
-## Example IOC
-
-From the repository root after building, run the standalone example IOC:
+Start the example from the repository root:
 
 ```sh
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericExample examples/ioc/st.cmd
 ```
 
-The script loads mean, running statistics, paired covariance, acknowledged streaming, FFT, window-statistics, numericScalar and numericArray records under the `demo:` prefix. It calls `numericInitialize` before `iocInit`; check the [process-wide GSL policy](docs/architecture.md#gsl-setup-for-an-ioc) when combining this module with other GSL users. In another terminal, with EPICS Base tools on `PATH`, try:
+In another terminal with the EPICS Base tools on `PATH`:
 
 ```sh
-export PATH="$PWD/bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch):$PATH"
 caput -a demo:input 3 1 3 5
 caput demo:mean.PROC 1
-caget demo:result
+caget demo:result                 # expected: 3
+
 caput -a demo:scalarInput 4 1 2 3 4
 caput demo:scalarMean.PROC 1
-caget demo:scalarMean
-caput demo:vectorNorm.PROC 1
-caget demo:vectorNorm
-caput demo:erfInput 1
-caput demo:erf.PROC 1
-caget demo:erf
-caput demo:normalCdf.PROC 1
-caget demo:normalCdf
-caput demo:logOnePlus.PROC 1
-caget demo:logOnePlus
-caput -a demo:polyCoefficients 3 2 3 4
-caput demo:polyPoint 2
-caput demo:polyEval.PROC 1
-caget demo:polyResult
-caput -a demo:arrayInput 5 1 2 3 4 5
-caput demo:arrayMean.PROC 1
-caget -a demo:arrayMean
-caput -a demo:arrayInput 5 0 0.25 0.5 0.75 0.999
-caput demo:arrayHistogram.PROC 1
-caget -a demo:arrayHistogram
-caput -a demo:realFftInput 4 1 0 0 0
-caput demo:realFftForward.PROC 1
-caget -a demo:realFftOutput
-caput -a demo:windowInput 5 1 1 99 1 1
-caput demo:movingMedian.PROC 1
-caget -a demo:movingMedianOutput
-numericAckSend demo:event demo:acknowledgedStats 71 0 sample 2
-numericAckSend demo:event demo:acknowledgedStats 71 1 sample 4
-numericAckSend demo:event demo:acknowledgedStats 71 2 reset
+caget demo:scalarMean             # expected: 2.5
 ```
 
-Input links do not automatically process the records. For the streaming commands, the caller must follow the [single-producer acknowledgment protocol](docs/streaming-transport.md), including choosing a new session after an IOC restart. The example uses fixed `demo:` names; do not run another IOC with those names on the same CA network. Use `--headless` after the startup script to run without the interactive IOC shell. The startup script uses paths relative to the repository root.
+The example loads records under `demo:`. Input links do **not** automatically process a calculation record; arrange processing explicitly for your application. For acknowledged streaming, follow the [single-producer protocol](docs/streaming-transport.md), including a new session after an IOC restart. `numericAckSend` is a native sender for that protocol.
 
-The build also installs `numericAckSend`, a native Channel Access sender for the acknowledged streaming example. Its usage, retry behavior, and single-producer requirements are described in the [streaming transport guide](docs/streaming-transport.md#native-channel-access-sender).
+The startup script calls `numericInitialize` before `iocInit`. All GSL users in the same IOC must agree on a non-terminating error handler and initialize it before concurrent GSL use; see the [IOC setup guide](docs/architecture.md#gsl-setup-for-an-ioc). Use `--headless` after the startup script for a noninteractive IOC.
+
+## Validation and limitations
+
+The [benchmark guide](docs/benchmarks.md) documents native and isolated-IOC measurements, including what their timings exclude. These observations are not hard-real-time guarantees.
+
+An intermittent EPICS Base notification crash remains unresolved and has been reproduced without numeric or GSL linked. Its evidence and accepted scope are described in [Phase 2 acceptance](docs/phase2-acceptance.md). Test each target IOC and review its GSL handler policy and other modules before deployment.
+
+For project status and release work, see the [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), [Phase 6 acceptance](docs/phase6-acceptance.md), and [release-readiness checklist](docs/release-readiness.md).
 
 ## License
 
-The numeric project is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE) and [licensing considerations](docs/licensing.md). GSL and EPICS Base are separate external dependencies with their own licenses.
+numeric is licensed under **GPL-3.0-or-later**. See [LICENSE](LICENSE) and the [licensing considerations](docs/licensing.md). GSL and EPICS Base are separate external dependencies with their own licenses; distribution of a combined IOC requires review of the applicable obligations.

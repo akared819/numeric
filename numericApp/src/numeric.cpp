@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numeric.h"
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_version.h>
+#if GSL_MAJOR_VERSION < 2 || (GSL_MAJOR_VERSION == 2 && GSL_MINOR_VERSION < 8)
+#error "numeric requires GSL 2.8 or newer"
+#endif
 #include <atomic>
 #include <mutex>
 namespace numeric {
