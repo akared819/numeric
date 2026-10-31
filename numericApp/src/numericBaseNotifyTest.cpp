@@ -8,7 +8,7 @@
 #include <testMain.h>
 #include <atomic>
 
-extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
+extern "C" int numericBaseOnly_registerRecordDeviceDriver(struct dbBase*);
 struct Result { epicsEventId done; std::atomic<int> status{ECA_TIMEOUT}; };
 static void completed(event_handler_args args) {
     Result* result = static_cast<Result*>(args.usr);
@@ -27,8 +27,8 @@ static long calculate(aSubRecord* record) {
 MAIN(numericBaseNotifyTest) {
     testPlan(1);
     testdbPrepare();
-    testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
-    numericIocTest_registerRecordDeviceDriver(pdbbase);
+    testdbReadDatabase("dbd/numericBaseOnly.dbd", nullptr, nullptr);
+    numericBaseOnly_registerRecordDeviceDriver(pdbbase);
     registryFunctionAdd("baseNotifyCalculate", reinterpret_cast<REGISTRYFUNCTION>(calculate));
     testdbReadDatabase("numericApp/src/numericBaseNotifyTest.db", nullptr, nullptr);
     testIocInitOk();
