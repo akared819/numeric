@@ -72,6 +72,7 @@ const iocshFuncDef setupDef = {"numericInitialize", 0, nullptr};
 void setupCall(const iocshArgBuf*) { setup(); }
 void registerSetup() { iocshRegister(&setupDef, setupCall); }
 }
+bool numericIocReady() { return ready.load(std::memory_order_acquire); }
 long numericBatch(aSubRecord* rec, int kind) {
     if (!rec) return -1;
     rec->neva = 0;

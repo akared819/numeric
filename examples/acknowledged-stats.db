@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# One coordinated producer writes a four-element DOUBLE packet, then processes the aSub.
+record(waveform, "$(P)event") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(ao, "$(P)ackSession") {}
+record(ao, "$(P)ackSequence") {}
+record(aSub, "$(P)acknowledgedStats") {
+    field(SNAM, "numericAcknowledgedStats")
+    field(FTA, "DOUBLE") field(NOA, "5")
+    field(INPA, "$(P)event NPP NMS")
+    field(OUTH, "$(P)ackSession PP NMS")
+    field(OUTI, "$(P)ackSequence PP NMS")
+}
