@@ -4,6 +4,10 @@ record(aSub, "smallWindowOutput") {
     field(SNAM, "numericMovingMean") field(FTA, "DOUBLE") field(NOA, "6") field(INPA, "windowInput NPP NMS")
     field(FTB, "DOUBLE") field(INPB, "windowLength NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "3")
 }
+record(aSub, "smallMedianOutput") {
+    field(SNAM, "numericMovingMedian") field(FTA, "DOUBLE") field(NOA, "6") field(INPA, "windowInput NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "windowLength NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "3")
+}
 record(aSub, "smallWindowLink") {
     field(SNAM, "numericMovingMean") field(FTA, "DOUBLE") field(NOA, "6") field(INPA, "windowInput NPP NMS")
     field(FTB, "DOUBLE") field(INPB, "windowLength NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "5")

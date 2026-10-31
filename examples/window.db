@@ -3,6 +3,7 @@ record(waveform, "$(P)windowInput") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(ao, "$(P)windowLength") { field(VAL, "3") }
 record(ao, "$(P)gaussianAlpha") { field(VAL, "1.1774100225154747") }
 record(waveform, "$(P)movingMeanOutput") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(waveform, "$(P)movingMedianOutput") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(waveform, "$(P)gaussianOutput") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(aSub, "$(P)movingMean") {
     field(SNAM, "numericMovingMean")
@@ -16,4 +17,10 @@ record(aSub, "$(P)gaussianSmooth") {
     field(FTB, "DOUBLE") field(INPB, "$(P)windowLength NPP NMS")
     field(FTC, "DOUBLE") field(INPC, "$(P)gaussianAlpha NPP NMS")
     field(FTVA, "DOUBLE") field(NOVA, "5") field(OUTA, "$(P)gaussianOutput PP NMS")
+}
+record(aSub, "$(P)movingMedian") {
+    field(SNAM, "numericMovingMedian")
+    field(FTA, "DOUBLE") field(NOA, "6") field(INPA, "$(P)windowInput NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "$(P)windowLength NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "5") field(OUTA, "$(P)movingMedianOutput PP NMS")
 }
