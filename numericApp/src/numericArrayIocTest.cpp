@@ -49,7 +49,7 @@ MAIN(numericArrayIocTest) {
     testOk(!dbNameToAddr("arrayMean.VAL", &addr) && dbPutField(&addr, DBR_DOUBLE, overwrite, 5) != 0,
            "array result rejects client writes");
     testOk(matches("arrayMean.VAL", expected, 5), "rejected write preserves output");
-    testMonitorSync(monitor); testOk(testMonitorCount(monitor, 1) > 0, "successful calculation posts a value monitor");
+    testMonitorWait(monitor); testOk(testMonitorCount(monitor, 1) > 0, "successful calculation posts a value monitor");
     dbCommon* record = testdbRecordPtr("arrayMean"); dbScanLock(record);
     const bool timestamp = record->time.secPastEpoch != 0; dbScanUnlock(record);
     testOk(timestamp, "successful processing sets a timestamp");
@@ -59,7 +59,7 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
     testOk(matches("arrayMean.VAL", expected, 5), "invalid window preserves previous output and count");
-    testMonitorSync(monitor); testOk(testMonitorCount(monitor, 1) > 0, "failure posts an alarm monitor");
+    testMonitorWait(monitor); testOk(testMonitorCount(monitor, 1) > 0, "failure posts an alarm monitor");
     testdbPutFieldOk("arrayMean.WIN", DBF_DOUBLE, 3.0);
     testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");

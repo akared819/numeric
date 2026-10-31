@@ -13,3 +13,6 @@ record(ao, "$(P)erfInput") { field(VAL, "1") }
 record(numericScalar, "$(P)erf") {
     field(INP, "$(P)erfInput NPP NMS") field(OP, "erf") field(NMAX, "1")
 }
+record(numericScalar, "$(P)normalCdf") {
+    field(INP, "$(P)erfInput NPP NMS") field(OP, "normal_cdf") field(NMAX, "1")
+}

@@ -41,6 +41,8 @@ MAIN(numericScalarIocTest) {
         testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("erf.SEVR", DBF_STRING, "INVALID");
         testdbGetFieldEqual("erf.NORD", DBF_ULONG, 0u);
+        testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("normalCdf.SEVR", DBF_STRING, "INVALID");
         testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "INVALID");
         testMonitorDestroy(valueMonitor);
@@ -49,6 +51,9 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("normalCdf.NORD", DBF_ULONG, 1u);
+    testOk(valueNear("normalCdf.VAL", 0.8413447460685429), "standard normal CDF computes P(1)");
     testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
     testOk(valueNear("vectorNorm.VAL", std::sqrt(30.0)), "vector norm is computed through numericScalar");
     testdbGetFieldEqual("vectorNorm.NORD", DBF_ULONG, 4u);
@@ -59,10 +64,16 @@ MAIN(numericScalarIocTest) {
     testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
     testOk(valueNear("erf.VAL", -0.8427007929497149), "scalar special function computes erf(-1)");
     testdbPutFieldOk("erfInput", DBF_DOUBLE, std::numeric_limits<double>::quiet_NaN());
+    testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("normalCdf.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("normalCdf.VAL", 0.8413447460685429), "invalid input preserves CDF result");
     testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("erf.SEVR", DBF_STRING, "INVALID");
     testOk(valueNear("erf.VAL", -0.8427007929497149), "invalid scalar input preserves erf result");
     testdbPutFieldOk("erfInput", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("normalCdf.SEVR", DBF_STRING, "NO_ALARM");
+    testdbGetFieldEqual("normalCdf.VAL", DBF_DOUBLE, 0.5);
     testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("erf.SEVR", DBF_STRING, "NO_ALARM");
     testdbGetFieldEqual("erf.VAL", DBF_DOUBLE, 0.0);
@@ -77,7 +88,7 @@ MAIN(numericScalarIocTest) {
     const bool hasTimestamp = scalarRecord->time.secPastEpoch != 0;
     dbScanUnlock(scalarRecord);
     testOk(hasTimestamp, "successful processing sets a timestamp");
-    testMonitorSync(valueMonitor);
+    testMonitorWait(valueMonitor);
     testOk(testMonitorCount(valueMonitor, 1) > 0, "successful calculation posts a value monitor");
     testdbPutFieldOk("scalarVariance.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarVariance.NORD", DBF_ULONG, 4u);
@@ -96,7 +107,7 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 0u);
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
-    testMonitorSync(valueMonitor);
+    testMonitorWait(valueMonitor);
     testOk(testMonitorCount(valueMonitor, 1) > 0, "invalid calculation posts an alarm monitor");
     testdbPutArrFieldOk("scalarInput", DBF_DOUBLE, 0, values);
     testdbPutFieldOk("scalarMean.PROC", DBF_LONG, 1);
@@ -117,6 +128,8 @@ MAIN(numericScalarIocTest) {
     testdbPutArrFieldOk("scalarOversizedInput", DBF_DOUBLE, 2, tooMany);
     testdbPutFieldOk("erfWrongCount.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("erfWrongCount.SEVR", DBF_STRING, "INVALID");
+    testdbPutFieldOk("cdfWrongCount.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("cdfWrongCount.SEVR", DBF_STRING, "INVALID");
     testdbPutFieldOk("scalarForward.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarProcessed.VAL", DBF_DOUBLE, 1.0);
     testdbPutFieldOk("scalarWrongType.PROC", DBF_LONG, 1);

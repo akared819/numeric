@@ -205,3 +205,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add GSL BLAS Euclidean norm through the registry and existing numericScalar record. See [linear algebra](linear-algebra.md).
 - Acceptance: known, zero, large and small vectors; stride and buffer validation; overflow and non-finite rejection; IOC alarm and recovery; standalone Channel Access example; Linux CI.
 - Local and Linux validation results are recorded in the pull request. Matrix operations and other linear algebra functions remain open.
+
+## Phase 5 increment: standard normal CDF
+
+- Add GSL standard normal lower-tail cumulative probability through the registry and numericScalar record. See [probability](probability.md).
+- Acceptance: analytical central and tail values, invalid scalar and buffers, missing initialization, IOC alarm/recovery, standalone Channel Access and Linux CI.
+- Local and Linux validation results are recorded in the pull request. Other distributions, inverse CDFs and random-number generators remain open.
