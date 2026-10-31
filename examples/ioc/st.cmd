@@ -9,4 +9,5 @@ dbLoadRecords("examples/acknowledged-stats.db", "P=demo:")
 dbLoadRecords("examples/covariance-pairs.db", "P=demo:")
 dbLoadRecords("examples/fft.db", "P=demo:")
 dbLoadRecords("examples/window.db", "P=demo:")
+dbLoadRecords("examples/scalar.db", "P=demo:")
 iocInit

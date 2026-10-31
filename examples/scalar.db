@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)scalarInput") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(numericScalar, "$(P)scalarMean") {
+    field(INP, "$(P)scalarInput NPP NMS") field(OP, "mean") field(NMAX, "4")
+}
+record(numericScalar, "$(P)scalarVariance") {
+    field(INP, "$(P)scalarInput NPP NMS") field(OP, "variance") field(NMAX, "4")
+}
