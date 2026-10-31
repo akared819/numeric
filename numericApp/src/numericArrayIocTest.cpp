@@ -39,6 +39,9 @@ MAIN(numericArrayIocTest) {
     if (noInit) {
         testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
         testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 0u);
+        testdbPutFieldOk("arrayHistogram.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("arrayHistogram.SEVR", DBF_STRING, "INVALID");
+        testdbGetFieldEqual("arrayHistogram.NORD", DBF_ULONG, 0u);
         testMonitorDestroy(monitor); return finish();
     }
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
@@ -76,6 +79,35 @@ MAIN(numericArrayIocTest) {
     testdbPutFieldOk("arrayGaussian.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arrayGaussian.SEVR", DBF_STRING, "INVALID");
     testOk(matches("arrayGaussian.VAL", smooth, 5), "invalid alpha preserves Gaussian output");
+    double histSamples[] = {0,0.25,0.5,0.75,0.999}, histExpected[] = {1,1,1,2}, histTwo[] = {2,3};
+    testdbPutArrFieldOk("arrayInput", DBF_DOUBLE, 5, histSamples);
+    testdbPutFieldOk("arrayHistogram.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayHistogram.NORD", DBF_ULONG, 4u);
+    testOk(matches("arrayHistogram.VAL", histExpected, 4), "histogram uses lower-inclusive, upper-exclusive bins");
+    testdbPutFieldOk("histSmallOutput.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("histSmallOutput.SEVR", DBF_STRING, "INVALID");
+    histSamples[4] = 1;
+    testdbPutArrFieldOk("arrayInput", DBF_DOUBLE, 5, histSamples);
+    testdbPutFieldOk("arrayHistogram.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayHistogram.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("arrayHistogram.NIN", DBF_ULONG, 0u);
+    testdbGetFieldEqual("arrayHistogram.NORD", DBF_ULONG, 4u);
+    testOk(matches("arrayHistogram.VAL", histExpected, 4), "out-of-range sample preserves histogram output");
+    histSamples[4] = 0.999;
+    testdbPutArrFieldOk("arrayInput", DBF_DOUBLE, 5, histSamples);
+    testdbPutFieldOk("arrayHistogram.NBIN", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("arrayHistogram.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayHistogram.SEVR", DBF_STRING, "NO_ALARM");
+    testOk(matches("arrayHistogram.VAL", histTwo, 2), "histogram recovers with a new bin count");
+    testdbPutFieldOk("arrayHistogram.NBIN", DBF_DOUBLE, 2.5);
+    testdbPutFieldOk("arrayHistogram.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayHistogram.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("arrayHistogram.VAL", histTwo, 2), "fractional bin count preserves histogram output");
+    testdbPutFieldOk("arrayHistogram.NBIN", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("arrayHistogram.HMAX", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("arrayHistogram.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayHistogram.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("arrayHistogram.VAL", histTwo, 2), "invalid range preserves histogram output");
     testdbPutArrFieldOk("arrayInput", DBF_DOUBLE, 5, data);
     testdbPutFieldOk("arraySmallInput.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arraySmallInput.SEVR", DBF_STRING, "INVALID");

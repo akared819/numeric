@@ -223,3 +223,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add GSL log(1+x) through the registry and numericScalar record. See [elementary functions](elementary.md).
 - Acceptance: central, small and near-boundary values; invalid domain and descriptors; missing initialization; IOC alarm/recovery; standalone Channel Access; Linux CI.
 - Local and Linux validation results are recorded in the pull request. Other elementary functions and other GSL modules remain open.
+
+## Phase 5 increment: uniform histogram
+
+- Add GSL uniform batch histogram counts through the native registry and numericArray record. See [histograms](histograms.md).
+- Acceptance: bin boundaries, out-of-range rejection, invalid parameters, count/output capacity, unrepresentable edges, workspace reuse, IOC alarm/recovery, standalone Channel Access and Linux CI.
+- Local and Linux validation results are recorded in the pull request. Weighted, nonuniform and streaming histograms remain open.

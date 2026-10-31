@@ -9,6 +9,10 @@ record(numericArray, "$(P)arrayMedian") {
 record(numericArray, "$(P)arrayGaussian") {
     field(INP, "$(P)arrayInput NPP NMS") field(OP, "gaussian_smooth") field(NMAX, "8") field(OMAX, "8") field(WIN, "3")
 }
+record(numericArray, "$(P)arrayHistogram") {
+    field(INP, "$(P)arrayInput NPP NMS") field(OP, "histogram_uniform") field(NMAX, "8") field(OMAX, "4")
+    field(HMIN, "0") field(HMAX, "1") field(NBIN, "4")
+}
 record(numericArray, "$(P)arrayRealFft") {
     field(INP, "$(P)arrayInput NPP NMS") field(OP, "fft_real_radix2_forward") field(NMAX, "8") field(OMAX, "16")
 }
