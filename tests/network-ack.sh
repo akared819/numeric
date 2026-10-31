@@ -14,6 +14,7 @@ export EPICS_CA_REPEATER_PORT=25065
 log_file=$(mktemp "${TMPDIR:-/tmp}/numeric-network-ioc.XXXXXX")
 test_dir=$(mktemp -d "${TMPDIR:-/tmp}/numeric-crash-test.XXXXXX")
 export NUMERIC_TEST_CRASH_MARKER="$test_dir/entered"
+export NUMERIC_TEST_AFTER_MARKER="$test_dir/updated"
 ioc_pid=
 client_pid=
 start_ioc() {
@@ -53,19 +54,22 @@ if ! "./bin/$1/numericCrashTest" prepare; then
     cat "$log_file" >&2
     exit 1
 fi
-# Arm the test-only delay, then wait until the IOC enters it before killing it.
-touch "$NUMERIC_TEST_CRASH_MARKER.arm"
-"./bin/$1/numericCrashTest" inflight >"$test_dir/client.log" 2>&1 &
+crash_during() {
+arch=$1
+mode=$2
+marker=$3
+touch "$marker.arm"
+"./bin/$arch/numericCrashTest" "$mode" >"$test_dir/client.log" 2>&1 &
 client_pid=$!
 attempt=0
-while [ ! -f "$NUMERIC_TEST_CRASH_MARKER" ] && [ "$attempt" -lt 100 ]; do
+while [ ! -f "$marker" ] && [ "$attempt" -lt 100 ]; do
     if ! kill -0 "$client_pid" 2>/dev/null || ! kill -0 "$ioc_pid" 2>/dev/null; then
         break
     fi
     sleep 0.1
     attempt=$((attempt + 1))
 done
-if [ ! -f "$NUMERIC_TEST_CRASH_MARKER" ]; then
+if [ ! -f "$marker" ]; then
     cat "$test_dir/client.log" "$log_file" >&2
     echo "IOC did not enter the controlled delay" >&2
     exit 1
@@ -80,9 +84,18 @@ if ! wait "$client_pid"; then
 fi
 client_pid=
 cat "$test_dir/client.log"
-rm -f "$NUMERIC_TEST_CRASH_MARKER.arm"
+rm -f "$marker.arm"
+}
+# Both markers are written by the IOC at the respective processing boundary.
+crash_during "$1" inflight "$NUMERIC_TEST_CRASH_MARKER"
 start_ioc "$1"
 if ! "./bin/$1/numericCrashTest" recovery; then
+    cat "$log_file" >&2
+    exit 1
+fi
+crash_during "$1" post-inflight "$NUMERIC_TEST_AFTER_MARKER"
+start_ioc "$1"
+if ! "./bin/$1/numericCrashTest" post-recovery; then
     cat "$log_file" >&2
     exit 1
 fi

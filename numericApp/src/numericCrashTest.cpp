@@ -5,8 +5,8 @@
 #include <cstring>
 
 int main(int argc, char** argv) {
-    if (argc != 2 || (std::strcmp(argv[1], "prepare") && std::strcmp(argv[1], "inflight") && std::strcmp(argv[1], "recovery"))) {
-        std::fprintf(stderr, "Usage: numericCrashTest prepare|inflight|recovery\n");
+    if (argc != 2 || (std::strcmp(argv[1], "prepare") && std::strcmp(argv[1], "inflight") && std::strcmp(argv[1], "recovery") && std::strcmp(argv[1], "post-inflight") && std::strcmp(argv[1], "post-recovery"))) {
+        std::fprintf(stderr, "Usage: numericCrashTest prepare|inflight|recovery|post-inflight|post-recovery\n");
         return 2;
     }
     if (!std::strcmp(argv[1], "prepare")) {
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
         const auto result = numeric::sendAcknowledged("numericNet:event", "numericNet:stats", event, 1, 10.0);
         testOk(result.status == numeric::SendStatus::Uncertain,
                "sender reports uncertainty when IOC dies during event processing");
-    } else {
+    } else if (!std::strcmp(argv[1], "recovery")) {
         testPlan(2);
         const numeric::Event stale{202, 1, numeric::EventKind::Sample, 10};
         const auto old = numeric::sendAcknowledged("restart:event", "restart:acknowledgedStats", stale, 1, 1.0);
@@ -35,6 +35,22 @@ int main(int argc, char** argv) {
         const auto result = numeric::sendAcknowledged("restart:event", "restart:acknowledgedStats", fresh, 1, 5.0);
         testOk(result.status == numeric::SendStatus::Acknowledged && result.statistics[6] == 1 && result.statistics[0] == 11,
                "fresh session starts from empty statistics after crash");
+    } else if (!std::strcmp(argv[1], "post-inflight")) {
+        testPlan(1);
+        const numeric::Event event{901, 0, numeric::EventKind::Sample, 7};
+        const auto result = numeric::sendAcknowledged("numericPost:event", "numericPost:stats", event, 1, 10.0);
+        testOk(result.status == numeric::SendStatus::Uncertain,
+               "sender reports uncertainty when IOC dies after numerical update");
+    } else {
+        testPlan(2);
+        const numeric::Event event{901, 0, numeric::EventKind::Sample, 7};
+        const auto replay = numeric::sendAcknowledged("numericPost:event", "numericPost:stats", event, 1, 5.0);
+        testOk(replay.status == numeric::SendStatus::Acknowledged && replay.statistics[6] == 1 && replay.statistics[0] == 7,
+               "old first event is accepted again after state is lost");
+        const numeric::Event fresh{204, 0, numeric::EventKind::Sample, 13};
+        const auto result = numeric::sendAcknowledged("restart:event", "restart:acknowledgedStats", fresh, 1, 5.0);
+        testOk(result.status == numeric::SendStatus::Acknowledged && result.statistics[6] == 1 && result.statistics[0] == 13,
+               "a distinct fresh session starts empty after the crash");
     }
     return testDone();
 }
