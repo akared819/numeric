@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <dbAccess.h>
 #include <dbUnitTest.h>
+#include <aSubRecord.h>
 #include <cadef.h>
 #include <epicsEvent.h>
+#include <registryFunction.h>
 #include <testMain.h>
 #include <atomic>
 
@@ -13,11 +15,21 @@ static void completed(event_handler_args args) {
     result->status.store(args.status);
     epicsEventSignal(result->done);
 }
+static long calculate(aSubRecord* record) {
+    record->neva = 0;
+    if (!record->a || record->nea != 4) return -1;
+    const double* input = static_cast<const double*>(record->a);
+    if (static_cast<unsigned>(input[1]) % 2) return -1;
+    *static_cast<double*>(record->vala) = input[3];
+    record->neva = 1;
+    return 0;
+}
 MAIN(numericBaseNotifyTest) {
     testPlan(1);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
+    registryFunctionAdd("baseNotifyCalculate", reinterpret_cast<REGISTRYFUNCTION>(calculate));
     testdbReadDatabase("numericApp/src/numericBaseNotifyTest.db", nullptr, nullptr);
     testIocInitOk();
     bool success = true;
