@@ -217,3 +217,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add GSL real polynomial evaluation through a two-input registry operation and aSub interface. See [polynomials](polynomials.md).
 - Acceptance: analytical and constant polynomials, invalid dimensions and values, GSL integer length bound, overflow, IOC alarm/recovery, standalone Channel Access and Linux CI.
 - Local and Linux validation results are recorded in the pull request. Polynomial roots and other polynomial functions remain open.
+
+## Phase 5 increment: elementary log1p
+
+- Add GSL log(1+x) through the registry and numericScalar record. See [elementary functions](elementary.md).
+- Acceptance: central, small and near-boundary values; invalid domain and descriptors; missing initialization; IOC alarm/recovery; standalone Channel Access; Linux CI.
+- Local and Linux validation results are recorded in the pull request. Other elementary functions and other GSL modules remain open.

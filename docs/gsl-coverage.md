@@ -17,6 +17,6 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | Random numbers and probability distributions | Tested | `normal_cdf` (standard normal lower-tail probability) through the native registry and numericScalar record; random-number generators and other distributions are not evaluated. |
 | Least squares and fitting | Not evaluated | |
 | Roots, optimization, and ODE solvers | Not evaluated | |
-| Other GSL modules | Not evaluated | |
+| Other GSL modules | Tested | `log1p` from the elementary mathematical functions through the native registry and numericScalar record; other functions and modules are not evaluated. |
 
 Available statuses: Not evaluated, Planned, Implemented, Tested, Unsupported (with reason). Tested requires recorded successful verification.

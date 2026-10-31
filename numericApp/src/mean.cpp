@@ -124,6 +124,7 @@ void registerSpecialFunctions(Registry&);
 void registerLinearAlgebra(Registry&);
 void registerProbability(Registry&);
 void registerPolynomial(Registry&);
+void registerElementary(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
     r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
@@ -158,6 +159,7 @@ void registerBuiltins(Registry& r) {
     registerLinearAlgebra(r);
     registerProbability(r);
     registerPolynomial(r);
+    registerElementary(r);
     registerWindowOperations(r);
 }
 }

@@ -16,3 +16,6 @@ record(numericScalar, "$(P)erf") {
 record(numericScalar, "$(P)normalCdf") {
     field(INP, "$(P)erfInput NPP NMS") field(OP, "normal_cdf") field(NMAX, "1")
 }
+record(numericScalar, "$(P)logOnePlus") {
+    field(INP, "$(P)erfInput NPP NMS") field(OP, "log1p") field(NMAX, "1")
+}

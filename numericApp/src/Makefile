@@ -10,6 +10,7 @@ numeric_SRCS += special.cpp
 numeric_SRCS += linear.cpp
 numeric_SRCS += probability.cpp
 numeric_SRCS += polynomial.cpp
+numeric_SRCS += elementary.cpp
 numeric_SRCS += fft.cpp
 numeric_SRCS += window.cpp
 numeric_SRCS += runningMean.cpp
