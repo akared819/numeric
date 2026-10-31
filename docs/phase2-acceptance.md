@@ -1,6 +1,6 @@
 # Phase 2 acceptance: general-purpose module
 
-**Status: complete for the general-purpose module and bundled example IOC.** This scope does not include integration into a particular facility's IOC or a guarantee of durable delivery. The criteria below are met by the implementation and tests; Linux CI passed on the implementation commit in [PR #18](https://github.com/akared819/numeric/pull/18). The boundaries listed below remain in effect.
+**Status: pending.** The general-purpose module and bundled example IOC meet the functional criteria below, but the final Linux validation reproduced an intermittent crash in the Base-only same-process CA put-notify control test. The preceding implementation commit passed Linux CI; the later failure is recorded in [PR #18](https://github.com/akared819/numeric/pull/18). The crash needs investigation before closing the phase. This scope does not include integration into a particular facility's IOC or a guarantee of durable delivery.
 
 | Criterion | Evidence |
 | --- | --- |
@@ -16,5 +16,6 @@
 - The acknowledged interface is a cooperative, single-producer protocol for a running session. It is not a durable queue, does not arbitrate independent producers, and does not guarantee every PV update is processed. The caller must preserve event identity, wait for acknowledgment and use a new session after a restart.
 - IOC state and acknowledgments are lost on restart. A connection interruption after receipt, a timeout, and two controlled crash points are tested; arbitrary network partitions, every possible failure timing and durable recovery are not covered. A facility must define its own restart detection and reconciliation procedure.
 - The IOC integrator must confirm that all GSL users in the process agree on a non-terminating error-handler policy. Numeric cannot prevent another component from replacing it. The documented upstream GSL workspace allocation-failure caveat remains.
+- A Base-only test has intermittently crashed in EPICS Base 7.0.10 notification handling during rapid same-process CA put-callback and context teardown. The crash's cause is unconfirmed. Numeric's sender and local regression helper use plain puts, but numeric cannot protect an IOC from other components using the affected Base path. The control remains a required Linux CI test while this is investigated.
 - The module supports DOUBLE inputs in these interfaces. Input links and output links have the acquisition, truncation and atomicity limits documented with each operation. No hard real-time guarantee is made.
 - FFT, filtering, moving statistics, dedicated record types and broader GSL coverage are subsequent work; they are not implied by closing this Phase 2 scope.

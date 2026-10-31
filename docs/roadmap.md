@@ -1,6 +1,6 @@
 # Roadmap and acceptance
 
-Phase 2 is complete for the general-purpose module and bundled example IOC; its acceptance evidence and remaining limits are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
+Phase 2 acceptance for the general-purpose module and bundled example IOC is pending investigation of an intermittent Base-only same-process CA notification crash. Evidence and remaining limits are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
 
 ## This increment: Phase 0 and minimal Phase 1
 
