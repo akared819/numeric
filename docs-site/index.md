@@ -21,7 +21,15 @@ From the repository root, start the bundled example IOC. Replace the Base path w
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericExample examples/ioc/st.cmd
 ```
 
-Keep that terminal open. In a second terminal, put the EPICS Base `bin/<arch>` directory on `PATH` so `caput` and `caget` are available. For the streaming example, also add numeric's `bin/<arch>` directory. The IOC creates PVs with the `demo:` prefix.
+Keep that terminal open. In a second terminal, change to the numeric repository root and add both EPICS Base and numeric tools to `PATH` (replace the Base path):
+
+```sh
+NUMERIC_EPICS_BASE=/absolute/path/to/base-7.0.10
+NUMERIC_ARCH=$("$NUMERIC_EPICS_BASE/startup/EpicsHostArch")
+export PATH="$NUMERIC_EPICS_BASE/bin/$NUMERIC_ARCH:$PWD/bin/$NUMERIC_ARCH:$PATH"
+```
+
+The IOC creates PVs with the `demo:` prefix.
 
 Send three samples, process the mean record, and read the result:
 

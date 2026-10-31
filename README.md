@@ -64,7 +64,7 @@ To exercise the example IOC and the separate-process Channel Access tests, from 
 
 These tests use loopback ports 25064–25066, which must be available. The [Linux](.github/workflows/ci.yml) and [macOS](.github/workflows/macos.yml) workflows show the full native and IOC test suites. Linux additionally runs the GDB notification stress checks. Build products install under `include/`, `lib/<arch>/`, `dbd/`, and `bin/<arch>/`; `make clean` removes build products.
 
-For a step-by-step tour of the example databases, see the [examples and usage guide](docs-site/index.md).
+For a step-by-step tour of the example databases, see the [examples and usage guide](docs-site/index.md). To publish that guide with GitHub Pages, set the repository’s Pages source to **GitHub Actions**; the documentation workflow deploys changes from `main`.
 
 ## Try the example IOC
 
