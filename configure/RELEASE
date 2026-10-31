@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Set EPICS_BASE in configure/RELEASE.local.
+EPICS_BASE = /path/to/epics-base
+-include $(TOP)/configure/RELEASE.local

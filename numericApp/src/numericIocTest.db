@@ -1,0 +1,29 @@
+record(waveform, "input") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+record(ao, "result") { field(PREC, "3") }
+record(aSub, "calc") {
+    field(SNAM, "numericMean")
+    field(FTA, "DOUBLE")
+    field(NOA, "8")
+    field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "result PP NMS")
+}
+
+record(aSub, "bad") {
+    field(SNAM, "numericMean")
+    field(FTA, "LONG")
+    field(FTVA, "DOUBLE")
+}
+
+record(aSub, "small") {
+    field(SNAM, "numericMean")
+    field(FTA, "DOUBLE")
+    field(NOA, "2")
+    field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+}

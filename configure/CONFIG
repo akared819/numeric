@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+include $(TOP)/configure/RELEASE
+CONFIG = $(EPICS_BASE)/configure
+include $(CONFIG)/CONFIG
+INSTALL_LOCATION = $(TOP)
+include $(TOP)/configure/CONFIG_SITE
