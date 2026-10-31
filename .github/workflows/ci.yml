@@ -21,7 +21,9 @@ jobs:
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           gdb --batch --return-child-result -ex run -ex 'thread apply all bt full' --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBaseNotifyTest
-          gdb --batch --return-child-result -ex run -ex 'thread apply all bt full' --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericLocalAckRegression
+          for attempt in 1 2 3 4 5; do
+            gdb --batch --return-child-result -ex run -ex 'thread apply all bt full' --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericLocalAckRegression
+          done
           for attempt in 1 2 3 4 5; do
             ./tests/network-ack.sh $(./base-7.0.10/startup/EpicsHostArch)
           done
