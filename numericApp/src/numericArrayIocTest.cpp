@@ -3,6 +3,7 @@
 #include <dbUnitTest.h>
 #include <dbEvent.h>
 #include <dbScan.h>
+#include <epicsExit.h>
 #include <iocsh.h>
 #include <testMain.h>
 #include <cmath>
@@ -14,6 +15,12 @@ static bool matches(const char* name, const double* expected, long length) {
     if (dbNameToAddr(name, &addr) || dbGetField(&addr, DBR_DOUBLE, actual, nullptr, &count, nullptr) || count != length) return false;
     for (long i = 0; i < count; ++i) if (!std::isfinite(actual[i]) || std::fabs(actual[i] - expected[i]) > 1e-12) return false;
     return true;
+}
+static int finish() {
+    testIocShutdownOk(); testdbCleanup();
+    const int status = testDone();
+    epicsExitCallAtExits();
+    return status;
 }
 MAIN(numericArrayIocTest) {
     const bool noInit = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
@@ -32,7 +39,7 @@ MAIN(numericArrayIocTest) {
     if (noInit) {
         testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
         testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 0u);
-        testMonitorDestroy(monitor); testIocShutdownOk(); testdbCleanup(); return testDone();
+        testMonitorDestroy(monitor); return finish();
     }
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
@@ -112,5 +119,5 @@ MAIN(numericArrayIocTest) {
     testdbPutFieldOk("arrayRealFft.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arrayRealFft.NORD", DBF_ULONG, 16u);
     testOk(matches("arrayRealFft.VAL", fullSpectrum, 16), "full-capacity input is accepted without truncation");
-    testMonitorDestroy(monitor); testIocShutdownOk(); testdbCleanup(); return testDone();
+    testMonitorDestroy(monitor); return finish();
 }

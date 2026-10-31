@@ -3,6 +3,7 @@
 #include <dbUnitTest.h>
 #include <dbEvent.h>
 #include <dbScan.h>
+#include <epicsExit.h>
 #include <iocsh.h>
 #include <testMain.h>
 #include <cstdlib>
@@ -13,6 +14,12 @@ static bool valueNear(const char* name, double expected) {
     DBADDR addr; double actual = 0; long count = 1;
     return !dbNameToAddr(name, &addr) && !dbGetField(&addr, DBR_DOUBLE, &actual, nullptr, &count, nullptr) &&
            count == 1 && std::fabs(actual - expected) < 1e-12;
+}
+static int finish() {
+    testIocShutdownOk(); testdbCleanup();
+    const int status = testDone();
+    epicsExitCallAtExits();
+    return status;
 }
 MAIN(numericScalarIocTest) {
     const bool noInit = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
@@ -32,7 +39,7 @@ MAIN(numericScalarIocTest) {
         testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
         testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 0u);
         testMonitorDestroy(valueMonitor);
-        testIocShutdownOk(); testdbCleanup(); return testDone();
+        return finish();
     }
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
@@ -89,5 +96,5 @@ MAIN(numericScalarIocTest) {
     testdbPutFieldOk("scalarInvalidMax.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarInvalidMax.SEVR", DBF_STRING, "INVALID");
     testMonitorDestroy(valueMonitor);
-    testIocShutdownOk(); testdbCleanup(); return testDone();
+    return finish();
 }
