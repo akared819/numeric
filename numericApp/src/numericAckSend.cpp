@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -29,7 +30,7 @@ int main(int argc, char** argv) {
     } else { std::cerr << "Invalid event kind or arguments\n"; return 1; }
     const numeric::SendResult result = numeric::sendAcknowledged(argv[1], argv[2], event, 3, 5.0);
     if (result.status == numeric::SendStatus::Acknowledged) {
-        std::cout << "Acknowledged session " << event.session << " sequence " << event.sequence << "\nStatistics:";
+        std::cout << "Acknowledged session " << event.session << " sequence " << event.sequence << "\nStatistics:" << std::setprecision(17);
         for (double value : result.statistics) std::cout << ' ' << value;
         std::cout << '\n'; return 0;
     }
