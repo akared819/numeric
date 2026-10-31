@@ -6,6 +6,9 @@ record(numericScalar, "$(P)scalarMean") {
 record(numericScalar, "$(P)scalarVariance") {
     field(INP, "$(P)scalarInput NPP NMS") field(OP, "variance") field(NMAX, "4")
 }
+record(numericScalar, "$(P)vectorNorm") {
+    field(INP, "$(P)scalarInput NPP NMS") field(OP, "vector_norm") field(NMAX, "4")
+}
 record(ao, "$(P)erfInput") { field(VAL, "1") }
 record(numericScalar, "$(P)erf") {
     field(INP, "$(P)erfInput NPP NMS") field(OP, "erf") field(NMAX, "1")

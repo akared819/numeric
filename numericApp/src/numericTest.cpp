@@ -3,6 +3,7 @@
 #include "numericAck.h"
 #include <gsl/gsl_errno.h>
 #include <atomic>
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <limits>
@@ -40,6 +41,8 @@ int main() {
     Input erfIn{&erfInput, 1, 1, 1, Type::Float64, Shape::Scalar};
     Output erfOut{&erfValue, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(erfOp->execute(&erfIn, 1, &erfOut, 1).status == Status::NotInitialized && erfOut.count == 0 && erfValue == 42);
+    auto uninitializedNorm = r.create("vector_norm");
+    CHECK(uninitializedNorm && uninitializedNorm->execute(&in, 1, &out, 1).status == Status::NotInitialized && out.count == 0);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(erfOp->execute(&erfIn, 1, &erfOut, 1).status == Status::Ok && erfOut.count == 1 && erfValue == 0);
     erfInput = 1; CHECK(erfOp->execute(&erfIn, 1, &erfOut, 1).status == Status::Ok && std::fabs(erfValue - 0.8427007929497149) < 1e-14);
@@ -53,6 +56,35 @@ int main() {
     erfIn.shape = Shape::Scalar; erfIn.stride = 0; CHECK(erfOp->execute(&erfIn, 1, &erfOut, 1).status == Status::InvalidArgument);
     erfIn.stride = 1; erfOut.capacity = 0; CHECK(erfOp->execute(&erfIn, 1, &erfOut, 1).status == Status::InvalidArgument);
     erfOut.capacity = 1; erfOp->reset(); for (int i=0; i<100; ++i) CHECK(erfOp->execute(&erfIn, 1, &erfOut, 1).status == Status::Ok);
+    auto norm = r.create("vector_norm");
+    CHECK(norm && r.find("vector_norm") && r.find("vector_norm")->inputs[0].shape == Shape::Array);
+    double vectorData[] = {3,99,-4}; double normValue = -1;
+    Input vectorIn{vectorData, 2, 3, 2, Type::Float64, Shape::Array};
+    Output normOut{&normValue, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::Ok && normValue == 5 && normOut.count == 1);
+    vectorIn.count = 1; CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::Ok && normValue == 3);
+    vectorData[0] = 0; CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::Ok && normValue == 0);
+    vectorData[0] = 3; vectorIn.count = 2; vectorIn.capacity = 2;
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument && normOut.count == 0);
+    vectorIn.capacity = 3; vectorIn.stride = 0; CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorIn.stride = static_cast<std::size_t>(INT_MAX); vectorIn.capacity = std::numeric_limits<std::size_t>::max();
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorIn.stride = 1; vectorIn.count = static_cast<std::size_t>(INT_MAX) + 1;
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorIn.stride = 2; vectorIn.capacity = 3; vectorIn.count = 0; CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorIn.count = 1; vectorIn.shape = Shape::Scalar; CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorIn.shape = Shape::Array; normOut.capacity = 0; CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    normOut.capacity = 1;
+    vectorIn.count = 2; vectorData[0] = std::numeric_limits<double>::quiet_NaN(); CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorData[0] = std::numeric_limits<double>::infinity(); CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::InvalidArgument);
+    vectorData[0] = 1e200; vectorData[2] = 1e200;
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::Ok && std::fabs(normValue / 1e200 - std::sqrt(2.0)) < 1e-14);
+    vectorData[0] = vectorData[2] = 1e-200;
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::Ok && std::fabs(normValue / 1e-200 - std::sqrt(2.0)) < 1e-14);
+    vectorData[0] = vectorData[2] = std::numeric_limits<double>::max(); double previousNorm = normValue;
+    CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::NumericalError && normOut.count == 0 && normValue == previousNorm);
+    vectorData[0] = 3; vectorData[2] = 4; norm->reset();
+    for (int i=0; i<100; ++i) CHECK(norm->execute(&vectorIn, 1, &normOut, 1).status == Status::Ok && normValue == 5);
     CHECK(op->execute(&in, 1, &out, 1).status == Status::Ok && out.count == 1 && std::fabs(result - 3) < 1e-12);
     auto minmax = r.create("minmax");
     double extrema[] = {99, 99};

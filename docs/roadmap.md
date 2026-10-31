@@ -199,3 +199,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add GSL `erf` through the native registry and extend `numericScalar` to compatible scalar-input operations. See [special functions](special-functions.md) and the [Phase 5 plan](phase5-plan.md).
 - Acceptance: analytical positive, negative, zero and large-input results; invalid values and descriptors; missing initialization; IOC alarm and recovery; standalone Channel Access example; Linux CI.
 - Local and Linux validation results are recorded in the pull request. Other special functions and the other unevaluated coverage categories remain open.
+
+## Phase 5 increment: real vector norm
+
+- Add GSL BLAS Euclidean norm through the registry and existing numericScalar record. See [linear algebra](linear-algebra.md).
+- Acceptance: known, zero, large and small vectors; stride and buffer validation; overflow and non-finite rejection; IOC alarm and recovery; standalone Channel Access example; Linux CI.
+- Local and Linux validation results are recorded in the pull request. Matrix operations and other linear algebra functions remain open.

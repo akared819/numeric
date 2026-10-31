@@ -11,7 +11,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | Histograms | Not evaluated | |
 | Interpolation | Not evaluated | |
 | Numerical differentiation and integration | Not evaluated | |
-| Linear algebra | Not evaluated | |
+| Linear algebra | Tested | `vector_norm` (real Euclidean vector norm) through the native registry and numericScalar record; matrix operations and other BLAS functions are not evaluated. |
 | Special functions | Tested | `erf` through the native registry and numericScalar record; other special functions are not evaluated. |
 | Polynomials | Not evaluated | |
 | Random numbers and probability distributions | Not evaluated | |

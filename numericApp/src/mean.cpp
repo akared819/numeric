@@ -121,6 +121,7 @@ void registerRunningStatistics(Registry&);
 void registerRunningStats(Registry&);
 void registerFft(Registry&);
 void registerSpecialFunctions(Registry&);
+void registerLinearAlgebra(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
     r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
@@ -152,6 +153,7 @@ void registerBuiltins(Registry& r) {
     registerRunningStats(r);
     registerFft(r);
     registerSpecialFunctions(r);
+    registerLinearAlgebra(r);
     registerWindowOperations(r);
 }
 }

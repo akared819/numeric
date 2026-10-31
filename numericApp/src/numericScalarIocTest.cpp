@@ -41,12 +41,17 @@ MAIN(numericScalarIocTest) {
         testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("erf.SEVR", DBF_STRING, "INVALID");
         testdbGetFieldEqual("erf.NORD", DBF_ULONG, 0u);
+        testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "INVALID");
         testMonitorDestroy(valueMonitor);
         return finish();
     }
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
+    testOk(valueNear("vectorNorm.VAL", std::sqrt(30.0)), "vector norm is computed through numericScalar");
+    testdbGetFieldEqual("vectorNorm.NORD", DBF_ULONG, 4u);
     testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("erf.NORD", DBF_ULONG, 1u);
     testOk(valueNear("erf.VAL", 0.8427007929497149), "scalar special function computes erf(1)");
@@ -84,6 +89,9 @@ MAIN(numericScalarIocTest) {
     testOk(valueNear("scalarVariance.VAL", 5.0/3.0), "invalid input preserves previous variance");
     double invalid[] = {std::numeric_limits<double>::quiet_NaN(), 1};
     testdbPutArrFieldOk("scalarInput", DBF_DOUBLE, 2, invalid);
+    testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("vectorNorm.VAL", std::sqrt(30.0)), "invalid vector preserves previous norm");
     testdbPutFieldOk("scalarMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 0u);
@@ -96,6 +104,8 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbPutArrFieldOk("scalarInput", DBF_DOUBLE, 4, values);
+    testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("scalarMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
