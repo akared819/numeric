@@ -28,6 +28,9 @@ PROD_HOST += numericIocTest
 numericIocTest_SRCS += numericIocTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
 numericIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericAckCaTest
-numericAckCaTest_SRCS += numericAckCaTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
+numericAckCaTest_SRCS += numericAckCaTest.cpp numericAckClient.cpp numericIocTest_registerRecordDeviceDriver.cpp
 numericAckCaTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
+PROD_HOST += numericAckSend
+numericAckSend_SRCS += numericAckSend.cpp numericAckClient.cpp
+numericAckSend_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES

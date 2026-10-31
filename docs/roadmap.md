@@ -47,11 +47,17 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Added batch sample standard deviation and population variance and standard deviation; grouped running mean, variance, standard deviation, RMS, minimum, maximum and sample count, with aSub interfaces and native/IOC tests.
 - [x] macOS arm64: build, native core test, 154 IOC assertions and 22 uninitialized assertions passed using GSL 2.8 and the supplied EPICS Base development checkout.
 - [x] Linux CI passed for this increment (PR #6).
-- [ ] Validate and review the acknowledged streaming protocol described below.
+- [x] Validate and review the acknowledged streaming protocol described below (PR #7).
 - [ ] Complete remaining Phase 2 acceptance decisions, including the IOC-wide GSL policy for each deployment.
 
 ## Phase 2 increment: acknowledged streaming
 
 - Added a single-producer protocol with an atomic event waveform, sequence checks, duplicate replay, ordered reset and explicit acknowledgment; see [streaming transport](streaming-transport.md).
 - [x] Local macOS arm64 build, native core tests, 194 IOC assertions, 25 missing-initialization assertions and eight loopback Channel Access assertions passed using GSL 2.8 and the supplied EPICS Base checkout. The CA test destroys and recreates client channels; it does not simulate network partition or IOC crash.
-- [ ] Verify Linux CI and review the protocol. The producer must obey one-in-flight backpressure; the IOC cannot enforce exclusive access to the waveform slot. Durable recovery, arbitrary concurrent producers, and server-enforced buffering are not implemented.
+- [x] Linux CI passed and PR #7 was reviewed and merged. The producer must obey one-in-flight backpressure; the IOC cannot enforce exclusive access to the waveform slot. Durable recovery, arbitrary concurrent producers, and server-enforced buffering are not implemented.
+
+## Phase 2 increment: native acknowledged sender
+
+- Added `numericAckSend` with bounded retries, acknowledgment checks and explicit uncertain outcomes; see [streaming transport](streaming-transport.md).
+- [x] macOS arm64 build and native tests, 194 initialized and 25 uninitialized IOC assertions, and 14 loopback CA assertions passed with GSL 2.8 and the supplied EPICS Base development checkout.
+- [ ] Verify Linux CI for this increment. Fault injection for a response lost after IOC processing, deployment-specific integration, and IOC-wide GSL handler agreement remain outstanding. The sender does not implement durable recovery or multiple-producer arbitration.

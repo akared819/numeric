@@ -6,6 +6,7 @@
 #include <epicsEvent.h>
 #include <iocsh.h>
 #include <testMain.h>
+#include "numericAckClient.h"
 
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 struct PutResult { epicsEventId done; int status; };
@@ -29,7 +30,7 @@ static bool getDouble(chid channel, double& value) {
     return ca_get(DBR_DOUBLE, channel, &value) == ECA_NORMAL && ca_pend_io(5.0) == ECA_NORMAL;
 }
 MAIN(numericAckCaTest) {
-    testPlan(8);
+    testPlan(14);
     epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST", "NO");
     epicsEnvSet("EPICS_CA_ADDR_LIST", "127.0.0.1");
     epicsEnvSet("EPICS_CAS_INTF_ADDR_LIST", "127.0.0.1");
@@ -41,7 +42,7 @@ MAIN(numericAckCaTest) {
     testIocInitOk();
     putResult.done = epicsEventCreate(epicsEventEmpty);
     if (!putResult.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL) {
-        testFail("CA context creation"); testSkip(7, "CA context unavailable");
+        testFail("CA context creation"); testSkip(13, "CA context unavailable");
         if (putResult.done) epicsEventDestroy(putResult.done);
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
@@ -80,5 +81,23 @@ MAIN(numericAckCaTest) {
     testOk(reset, "ordered reset is acknowledged");
     ca_context_destroy();
     epicsEventDestroy(putResult.done);
+    numeric::Event clientEvent{57, 3, numeric::EventKind::Sample, 9};
+    auto sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[0] == 9 && sent.statistics[6] == 1,
+           "sender confirms sample and statistics");
+    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[6] == 1, "sender replay does not double count");
+    clientEvent.sequence = 5;
+    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    testOk(sent.status == numeric::SendStatus::Rejected, "sender reports rejected sequence gap");
+    clientEvent.sequence = 4; clientEvent.kind = numeric::EventKind::Reset; clientEvent.value = 0;
+    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    testOk(sent.status == numeric::SendStatus::Acknowledged && sent.statistics[6] == 0, "sender confirms reset");
+    clientEvent.session = 0;
+    sent = numeric::sendAcknowledged("ackEvent", "ackStats", clientEvent, 2, 5.0);
+    testOk(sent.status == numeric::SendStatus::InvalidArgument, "sender rejects invalid session locally");
+    clientEvent.session = 57;
+    sent = numeric::sendAcknowledged("numeric:missing:event", "numeric:missing:record", clientEvent, 1, 0.2);
+    testOk(sent.status == numeric::SendStatus::Uncertain, "sender reports unavailable IOC as uncertain");
     testIocShutdownOk(); testdbCleanup(); return testDone();
 }
