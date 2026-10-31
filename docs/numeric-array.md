@@ -1,0 +1,20 @@
+# numericArray record
+
+`numericArray` is a synchronous EPICS record for a small, explicit set of native registry operations that produce DOUBLE arrays. Its nonconstant INP link must report DOUBLE type. Configure OP at database load time; it cannot be changed at runtime. The supported operation names and parameter fields are:
+
+| OP | Input and output | Parameters |
+| --- | --- | --- |
+| `moving_mean`, `moving_median` | Real array to same-length real array | WIN: odd window length |
+| `gaussian_smooth` | Real array to same-length real array | WIN and ALPH: window length and Gaussian alpha |
+| `fft_complex_radix2_forward`, `fft_complex_radix2_inverse` | Interleaved complex input to equal-length interleaved complex output | None |
+| `fft_real_radix2_forward` | Real input to full interleaved complex spectrum | None |
+
+WIN and ALPH are writable DOUBLE fields; changing them does not itself process the record. Their bounds, endpoint convention, FFT lengths, output representation and numerical behavior are specified in [window statistics](window-statistics.md) and [FFT](fft.md). The operation is evaluated against the current fields at processing time; a producer changing input and parameters must coordinate them. Other registry operations are rejected at initialization rather than being mapped to incompatible fields.
+
+NMAX is the maximum input count and OMAX the output capacity, each 1 through 1,048,576 doubles and fixed at database load. An extra input element detects truncation: an input longer than NMAX is rejected, while an exact NMAX-element input is accepted. OMAX must accommodate the complete result, including 2N elements for an N-sample real FFT. VAL is a read-only DOUBLE array. On success NIN is the number of input doubles used and NORD is the number of output doubles; on failure NIN becomes zero while VAL and NORD retain the last successful result. Check SEVR and STAT when consuming the value.
+
+Call `numericInitialize` before `iocInit`, after registering support. Processing fetches INP, validates the input and parameters, performs the operation, and copies the complete staged result to VAL only on success. Success clears UDF and posts value/log monitors; the timestamp is refreshed on every processing attempt. errors raise CALC/INVALID and post alarm changes without replacing the last result. The forward link runs after every attempt, including failures. Input updates do not automatically process the record. There is no output link: clients may monitor VAL or other records may use it as an input link. EPICS link acquisition and client delivery have their normal asynchronous semantics and are not acknowledged by this record.
+
+Each record owns an input buffer of NMAX+1 doubles, two OMAX-double buffers for staging and published output, and its own operation instance. The real FFT and window operations may additionally allocate reusable scratch or GSL workspace on first use or size changes during processing; see their operation guides. Resources are registered for process-exit cleanup. Dynamic database deletion/recreation in a running process is unsupported; per-record resources are not freed at IOC shutdown before process exit. No record shares a mutable computational workspace. Initialization failure, invalid configuration or allocation failure leaves the record unavailable; subsequent processing raises an invalid alarm.
+
+Include `numericSupport.dbd`, `numericScalarRecord.dbd` if used, and `numericArrayRecord.dbd` in the IOC application DBD and link `numericIoc` and `numeric`. [array.db](../examples/array.db) demonstrates moving statistics, Gaussian smoothing, a real FFT and a complex inverse. The standalone example loads it with prefix `demo:`. For example, write `demo:arrayInput`, process `demo:arrayMean`, then read `demo:arrayMean.VAL` and `demo:arrayMean.SEVR`.

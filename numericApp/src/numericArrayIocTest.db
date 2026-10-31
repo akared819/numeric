@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "arrayIntInput") { field(FTVL, "LONG") field(NELM, "8") }
+record(numericArray, "arraySmallInput") {
+    field(INP, "arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "4") field(OMAX, "8") field(WIN, "3")
+}
+record(numericArray, "arraySmallOutput") {
+    field(INP, "arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "8") field(OMAX, "4") field(WIN, "3")
+}
+record(numericArray, "arrayWrongType") {
+    field(INP, "arrayIntInput NPP NMS") field(OP, "moving_mean") field(NMAX, "8") field(OMAX, "8")
+}
+record(numericArray, "arrayInvalidOp") {
+    field(INP, "arrayInput NPP NMS") field(OP, "mean") field(NMAX, "8") field(OMAX, "8")
+}
+record(calc, "arrayProcessed") { field(INPA, "arrayProcessed.VAL NPP NMS") field(CALC, "A+1") }
+record(numericArray, "arrayForward") {
+    field(INP, "arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "8") field(OMAX, "8") field(FLNK, "arrayProcessed")
+}
