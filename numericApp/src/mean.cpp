@@ -11,7 +11,7 @@ public:
     explicit BatchStatistic(bool variance) : variance_(variance) {}
     Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
         if (out && no == 1) out[0].count = 0;
-        if (!in || !out || ni != 1 || no != 1) return {Status::InvalidArgument, "mean requires one input and one output"};
+        if (!in || !out || ni != 1 || no != 1) return {Status::InvalidArgument, "batch statistic requires one input and one output"};
         const Input& x = in[0]; Output& y = out[0];
         if (x.type != Type::Float64 || x.shape != Shape::Array || y.type != Type::Float64 || y.shape != Shape::Scalar ||
             !x.data || !y.data || x.count < (variance_ ? 2u : 1u) || !x.stride || !y.capacity ||
