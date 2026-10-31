@@ -30,6 +30,8 @@ jobs:
           make -j2
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftTest
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftIocTest
+          NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           ./tests/example-ioc.sh $(./base-7.0.10/startup/EpicsHostArch)

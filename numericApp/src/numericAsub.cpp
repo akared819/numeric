@@ -26,6 +26,7 @@ std::unique_ptr<numeric::Operation> populationVariance, populationStddev;
 std::unique_ptr<numeric::Operation> minmax;
 std::unique_ptr<numeric::Operation> covariance;
 std::unique_ptr<numeric::Operation> correlation;
+std::unique_ptr<numeric::Operation> fftForward, fftInverse;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -62,7 +63,9 @@ void setup() {
             auto minmaxOperation = registry.create("minmax");
             auto covarianceOperation = registry.create("covariance");
             auto correlationOperation = registry.create("correlation");
-            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation) throw std::bad_alloc();
+            auto fftForwardOperation = registry.create("fft_complex_radix2_forward");
+            auto fftInverseOperation = registry.create("fft_complex_radix2_inverse");
+            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation || !fftForwardOperation || !fftInverseOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
             stddev = std::move(stddevOperation);
@@ -71,6 +74,8 @@ void setup() {
             minmax = std::move(minmaxOperation);
             covariance = std::move(covarianceOperation);
             correlation = std::move(correlationOperation);
+            fftForward = std::move(fftForwardOperation);
+            fftInverse = std::move(fftInverseOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -82,6 +87,38 @@ void setupCall(const iocshArgBuf*) { setup(); }
 void registerSetup() { iocshRegister(&setupDef, setupCall); }
 }
 bool numericIocReady() { return ready.load(std::memory_order_acquire); }
+static long numericFft(aSubRecord* rec, bool inverse) {
+    if (!rec) return -1;
+    rec->neva = 0;
+    try {
+        if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE ||
+            rec->ftva != DBF_DOUBLE || !rec->a || !rec->vala ||
+            rec->inpa.type == CONSTANT || rec->nea >= rec->noa || rec->nea > rec->nova) throw 1;
+        if (rec->outa.type != CONSTANT) {
+            long capacity = 0;
+            if (dbGetLinkDBFtype(&rec->outa) != DBF_DOUBLE ||
+                dbGetNelements(&rec->outa, &capacity) || capacity < 0 ||
+                static_cast<std::size_t>(capacity) < rec->nea) throw 1;
+        }
+        double* scratch = static_cast<double*>(rec->a);
+        numeric::Input input{scratch, rec->nea, rec->noa, 1, numeric::Type::Float64, numeric::Shape::Array};
+        numeric::Output output{scratch, rec->noa, 0, numeric::Type::Float64, numeric::Shape::Array};
+        numeric::Operation* operation = inverse ? fftInverse.get() : fftForward.get();
+        if (operation->execute(&input, 1, &output, 1).status != numeric::Status::Ok) throw 1;
+        double* destination = static_cast<double*>(rec->vala);
+        for (std::size_t i = 0; i < output.count; ++i) destination[i] = scratch[i];
+        rec->neva = output.count;
+        rec->udf = FALSE;
+        return 0;
+    } catch (...) {
+        recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM);
+        return -1;
+    }
+}
+extern "C" long numericFftForward(aSubRecord* rec) { return numericFft(rec, false); }
+extern "C" long numericFftInverse(aSubRecord* rec) { return numericFft(rec, true); }
+epicsRegisterFunction(numericFftForward);
+epicsRegisterFunction(numericFftInverse);
 long numericBatch(aSubRecord* rec, int kind) {
     if (!rec) return -1;
     rec->neva = 0;
