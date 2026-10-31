@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)covariancePairsInput") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(ao, "$(P)covariancePairsResult") { field(PREC, "3") }
+record(aSub, "$(P)covariancePairs") {
+    field(SNAM, "numericCovariancePairs")
+    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)covariancePairsInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)covariancePairsResult PP NMS")
+}

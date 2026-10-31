@@ -103,3 +103,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: native numerical, stride, dimension and invalid-input tests; IOC tests for both inputs, truncation, alarms, recovery and the example database; Linux CI. Inputs are fetched separately and require producer coordination as documented in [batch statistics](asub-mean.md).
 - [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 260 initialized and 31 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
 - A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.
+
+## Phase 2 increment: paired waveform covariance
+
+- Add `numericCovariancePairs` for a single interleaved DOUBLE waveform, reusing the sample covariance operation through two strided views. It requires complete finite pairs, validates aSub capacity, and does not allocate or copy during calculation.
+- Acceptance: verify the existing core with two views of one buffer; IOC tests for normal, empty, odd, short, non-finite and full inputs, truncated aSub buffers, alarms, recovery and the example; Linux CI. The producer must publish complete paired updates and arrange processing as described in [batch statistics](asub-mean.md).
+- [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 303 initialized and 34 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
+- A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.

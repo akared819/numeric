@@ -7,3 +7,15 @@ record(aSub, "covSmallB") {
     field(SNAM, "numericCovariance") field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "example:covarianceX NPP NMS")
     field(FTB, "DOUBLE") field(NOB, "2") field(INPB, "example:covarianceY NPP NMS")
 }
+record(aSub, "covPairsSmall") {
+    field(SNAM, "numericCovariancePairs") field(FTA, "DOUBLE") field(NOA, "4")
+    field(INPA, "example:covariancePairsInput NPP NMS")
+}
+record(aSub, "covPairsBadInputType") {
+    field(SNAM, "numericCovariancePairs") field(FTA, "LONG") field(NOA, "9")
+    field(INPA, "example:covariancePairsInput NPP NMS")
+}
+record(aSub, "covPairsBadOutputType") {
+    field(SNAM, "numericCovariancePairs") field(FTA, "DOUBLE") field(NOA, "9")
+    field(INPA, "example:covariancePairsInput NPP NMS") field(FTVA, "LONG")
+}
