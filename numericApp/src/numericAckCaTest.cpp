@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#ifdef NUMERIC_CA_LOCAL_TEST
+#include <dbAccess.h>
+#include <dbUnitTest.h>
+#include <envDefs.h>
+#include <iocsh.h>
+extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
+#endif
 #include <cadef.h>
 #include <epicsEvent.h>
 #include <epicsUnitTest.h>
@@ -27,12 +34,31 @@ static bool connect(const char* name, chid& channel) {
 static bool getDouble(chid channel, double& value) {
     return ca_get(DBR_DOUBLE, channel, &value) == ECA_NORMAL && ca_pend_io(5.0) == ECA_NORMAL;
 }
+#ifdef NUMERIC_CA_LOCAL_TEST
+MAIN(numericLocalAckRegression) {
+#else
 MAIN(numericAckCaTest) {
+#endif
     testPlan(28);
+#ifdef NUMERIC_CA_LOCAL_TEST
+    epicsEnvSet("EPICS_CA_AUTO_ADDR_LIST", "NO");
+    epicsEnvSet("EPICS_CA_ADDR_LIST", "127.0.0.1");
+    epicsEnvSet("EPICS_CAS_INTF_ADDR_LIST", "127.0.0.1");
+    testdbPrepare();
+    testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
+    numericIocTest_registerRecordDeviceDriver(pdbbase);
+    testdbReadDatabase("numericApp/src/numericIocTest.db", nullptr, nullptr);
+    testdbReadDatabase("examples/acknowledged-stats.db", nullptr, "P=demo:");
+    iocshCmd("numericInitialize");
+    testIocInitOk();
+#endif
     putResult.done = epicsEventCreate(epicsEventEmpty);
     if (!putResult.done || ca_context_create(ca_enable_preemptive_callback) != ECA_NORMAL) {
         testFail("CA context creation"); testSkip(27, "CA context unavailable");
         if (putResult.done) epicsEventDestroy(putResult.done);
+#ifdef NUMERIC_CA_LOCAL_TEST
+        testIocShutdownOk(); testdbCleanup();
+#endif
         return testDone();
     }
     chid payload = nullptr, proc = nullptr, count = nullptr, session = nullptr, sequence = nullptr, status = nullptr;
@@ -154,5 +180,8 @@ MAIN(numericAckCaTest) {
     testOk(!numericParseSample("1e9999", parsed) && !numericParseSample("1e-9999", parsed),
            "sample parser rejects overflow and underflow to zero");
     testOk(!numericParseSample("nan", parsed) && !numericParseSample("1x", parsed), "sample parser rejects invalid input");
+#ifdef NUMERIC_CA_LOCAL_TEST
+    testIocShutdownOk(); testdbCleanup();
+#endif
     return testDone();
 }
