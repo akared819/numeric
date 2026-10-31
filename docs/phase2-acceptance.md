@@ -1,6 +1,6 @@
 # Phase 2 acceptance: general-purpose module
 
-The Phase 2 target is the reusable support module and the bundled example IOC. It does not include integration into a particular facility's IOC or a guarantee of durable delivery. The following acceptance criteria describe the completed scope and the evidence to check before closing the phase.
+**Status: complete for the general-purpose module and bundled example IOC.** This scope does not include integration into a particular facility's IOC or a guarantee of durable delivery. The criteria below are met by the implementation and tests; Linux CI passed on the implementation commit in [PR #18](https://github.com/akared819/numeric/pull/18). The boundaries listed below remain in effect.
 
 | Criterion | Evidence |
 | --- | --- |

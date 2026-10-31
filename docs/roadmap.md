@@ -1,6 +1,6 @@
 # Roadmap and acceptance
 
-The general-purpose Phase 2 target and its acceptance evidence are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
+Phase 2 is complete for the general-purpose module and bundled example IOC; its acceptance evidence and remaining limits are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
 
 ## This increment: Phase 0 and minimal Phase 1
 
@@ -15,7 +15,7 @@ Local verification: `make GSL_DIR=/tmp/numeric-gsl-install` and `./bin/darwin-aa
 
 ## Next work
 
-Complete Phase 1 by reviewing its data model, parameter schema, callback and error/lifetime contracts and process-wide GSL policy with IOC integrators. Review distribution obligations for the actual IOC and its dependencies. Phase 2 begins with the explicitly requested aSub mean prototype; the IOC-wide handler policy remains a documented integration review item. Phase 3 covers FFT and filtering; Phase 4 evaluates dedicated records; Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. None of those interfaces is implemented yet.
+Phase 3 covers FFT and filtering; Phase 4 evaluates dedicated records; Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies. None of the later-phase interfaces is implemented yet.
 
 ## Phase 2 increment: aSub mean prototype
 
@@ -131,4 +131,5 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 - Add a runnable `numericExample` IOC, startup script, and native CA smoke test for batch mean, paired covariance, acknowledged streaming and reset. The mean example reserves an extra input element so a full source waveform is accepted without ambiguous truncation.
 - [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 360 initialized and 40 uninitialized IOC assertions, 28 same-process and 47 separate-process CA assertions, the connection-interruption test, and two runs of the seven-assertion standalone example IOC test passed. Linux CI results are tracked in the pull request.
+- [x] Linux CI passed the implementation commit in PR #18, including the example IOC and repeated connection-interruption tests.
 - [Phase 2 acceptance](phase2-acceptance.md) records the general-purpose scope, checks and remaining deployment-specific limitations.
