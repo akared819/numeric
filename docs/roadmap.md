@@ -2,7 +2,7 @@
 
 Phase 2 is complete for the general-purpose module and bundled example IOC, with the unresolved intermittent EPICS Base notification crash and other limits accepted for that scope. Evidence and remaining limits are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
 
-Phase 3 is complete for the general-purpose batch interfaces and example IOC described in [Phase 3 acceptance](phase3-acceptance.md), subject to the stated boundaries and required Linux checks. Broader FFTs, streaming filters and unresolved EPICS Base behavior remain documented there.
+Phase 3 is complete for the general-purpose batch interfaces and example IOC described in [Phase 3 acceptance](phase3-acceptance.md), subject to the stated boundaries. Phase 4 is complete for the dedicated scalar and array record scope described in [Phase 4 acceptance](phase4-acceptance.md), subject to its documented limits and required Linux checks.
 
 ## This increment: Phase 0 and minimal Phase 1
 
@@ -17,7 +17,7 @@ Local verification: `make GSL_DIR=/tmp/numeric-gsl-install` and `./bin/darwin-aa
 
 ## Next work
 
-Phase 3 covers FFT and filtering; Phase 4 evaluates dedicated records; Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies. The first Phase 3 increment exposes complex radix-2 FFTs through the native core; an aSub waveform interface is also provided; other FFT variants and later-phase interfaces are not implemented yet.
+Phase 3 provides the documented FFT and batch window operations; Phase 4 provides the dedicated scalar and array records. Phase 5 expands GSL coverage; Phase 6 focuses on measured performance and portability. Solver callback and parameter contracts require further design before exposure. Each actual IOC deployment must review the process-wide GSL handler policy and distribution obligations for its dependencies.
 
 ## Phase 2 increment: aSub mean prototype
 
@@ -187,3 +187,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a dedicated `numericArray` record for the documented FFT and window operations, with read-only waveform output, per-record staging and workspace ownership. See [array record](numeric-array.md).
 - Acceptance: verify each supported operation, type and capacity validation, empty/non-finite input, output preservation, alarms, timestamps, forward links, monitors and write protection in IOC and separate-client tests; run Linux CI.
 - Local and Linux results are recorded in the pull request. Final Phase 4 acceptance and limitations remain to be reviewed.
+
+## Phase 4 increment: acceptance and exit cleanup
+
+- Exercise EPICS exit callbacks after the scalar and array IOC tests and document their precise lifecycle. [Phase 4 acceptance](phase4-acceptance.md) records the general-purpose scope, evidence and remaining limitations.
+- Acceptance: both record types, native and IOC validation, separate-client example and Linux CI pass; output/link, monitor, alarm, timestamp and resource behavior are documented.
+- Actual local and Linux results are recorded in the pull request. Additional operations, runtime database deletion and the EPICS Base notification crash remain outside the completed scope.

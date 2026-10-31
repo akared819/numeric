@@ -17,6 +17,10 @@ Omit `GSL_DIR` when headers and libraries are in standard compiler paths. For a 
 Run the IOC integration tests from the repository root after building:
 
 ```sh
+./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericScalarIocTest
+NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericScalarIocTest
+./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
+NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 ./tests/example-ioc.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
@@ -24,7 +28,7 @@ NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostAr
 ./tests/network-interruption.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ```
 
-The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). The [numericScalar](docs/numeric-scalar.md) and [numericArray](docs/numeric-array.md) records provide dedicated scalar-result and array-result interfaces. See [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). The [numericScalar](docs/numeric-scalar.md) and [numericArray](docs/numeric-array.md) records provide dedicated scalar-result and array-result interfaces. See [Phase 4 acceptance and limits](docs/phase4-acceptance.md), [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 ## Example IOC
 
