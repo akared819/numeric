@@ -24,7 +24,7 @@ NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostAr
 ./tests/network-interruption.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ```
 
-The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [complex radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). See [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 ## Example IOC
 
@@ -34,19 +34,25 @@ From the repository root after building, run the standalone example IOC:
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericExample examples/ioc/st.cmd
 ```
 
-The script loads mean, running statistics, paired covariance, and acknowledged streaming records under the `demo:` prefix. It calls `numericInitialize` before `iocInit`; check the [process-wide GSL policy](docs/architecture.md#gsl-setup-for-an-ioc) when combining this module with other GSL users. In another terminal, with EPICS Base tools on `PATH`, try:
+The script loads mean, running statistics, paired covariance, acknowledged streaming, FFT and window-statistics records under the `demo:` prefix. It calls `numericInitialize` before `iocInit`; check the [process-wide GSL policy](docs/architecture.md#gsl-setup-for-an-ioc) when combining this module with other GSL users. In another terminal, with EPICS Base tools on `PATH`, try:
 
 ```sh
 export PATH="$PWD/bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch):$PATH"
 caput -a demo:input 3 1 3 5
 caput demo:mean.PROC 1
 caget demo:result
+caput -a demo:realFftInput 4 1 0 0 0
+caput demo:realFftForward.PROC 1
+caget -a demo:realFftOutput
+caput -a demo:windowInput 5 1 1 99 1 1
+caput demo:movingMedian.PROC 1
+caget -a demo:movingMedianOutput
 numericAckSend demo:event demo:acknowledgedStats 71 0 sample 2
 numericAckSend demo:event demo:acknowledgedStats 71 1 sample 4
 numericAckSend demo:event demo:acknowledgedStats 71 2 reset
 ```
 
-The mean input link does not automatically process the record. For the streaming commands, the caller must follow the [single-producer acknowledgment protocol](docs/streaming-transport.md), including choosing a new session after an IOC restart. The example uses fixed `demo:` names; do not run another IOC with those names on the same CA network. Use `--headless` after the startup script to run without the interactive IOC shell. The startup script uses paths relative to the repository root.
+Input links do not automatically process the records. For the streaming commands, the caller must follow the [single-producer acknowledgment protocol](docs/streaming-transport.md), including choosing a new session after an IOC restart. The example uses fixed `demo:` names; do not run another IOC with those names on the same CA network. Use `--headless` after the startup script to run without the interactive IOC shell. The startup script uses paths relative to the repository root.
 
 The build also installs `numericAckSend`, a native Channel Access sender for the acknowledged streaming example. Its usage, retry behavior, and single-producer requirements are described in the [streaming transport guide](docs/streaming-transport.md#native-channel-access-sender).
 
