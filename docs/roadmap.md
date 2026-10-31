@@ -2,6 +2,8 @@
 
 Phase 2 is complete for the general-purpose module and bundled example IOC, with the unresolved intermittent EPICS Base notification crash and other limits accepted for that scope. Evidence and remaining limits are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
 
+Phase 3 is complete for the general-purpose batch interfaces and example IOC described in [Phase 3 acceptance](phase3-acceptance.md), subject to the stated boundaries and required Linux checks. Broader FFTs, streaming filters and unresolved EPICS Base behavior remain documented there.
+
 ## This increment: Phase 0 and minimal Phase 1
 
 - [x] EPICS module layout, configurable Base and GSL, native test application, Linux CI definition.
@@ -166,3 +168,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a GSL real-input forward transform with a full interleaved complex result through the registry and aSub, with per-instance scratch and an example database. See [FFT](fft.md).
 - Acceptance: native impulse, sine and cosine checks; complex-inverse round trips; length, buffer and numerical failure tests; IOC output preservation, capacity and recovery; Linux CI.
 - Actual local and Linux results are recorded in the pull request. Mixed-radix and direct real inverse FFTs remain future work.
+
+## Phase 3 increment: example IOC and acceptance
+
+- Load FFT and window examples in the standalone IOC and exercise them from a separate native Channel Access client. [Phase 3 acceptance](phase3-acceptance.md) records the general-purpose scope, evidence and remaining limits.
+- Acceptance: test real and complex FFTs, inverse reconstruction, moving mean, moving median and Gaussian smoothing through the example IOC; run the existing native, IOC and Linux CI regressions.
+- Local macOS arm64, GSL 2.8 and supplied EPICS Base checkout: build and example IOC tests passed (seven existing and six Phase 3 assertions). Final Linux results are tracked in the pull request.
+- Direct real inverse, mixed-radix FFT, window functions, streaming filters and the documented EPICS Base notification crash remain outside the completed batch scope.

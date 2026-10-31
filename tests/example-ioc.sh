@@ -24,3 +24,7 @@ if ! "./bin/$1/numericExampleTest"; then
     cat "$log_file" >&2
     exit 1
 fi
+if ! "./bin/$1/numericPhase3ExampleTest"; then
+    cat "$log_file" >&2
+    exit 1
+fi
