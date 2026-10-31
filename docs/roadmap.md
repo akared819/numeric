@@ -181,3 +181,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a registry-backed `numericScalar` record for compatible stateless DOUBLE array-to-scalar operations. See [scalar record](numeric-scalar.md) and the [Phase 4 plan](phase4-plan.md).
 - Acceptance: verify numerical results, link type/count validation, oversized data, missing initialization, alarms and recovery, monitor/forward-link behavior, resource lifetime, example IOC and Linux CI. `numericArray` and full Phase 4 acceptance remain subsequent work.
 - Local and Linux validation results are recorded in the PR.
+
+## Phase 4 increment: array record
+
+- Add a dedicated `numericArray` record for the documented FFT and window operations, with read-only waveform output, per-record staging and workspace ownership. See [array record](numeric-array.md).
+- Acceptance: verify each supported operation, type and capacity validation, empty/non-finite input, output preservation, alarms, timestamps, forward links, monitors and write protection in IOC and separate-client tests; run Linux CI.
+- Local and Linux results are recorded in the pull request. Final Phase 4 acceptance and limitations remain to be reviewed.

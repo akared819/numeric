@@ -24,7 +24,7 @@ NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostAr
 ./tests/network-interruption.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ```
 
-The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). The [numericScalar record](docs/numeric-scalar.md) provides a dedicated array-to-scalar interface. See [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). The [numericScalar](docs/numeric-scalar.md) and [numericArray](docs/numeric-array.md) records provide dedicated scalar-result and array-result interfaces. See [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 ## Example IOC
 
@@ -34,7 +34,7 @@ From the repository root after building, run the standalone example IOC:
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericExample examples/ioc/st.cmd
 ```
 
-The script loads mean, running statistics, paired covariance, acknowledged streaming, FFT, window-statistics and numericScalar records under the `demo:` prefix. It calls `numericInitialize` before `iocInit`; check the [process-wide GSL policy](docs/architecture.md#gsl-setup-for-an-ioc) when combining this module with other GSL users. In another terminal, with EPICS Base tools on `PATH`, try:
+The script loads mean, running statistics, paired covariance, acknowledged streaming, FFT, window-statistics, numericScalar and numericArray records under the `demo:` prefix. It calls `numericInitialize` before `iocInit`; check the [process-wide GSL policy](docs/architecture.md#gsl-setup-for-an-ioc) when combining this module with other GSL users. In another terminal, with EPICS Base tools on `PATH`, try:
 
 ```sh
 export PATH="$PWD/bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch):$PATH"
@@ -44,6 +44,9 @@ caget demo:result
 caput -a demo:scalarInput 4 1 2 3 4
 caput demo:scalarMean.PROC 1
 caget demo:scalarMean
+caput -a demo:arrayInput 5 1 2 3 4 5
+caput demo:arrayMean.PROC 1
+caget -a demo:arrayMean
 caput -a demo:realFftInput 4 1 0 0 0
 caput demo:realFftForward.PROC 1
 caget -a demo:realFftOutput
