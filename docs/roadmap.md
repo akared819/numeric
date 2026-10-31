@@ -160,3 +160,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a centered, value-padded moving median to the native registry and aSub waveform interface, reusing the per-instance GSL moving-statistics workspace. See [window statistics](window-statistics.md).
 - Acceptance: verify known medians, spike rejection, edge padding, in-place operation, validation, workspace reuse and cleanup, IOC alarms, output preservation and recovery; run Linux CI.
 - Local macOS arm64 and Linux results are recorded in the pull request. Other window statistics and endpoint modes remain future work.
+
+## Phase 3 increment: real-input radix-2 FFT
+
+- Add a GSL real-input forward transform with a full interleaved complex result through the registry and aSub, with per-instance scratch and an example database. See [FFT](fft.md).
+- Acceptance: native impulse, sine and cosine checks; complex-inverse round trips; length, buffer and numerical failure tests; IOC output preservation, capacity and recovery; Linux CI.
+- Actual local and Linux results are recorded in the pull request. Mixed-radix and direct real inverse FFTs remain future work.

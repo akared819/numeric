@@ -2,6 +2,8 @@
 #include "numeric.h"
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_fft_complex.h>
+#include <gsl/gsl_fft_real.h>
+#include <gsl/gsl_fft_halfcomplex.h>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -46,8 +48,40 @@ protected:
         return {Status::Ok, "ok"};
     }
 };
+class RealFft : public Operation {
+    std::vector<double> scratch_;
+public:
+    void reset() override { std::vector<double>().swap(scratch_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out) for (std::size_t i = 0; i < no; ++i) out[i].count = 0;
+        if (!in || !out || ni != 1 || no != 1)
+            return {Status::InvalidArgument, "real FFT requires one input and one output"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count ||
+            x.stride != 1 || x.count > x.capacity || y.type != Type::Float64 ||
+            y.shape != Shape::Array || !y.data || (x.count & (x.count - 1)) ||
+            x.count > std::numeric_limits<std::size_t>::max() / (2 * sizeof(double)) ||
+            y.capacity < x.count * 2)
+            return {Status::InvalidArgument, "invalid real FFT buffer, length, stride or capacity"};
+        for (std::size_t i = 0; i < x.count; ++i)
+            if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "real FFT input must be finite"};
+        try { scratch_.resize(x.count); }
+        catch (...) { return {Status::NumericalError, "real FFT scratch allocation failed"}; }
+        for (std::size_t i = 0; i < x.count; ++i) scratch_[i] = x.data[i];
+        if (gsl_fft_real_radix2_transform(scratch_.data(), 1, x.count) != GSL_SUCCESS)
+            return {Status::NumericalError, "GSL real FFT failed"};
+        for (double value : scratch_)
+            if (!std::isfinite(value)) return {Status::NumericalError, "non-finite real FFT result"};
+        if (gsl_fft_halfcomplex_radix2_unpack(scratch_.data(), y.data, 1, x.count) != GSL_SUCCESS)
+            return {Status::NumericalError, "GSL FFT unpack failed"};
+        y.count = 2 * x.count;
+        return {Status::Ok, "ok"};
+    }
+};
 std::unique_ptr<Operation> forward() { return std::unique_ptr<Operation>(new ComplexFft(false)); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
+std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
@@ -57,5 +91,8 @@ void registerFft(Registry& r) {
     r.add(Metadata{"fft_complex_radix2_inverse", "fft", arrays, arrays,
                    "interleaved complex DOUBLE; power-of-two complex length; inverse scales by 1/N", false,
                    "per-instance object; no workspace", "invalid buffers or non-finite data/result"}, &inverse);
+    r.add(Metadata{"fft_real_radix2_forward", "fft", arrays, arrays,
+                   "real DOUBLE input; power-of-two length; full interleaved complex output", false,
+                   "per-instance reusable scratch; reset frees it", "invalid buffers or allocation or numerical failure"}, &realForward);
 }
 }

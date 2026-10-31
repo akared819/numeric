@@ -27,3 +27,23 @@ record(aSub, "constantInput") {
     field(SNAM, "numericFftForward") field(FTA, "DOUBLE") field(NOA, "9")
     field(FTVA, "DOUBLE") field(NOVA, "8")
 }
+record(aSub, "realSmallInput") {
+    field(SNAM, "numericRealFftForward") field(FTA, "DOUBLE") field(NOA, "4") field(INPA, "realFftInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "8") field(FTVB, "DOUBLE") field(NOVB, "8")
+}
+record(aSub, "realSmallOutput") {
+    field(SNAM, "numericRealFftForward") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "realFftInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "7") field(FTVB, "DOUBLE") field(NOVB, "8")
+}
+record(aSub, "realSmallScratch") {
+    field(SNAM, "numericRealFftForward") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "realFftInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "8") field(FTVB, "DOUBLE") field(NOVB, "7")
+}
+record(aSub, "realSmallLink") {
+    field(SNAM, "numericRealFftForward") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "realFftInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "8") field(OUTA, "smallDest PP NMS") field(FTVB, "DOUBLE") field(NOVB, "8")
+}
+record(aSub, "realScratchLink") {
+    field(SNAM, "numericRealFftForward") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "realFftInput NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "8") field(FTVB, "DOUBLE") field(NOVB, "8") field(OUTB, "smallDest PP NMS")
+}
