@@ -7,12 +7,15 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  pages: read
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-24.04
+    outputs:
+      pages_enabled: ${{ steps.pages_status.outputs.enabled }}
     steps:
       - uses: actions/checkout@v4
       - name: Build documentation
@@ -32,13 +35,40 @@ jobs:
           name: documentation-preview
           path: ./_site
           if-no-files-found: error
-      - name: Upload Pages artifact
+      - name: Check Pages publishing source
+        id: pages_status
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=$(curl -sS -o "$RUNNER_TEMP/pages-status.json" -w '%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages")
+          case "$status" in
+            200)
+              if [ "$(jq -r '.build_type' "$RUNNER_TEMP/pages-status.json")" = workflow ]; then
+                echo 'enabled=true' >> "$GITHUB_OUTPUT"
+              else
+                echo 'Pages is not configured for GitHub Actions; skipping deployment.'
+                echo 'enabled=false' >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+            404)
+              echo 'Pages is not enabled; skipping deployment.'
+              echo 'enabled=false' >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Could not inspect Pages configuration (HTTP $status)." >&2
+              exit 1
+              ;;
+          esac
+      - name: Upload Pages artifact
+        if: steps.pages_status.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v4
         with:
           path: ./_site
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: needs.build.outputs.pages_enabled == 'true'
     needs: build
     runs-on: ubuntu-24.04
     permissions:
