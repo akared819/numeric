@@ -4,7 +4,7 @@ Native C++ scientific computing foundation for EPICS, using external GNU Scienti
 
 ## Build and test
 
-Target: Linux with EPICS Base 7.0.10, GSL 2.7.1 (Ubuntu 24.04), GNU C++ (C++11 or newer), GNU make and Perl. CI is configured to build those versions; other configurations are not yet claimed as supported. Build EPICS Base first ([EPICS installation instructions](https://docs.epics-controls.org/projects/base/en/b7.0.10/README.html)) and install GSL with headers and libraries. For Debian/Ubuntu, `sudo apt-get install build-essential libreadline-dev libgsl-dev` supplies build dependencies; the distribution GSL version may differ.
+Target: Linux with EPICS Base 7.0.10, GSL 2.7.1 (Ubuntu 24.04), GNU C++ (C++14 or newer), GNU make and Perl. CI is configured to build those versions; other configurations are not yet claimed as supported. Build EPICS Base first ([EPICS installation instructions](https://docs.epics-controls.org/projects/base/en/b7.0.10/README.html)) and install GSL with headers and libraries. For Debian/Ubuntu, `sudo apt-get install build-essential libreadline-dev libgsl-dev` supplies build dependencies; the distribution GSL version may differ.
 
 ```sh
 printf 'EPICS_BASE = /absolute/path/to/base-7.0.10\n' > configure/RELEASE.local
@@ -31,6 +31,8 @@ NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostAr
 The `numericIocTest` application loads `numericApp/src/numericIocTest.db`; the dedicated record tests load their own example and test databases. They use the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). The module also provides [radix-2 FFTs](docs/fft.md) and [moving mean, median and Gaussian smoothing](docs/window-statistics.md). The registry also provides the [error function](docs/special-functions.md), [vector norm](docs/linear-algebra.md), [standard normal CDF](docs/probability.md), [polynomial evaluation](docs/polynomials.md), [log1p](docs/elementary.md), [uniform histograms](docs/histograms.md), [linear interpolation](docs/interpolation.md), [straight-line fitting](docs/fitting.md), [polynomial integration](docs/integration.md), and [bracketed polynomial roots](docs/roots.md). The [numericScalar](docs/numeric-scalar.md) and [numericArray](docs/numeric-array.md) records provide dedicated scalar-result and array-result interfaces. See [Phase 5 acceptance](docs/phase5-acceptance.md), [Phase 4 acceptance and limits](docs/phase4-acceptance.md), [Phase 3 acceptance and limits](docs/phase3-acceptance.md), [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
 A native mean benchmark and its measurement boundaries are documented in [benchmarks](docs/benchmarks.md).
+
+The module requires a C++14-capable GCC or Clang toolchain. The CI workflows validate Linux (Ubuntu 24.04) and macOS arm64 using the clean EPICS Base 7.0.10 release and GSL; the macOS job runs native and IOC tests and the loopback example and network tests. The Linux-only GDB notification stress checks are not repeated on macOS.
 
 ## Example IOC
 
