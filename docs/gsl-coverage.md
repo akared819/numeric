@@ -10,7 +10,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | FFT and wavelets | Tested | Complex radix-2 forward/inverse and real-input radix-2 forward transforms through the native registry, aSub waveform interface and numericArray record. Other FFTs and wavelets are not evaluated. |
 | Histograms | Tested | `histogram_uniform` batch counts through the native registry and numericArray record; weighted, streaming and nonuniform histograms are not evaluated. |
 | Interpolation | Tested | `interp_linear` through the native registry and aSub; other interpolation functions are not evaluated. |
-| Numerical differentiation and integration | Not evaluated | |
+| Numerical differentiation and integration | Tested | `polynomial_integral` uses GSL fixed Gauss–Legendre quadrature through the native registry and aSub; differentiation and other integration methods are not evaluated. |
 | Linear algebra | Tested | `vector_norm` (real Euclidean vector norm) through the native registry and numericScalar record; matrix operations and other BLAS functions are not evaluated. |
 | Special functions | Tested | `erf` through the native registry and numericScalar record; other special functions are not evaluated. |
 | Polynomials | Tested | `polynomial_eval` for real coefficients and a real evaluation point through the native registry and aSub; other polynomial functions are not evaluated. |

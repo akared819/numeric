@@ -1,0 +1,9 @@
+# Polynomial integration
+
+`polynomial_integral` integrates a real polynomial with coefficients in ascending power order between two finite bounds. It uses GSL's [fixed 32-point Gauss–Legendre rule](https://www.gnu.org/software/gsl/doc/html/integration.html#gauss-legendre-integration) and GSL polynomial evaluation. It accepts one through 64 coefficients (degree at most 63), so the quadrature is exact in exact arithmetic; floating-point roundoff and ill-conditioned polynomials can still cause error. The routine does not provide an error estimate. Bounds may be equal or reversed. Input bounds must also have finite sum and difference. The adapter rejects non-finite coefficients, inputs, intermediate polynomial evaluations and results. The previous output is preserved on failure.
+
+A native operation instance owns a reusable quadrature table, allocated on first execution and freed on reset or destruction. A single instance must not execute concurrently. Each evaluation makes a bounded number of function calls; allocation on first execution means this is not a hard-real-time interface.
+
+`numericPolynomialIntegral` accepts the coefficient waveform on DOUBLE input A, lower and upper scalar DOUBLE inputs B and C, and emits a scalar DOUBLE in VALA. Reserve one extra element in NOA beyond the largest coefficient waveform to detect truncation; scalar links and the output target must be DOUBLE with scalar capacity. `examples/integration.db` supports four coefficients. Inputs are fetched separately and producers must coordinate them. Explicit record processing is required. Failure raises CALC/INVALID and preserves the previous output. IOC initialization and the GSL error-handler policy are described in [architecture](architecture.md).
+
+This bounded polynomial example does not expose arbitrary callbacks, adaptive integration, an error estimate, or differentiation.
