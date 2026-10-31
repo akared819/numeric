@@ -62,7 +62,9 @@ protected:
     }
 };
 class BatchCovariance : public Operation {
+    bool correlation_;
 public:
+    explicit BatchCovariance(bool correlation) : correlation_(correlation) {}
     void reset() override {}
 protected:
     Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
@@ -78,16 +80,36 @@ protected:
                 (x.count - 1) > (std::numeric_limits<std::size_t>::max() - 1) / x.stride ||
                 (x.count - 1) * x.stride >= x.capacity)
                 return {Status::InvalidArgument, "invalid input buffer, stride or capacity"};
-            for (std::size_t i = 0; i < x.count; ++i)
-                if (!std::isfinite(x.data[i * x.stride])) return {Status::InvalidArgument, "inputs must be finite"};
+            bool varying = false;
+            double minimum = x.data[0], maximum = x.data[0], largest = 0;
+            for (std::size_t i = 0; i < x.count; ++i) {
+                const double value = x.data[i * x.stride];
+                if (!std::isfinite(value)) return {Status::InvalidArgument, "inputs must be finite"};
+                if (correlation_) {
+                    if (value != x.data[0]) varying = true;
+                    if (value < minimum) minimum = value;
+                    if (value > maximum) maximum = value;
+                    if (std::fabs(value) > largest) largest = std::fabs(value);
+                }
+            }
+            if (correlation_ && !varying) return {Status::InvalidArgument, "correlation requires non-constant inputs"};
+            if (correlation_) {
+                // Bound intermediate sums on platforms where GSL uses double-sized long double.
+                const double high = std::sqrt(std::numeric_limits<double>::max() / static_cast<double>(x.count)) / 4;
+                const double low = 4 * std::sqrt(std::numeric_limits<double>::min());
+                if (largest > high || maximum - minimum < low)
+                    return {Status::NumericalError, "correlation input range exceeds conservative floating-point limits"};
+            }
         }
-        const double value = gsl_stats_covariance(in[0].data, in[0].stride, in[1].data, in[1].stride, in[0].count);
-        if (!std::isfinite(value)) return {Status::NumericalError, "non-finite covariance"};
+        const double value = correlation_ ? gsl_stats_correlation(in[0].data, in[0].stride, in[1].data, in[1].stride, in[0].count)
+                                          : gsl_stats_covariance(in[0].data, in[0].stride, in[1].data, in[1].stride, in[0].count);
+        if (!std::isfinite(value)) return {Status::NumericalError, "non-finite result"};
         *out[0].data = value; out[0].count = 1;
         return {Status::Ok, "ok"};
     }
 };
-std::unique_ptr<Operation> makeCovariance() { return std::unique_ptr<Operation>(new BatchCovariance()); }
+std::unique_ptr<Operation> makeCovariance() { return std::unique_ptr<Operation>(new BatchCovariance(false)); }
+std::unique_ptr<Operation> makeCorrelation() { return std::unique_ptr<Operation>(new BatchCovariance(true)); }
 std::unique_ptr<Operation> makeMinmax() { return std::unique_ptr<Operation>(new BatchMinmax()); }
 std::unique_ptr<Operation> makeMean() { return std::unique_ptr<Operation>(new BatchStatistic(0)); }
 std::unique_ptr<Operation> makeVariance() { return std::unique_ptr<Operation>(new BatchStatistic(1)); }
@@ -98,6 +120,9 @@ std::unique_ptr<Operation> makePopulationStddev() { return std::unique_ptr<Opera
 void registerRunningStatistics(Registry&);
 void registerRunningStats(Registry&);
 void registerBuiltins(Registry& r) {
+    r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+                   {{Type::Float64, Shape::Scalar}}, "Pearson correlation; at least two paired non-constant samples", false,
+                   "per-instance object; no workspace", "invalid or constant input; unsupported numeric range or non-finite result"}, &makeCorrelation);
     r.add(Metadata{"covariance", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample covariance (N-1); at least two paired samples", false,
                    "per-instance object; no workspace", "invalid input or non-finite result"}, &makeCovariance);

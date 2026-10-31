@@ -104,6 +104,50 @@ int main() {
     double huge[] = {std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()};
     Input hugePair[] = {{huge, 2, 2, 1, Type::Float64, Shape::Array}, {huge, 2, 2, 1, Type::Float64, Shape::Array}};
     CHECK(covariance->execute(hugePair, 2, &covOut, 1).status == Status::NumericalError && covOut.count == 0 && covResult == 4);
+    auto correlation = r.create("correlation");
+    CHECK(correlation && r.find("correlation") && r.find("correlation")->inputs.size() == 2);
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::Ok && std::fabs(covResult - 1) < 1e-12);
+    packed[1].capacity = 5;
+    CHECK(correlation->execute(packed, 2, &covOut, 1).status == Status::Ok && std::fabs(covResult - 1) < 1e-12);
+    ydata[0] = 6; ydata[2] = 2;
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::Ok && std::fabs(covResult + 1) < 1e-12);
+    ydata[0] = ydata[1] = ydata[2] = 2;
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::InvalidArgument && covOut.count == 0 && std::fabs(covResult + 1) < 1e-12);
+    double constantX[] = {3, 3, 3};
+    Input constantPair[] = {{constantX, 3, 3, 1, Type::Float64, Shape::Array},
+                            {data, 3, 5, 2, Type::Float64, Shape::Array}};
+    CHECK(correlation->execute(constantPair, 2, &covOut, 1).status == Status::InvalidArgument);
+    double extremeCorrelation[] = {1e200, -1e200};
+    Input extremePair[] = {{extremeCorrelation, 2, 2, 1, Type::Float64, Shape::Array},
+                           {extremeCorrelation, 2, 2, 1, Type::Float64, Shape::Array}};
+    CHECK(correlation->execute(extremePair, 2, &covOut, 1).status == Status::NumericalError && covOut.count == 0);
+    double tinyCorrelation[] = {1e-200, -1e-200};
+    Input tinyPair[] = {{tinyCorrelation, 2, 2, 1, Type::Float64, Shape::Array},
+                        {tinyCorrelation, 2, 2, 1, Type::Float64, Shape::Array}};
+    CHECK(correlation->execute(tinyPair, 2, &covOut, 1).status == Status::NumericalError && covOut.count == 0);
+    Input unsafeSecond[] = {{data, 2, 5, 2, Type::Float64, Shape::Array},
+                            {extremeCorrelation, 2, 2, 1, Type::Float64, Shape::Array}};
+    CHECK(correlation->execute(unsafeSecond, 2, &covOut, 1).status == Status::NumericalError);
+    unsafeSecond[1].data = tinyCorrelation;
+    CHECK(correlation->execute(unsafeSecond, 2, &covOut, 1).status == Status::NumericalError);
+    double scaledCorrelation[] = {1e150, -1e150};
+    Input scaledPair[] = {{scaledCorrelation, 2, 2, 1, Type::Float64, Shape::Array},
+                          {scaledCorrelation, 2, 2, 1, Type::Float64, Shape::Array}};
+    CHECK(correlation->execute(scaledPair, 2, &covOut, 1).status == Status::Ok && std::fabs(covResult - 1) < 1e-12);
+    scaledCorrelation[0] = 1e-150; scaledCorrelation[1] = -1e-150;
+    CHECK(correlation->execute(scaledPair, 2, &covOut, 1).status == Status::Ok && std::fabs(covResult - 1) < 1e-12);
+    ydata[0] = 2; ydata[1] = 4; ydata[2] = 6; pair[1].count = 2;
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::InvalidArgument);
+    pair[1].count = 3; pair[0].count = pair[1].count = 1;
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::InvalidArgument);
+    pair[0].count = pair[1].count = 0;
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::InvalidArgument);
+    pair[0].count = pair[1].count = 3; ydata[1] = std::numeric_limits<double>::infinity();
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::InvalidArgument);
+    ydata[1] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::InvalidArgument);
+    ydata[1] = 4;
+    CHECK(correlation->execute(pair, 2, &covOut, 1).status == Status::Ok && std::fabs(covResult - 1) < 1e-12);
     auto variance = r.create("variance");
     auto popVar = r.create("population_variance"); auto popSd = r.create("population_stddev");
     CHECK(popVar && popSd);

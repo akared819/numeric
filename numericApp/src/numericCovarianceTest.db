@@ -19,3 +19,15 @@ record(aSub, "covPairsBadOutputType") {
     field(SNAM, "numericCovariancePairs") field(FTA, "DOUBLE") field(NOA, "9")
     field(INPA, "example:covariancePairsInput NPP NMS") field(FTVA, "LONG")
 }
+record(aSub, "corrSmallA") {
+    field(SNAM, "numericCorrelation") field(FTA, "DOUBLE") field(NOA, "2") field(INPA, "example:correlationX NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "9") field(INPB, "example:correlationY NPP NMS")
+}
+record(aSub, "corrSmallB") {
+    field(SNAM, "numericCorrelation") field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "example:correlationX NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "2") field(INPB, "example:correlationY NPP NMS")
+}
+record(aSub, "corrPairsSmall") {
+    field(SNAM, "numericCorrelationPairs") field(FTA, "DOUBLE") field(NOA, "4")
+    field(INPA, "example:correlationPairsInput NPP NMS")
+}
