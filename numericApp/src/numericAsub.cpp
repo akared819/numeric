@@ -20,6 +20,7 @@
 namespace {
 std::once_flag setupOnce;
 std::unique_ptr<numeric::Operation> mean;
+std::unique_ptr<numeric::Operation> variance;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -49,8 +50,10 @@ void setup() {
             numeric::Registry registry;
             numeric::registerBuiltins(registry);
             auto operation = registry.create("mean");
-            if (!operation) throw std::bad_alloc();
+            auto varianceOperation = registry.create("variance");
+            if (!operation || !varianceOperation) throw std::bad_alloc();
             mean = std::move(operation);
+            variance = std::move(varianceOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -61,7 +64,7 @@ const iocshFuncDef setupDef = {"numericInitialize", 0, nullptr};
 void setupCall(const iocshArgBuf*) { setup(); }
 void registerSetup() { iocshRegister(&setupDef, setupCall); }
 }
-extern "C" long numericMean(aSubRecord* rec) {
+long numericBatch(aSubRecord* rec, bool useVariance) {
     if (!rec) return -1;
     rec->neva = 0;
     if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE ||
@@ -70,11 +73,12 @@ extern "C" long numericMean(aSubRecord* rec) {
         recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
     }
     try {
+        numeric::Operation* operation = useVariance ? variance.get() : mean.get();
         numeric::Input input{static_cast<const double*>(rec->a), rec->nea, rec->noa, 1,
                              numeric::Type::Float64, numeric::Shape::Array};
         numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0,
                                numeric::Type::Float64, numeric::Shape::Scalar};
-        const numeric::Result result = mean->execute(&input, 1, &output, 1);
+        const numeric::Result result = operation->execute(&input, 1, &output, 1);
         if (result.status != numeric::Status::Ok) {
             recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
         }
@@ -85,7 +89,10 @@ extern "C" long numericMean(aSubRecord* rec) {
         recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
     }
 }
+extern "C" long numericMean(aSubRecord* rec) { return numericBatch(rec, false); }
+extern "C" long numericVariance(aSubRecord* rec) { return numericBatch(rec, true); }
 epicsRegisterFunction(numericMean);
+epicsRegisterFunction(numericVariance);
 extern "C" long numericRunningMean(aSubRecord* rec) {
     if (!rec) return -1;
     rec->neva = rec->nevb = 0;
