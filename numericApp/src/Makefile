@@ -7,6 +7,7 @@ INC += numericAck.h
 numeric_SRCS += numeric.cpp
 numeric_SRCS += mean.cpp
 numeric_SRCS += special.cpp
+numeric_SRCS += linear.cpp
 numeric_SRCS += fft.cpp
 numeric_SRCS += window.cpp
 numeric_SRCS += runningMean.cpp

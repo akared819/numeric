@@ -5,7 +5,7 @@
 #include <cmath>
 
 int main() {
-    testPlan(9);
+    testPlan(10);
     chid input = nullptr, process = nullptr, result = nullptr;
     chid pairs = nullptr, pairsProcess = nullptr, pairsResult = nullptr;
     const bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL &&
@@ -48,6 +48,18 @@ int main() {
         ca_array_get(DBR_DOUBLE, 1, scalarResult, &scalarValue) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL && scalarValue == 2.5;
     testOk(scalarComputed, "example dedicated scalar record computes mean over Channel Access");
+    chid normProcess = nullptr, normResult = nullptr;
+    const bool normConnected = scalarConnected &&
+        ca_create_channel("demo:vectorNorm.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &normProcess) == ECA_NORMAL &&
+        ca_create_channel("demo:vectorNorm.VAL", nullptr, nullptr, CA_PRIORITY_DEFAULT, &normResult) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    double normValue = 0;
+    const bool normComputed = normConnected && ca_put(DBR_LONG, normProcess, &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 1, normResult, &normValue) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
+        std::fabs(normValue - std::sqrt(30.0)) < 1e-12;
+    testOk(normComputed, "example record computes vector norm over Channel Access");
+    if (normProcess) ca_clear_channel(normProcess);
+    if (normResult) ca_clear_channel(normResult);
     chid erfProcess = nullptr, erfResult = nullptr;
     const bool erfConnected = connected &&
         ca_create_channel("demo:erf.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &erfProcess) == ECA_NORMAL &&

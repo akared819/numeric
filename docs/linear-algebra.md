@@ -1,0 +1,9 @@
+# Linear algebra
+
+`vector_norm` computes the Euclidean 2-norm of one nonempty finite DOUBLE vector using GSL's [`gsl_blas_dnrm2`](https://www.gnu.org/software/gsl/doc/html/blas.html). The native input descriptor is an array: count is the number of samples, stride is the positive step in doubles, and capacity is the number of addressable doubles including gaps. The output is one DOUBLE scalar. For example, `[3, -4]` has norm 5; a zero vector has norm 0.
+
+Both count and stride must fit in `int`. For more than one sample, count multiplied by stride must also fit in `int`; this conservative bound protects the integer indexing used by GSL's bundled CBLAS implementation. Buffer extent and multiplication are checked before reading. Empty arrays, invalid descriptors, invalid lengths/stride/capacity, NaN and infinities are rejected. A non-finite computed result is a numerical error. In either case output count is zero and the previous output value remains unchanged. Floating-point rounding and underflow are not separately diagnosed. The caller owns the input and output buffers and must keep them valid throughout execution.
+
+The adapter uses a stack-only GSL vector view; it owns no workspace and allocates nothing during execution. Initialize the non-terminating GSL error policy before use, as described in [architecture](architecture.md#gsl-setup-for-an-ioc). This operation does not require a numerical library beyond the existing GSL and its CBLAS dependency.
+
+The [numericScalar record](numeric-scalar.md) exposes OP `vector_norm` for a DOUBLE waveform. [scalar.db](../examples/scalar.db) supplies `demo:vectorNorm` linked to `demo:scalarInput`. After writing the waveform, explicitly process the record and inspect VAL and SEVR. Input updates do not automatically trigger processing, and invalid input preserves the previous VAL while setting CALC/INVALID and clearing NORD.
