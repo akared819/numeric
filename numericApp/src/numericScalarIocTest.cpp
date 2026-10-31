@@ -88,7 +88,7 @@ MAIN(numericScalarIocTest) {
     const bool hasTimestamp = scalarRecord->time.secPastEpoch != 0;
     dbScanUnlock(scalarRecord);
     testOk(hasTimestamp, "successful processing sets a timestamp");
-    testMonitorSync(valueMonitor);
+    testMonitorWait(valueMonitor);
     testOk(testMonitorCount(valueMonitor, 1) > 0, "successful calculation posts a value monitor");
     testdbPutFieldOk("scalarVariance.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarVariance.NORD", DBF_ULONG, 4u);
@@ -107,7 +107,7 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 0u);
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
-    testMonitorSync(valueMonitor);
+    testMonitorWait(valueMonitor);
     testOk(testMonitorCount(valueMonitor, 1) > 0, "invalid calculation posts an alarm monitor");
     testdbPutArrFieldOk("scalarInput", DBF_DOUBLE, 0, values);
     testdbPutFieldOk("scalarMean.PROC", DBF_LONG, 1);
