@@ -27,16 +27,18 @@ bool token(double x, bool nonzero) {
 extern "C" long numericAcknowledgedStats(aSubRecord* rec) {
     if (!rec) return -1;
     rec->neva = rec->nevb = rec->nevc = rec->nevd = rec->neve = 0;
-    rec->nevf = rec->nevg = rec->nevh = rec->nevi = 0;
+    rec->nevf = rec->nevg = rec->nevh = rec->nevi = rec->nevj = rec->nevk = 0;
+    rec->nevl = 0;
     try {
         if (!numericIocReady() || rec->fta != DBF_DOUBLE || !rec->a || rec->noa < 5 || rec->nea != 4 ||
             rec->ftva != DBF_DOUBLE || rec->ftvb != DBF_DOUBLE || rec->ftvc != DBF_DOUBLE ||
             rec->ftvd != DBF_DOUBLE || rec->ftve != DBF_DOUBLE || rec->ftvf != DBF_DOUBLE ||
             rec->ftvg != DBF_DOUBLE || rec->ftvh != DBF_DOUBLE || rec->ftvi != DBF_DOUBLE ||
+            rec->ftvj != DBF_DOUBLE || rec->ftvk != DBF_DOUBLE ||
             !rec->vala || !rec->valb || !rec->valc || !rec->vald || !rec->vale || !rec->valf ||
-            !rec->valg || !rec->valh || !rec->vali || rec->nova < 1 || rec->novb < 1 ||
+            !rec->valg || !rec->valh || !rec->vali || !rec->valj || !rec->valk || rec->nova < 1 || rec->novb < 1 ||
             rec->novc < 1 || rec->novd < 1 || rec->nove < 1 || rec->novf < 1 || rec->novg < 1 ||
-            rec->novh < 1 || rec->novi < 1) throw 1;
+            rec->novh < 1 || rec->novi < 1 || rec->novj < 1 || rec->novk < 1) throw 1;
         const double* payload = static_cast<const double*>(rec->a);
         if (!token(payload[0], true) || !token(payload[1], false) ||
             (payload[2] != 0 && payload[2] != 1) || !std::isfinite(payload[3])) throw 1;
@@ -61,8 +63,21 @@ extern "C" long numericAcknowledgedStats(aSubRecord* rec) {
         for (std::size_t i = 0; i < 7; ++i) *static_cast<double*>(values[i]) = acknowledgment.statistics[i];
         *static_cast<double*>(values[7]) = static_cast<double>(acknowledgment.event.session);
         *static_cast<double*>(values[8]) = static_cast<double>(acknowledgment.event.sequence);
+        *static_cast<double*>(rec->valj) = acknowledgment.event.kind == numeric::EventKind::Sample ? 0.0 : 1.0;
+        *static_cast<double*>(rec->valk) = acknowledgment.event.value;
+        // VAL L is optional for existing databases. When configured as a DOUBLE
+        // array, one CA get reads the full response under the record lock.
+        if (rec->ftvl == DBF_DOUBLE && rec->novl >= 11 && rec->vall) {
+            double* snapshot = static_cast<double*>(rec->vall);
+            for (std::size_t i = 0; i < 7; ++i) snapshot[i] = acknowledgment.statistics[i];
+            snapshot[7] = static_cast<double>(acknowledgment.event.session);
+            snapshot[8] = static_cast<double>(acknowledgment.event.sequence);
+            snapshot[9] = acknowledgment.event.kind == numeric::EventKind::Sample ? 0.0 : 1.0;
+            snapshot[10] = acknowledgment.event.value;
+            rec->nevl = 11;
+        }
         rec->neva = rec->nevb = rec->nevc = rec->nevd = rec->neve = 1;
-        rec->nevf = rec->nevg = rec->nevh = rec->nevi = 1;
+        rec->nevf = rec->nevg = rec->nevh = rec->nevi = rec->nevj = rec->nevk = 1;
         rec->udf = FALSE;
         return 0;
     } catch (...) {

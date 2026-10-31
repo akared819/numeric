@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# One coordinated producer writes a four-element DOUBLE packet, then processes the aSub.
-record(waveform, "$(P)event") { field(FTVL, "DOUBLE") field(NELM, "4") }
+# A local forward link processes the aSub while the event waveform lock set is held.
+record(waveform, "$(P)event") { field(FTVL, "DOUBLE") field(NELM, "5") field(FLNK, "$(P)acknowledgedStats") }
 record(ao, "$(P)ackSession") {}
 record(ao, "$(P)ackSequence") {}
 record(aSub, "$(P)acknowledgedStats") {
     field(SNAM, "numericAcknowledgedStats")
+    field(FTVL, "DOUBLE") field(NOVL, "11")
     field(FTA, "DOUBLE") field(NOA, "5")
     field(INPA, "$(P)event NPP NMS")
     field(OUTH, "$(P)ackSession PP NMS")

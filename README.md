@@ -24,6 +24,8 @@ NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostAr
 
 The test IOC loads `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test starts a loopback IOC and client and requires local network sockets. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
 
+The build also installs `numericAckSend`, a native Channel Access sender for the acknowledged streaming example. Its usage, retry behavior, and single-producer requirements are described in the [streaming transport guide](docs/streaming-transport.md#native-channel-access-sender).
+
 ## License
 
 The numeric project is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE) and [licensing considerations](docs/licensing.md). GSL and EPICS Base are separate external dependencies with their own licenses.
