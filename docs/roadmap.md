@@ -253,3 +253,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add bounded GSL Brent root finding for a polynomial with an aSub scalar-output interface. See [roots](roots.md).
 - Acceptance: quadratic and endpoint roots, non-bracketing and non-finite inputs, bounded iteration, workspace reuse, IOC alarm/output preservation/recovery and Linux CI.
 - Local macOS arm64 with GSL 2.8 and the supplied EPICS Base checkout: build and native root tests, 26 initialized and 4 uninitialized IOC assertions passed. Linux results are recorded in the PR. Arbitrary callbacks, optimization and ODEs remain future work.
+
+## Phase 6 increment: native mean benchmark
+
+- Add a native, allocation-free timed mean benchmark comparing direct GSL with the validated numeric core path. See [benchmarks](benchmarks.md).
+- Acceptance: correctness-checked benchmark, explicit array/type/hardware/time and overhead reporting, invalid-argument handling, Linux CI smoke test, and at least one honestly recorded measurement.
+- Local Apple M3 macOS arm64: build, benchmark at 1,024 and 65,536 elements, invalid-argument check, and native core test passed using GSL 2.8 and the supplied EPICS Base checkout. Linux CI results are recorded in the PR. IOC latency, controlled statistical measurements and other algorithms remain future work.
