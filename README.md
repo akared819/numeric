@@ -32,6 +32,8 @@ The `numericIocTest` application loads `numericApp/src/numericIocTest.db`; the d
 
 A native mean benchmark and its measurement boundaries are documented in [benchmarks](docs/benchmarks.md).
 
+The CI workflows validate Linux (Ubuntu 24.04) and macOS arm64 using the clean EPICS Base 7.0.10 release and GSL; the macOS job runs native and IOC tests and the loopback example and network tests. The Linux-only GDB notification stress checks are not repeated on macOS.
+
 ## Example IOC
 
 From the repository root after building, run the standalone example IOC:

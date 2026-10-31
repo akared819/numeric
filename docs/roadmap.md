@@ -259,3 +259,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a native, allocation-free timed mean benchmark comparing direct GSL with the validated numeric core path. See [benchmarks](benchmarks.md).
 - Acceptance: correctness-checked benchmark, explicit array/type/hardware/time and overhead reporting, invalid-argument handling, Linux CI smoke test, and at least one honestly recorded measurement.
 - Local Apple M3 macOS arm64: build, benchmark at 1,024 and 65,536 elements, invalid-argument check, and native core test passed using GSL 2.8 and the supplied EPICS Base checkout. Linux CI results are recorded in the PR. IOC latency, controlled statistical measurements and other algorithms remain future work.
+
+## Phase 6 increment: macOS CI
+
+- Add an Apple Silicon macOS CI job building clean EPICS Base 7.0.10 and GSL, running native and initialized/uninitialized IOC tests plus loopback example, acknowledgment and interruption tests.
+- Acceptance: the new macOS job and existing Linux job pass, with exact tested platforms and exclusions documented; no claim of coverage for Intel macOS or all EPICS Base versions.
+- Linux-specific GDB notification stress tests remain Linux-only; deployment-specific validation is still necessary. Actual CI results are recorded in the PR.

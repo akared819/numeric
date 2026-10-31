@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: macOS build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GSL
+        run: brew install gsl
+      - name: Build EPICS Base 7.0.10
+        run: |
+          curl -fsSLO https://epics-controls.org/download/base/base-7.0.10.tar.gz
+          tar -xzf base-7.0.10.tar.gz
+          make -C base-7.0.10 -j2
+      - name: Build and test numeric
+        run: |
+          printf 'EPICS_BASE = %s/base-7.0.10\n' "$GITHUB_WORKSPACE" > configure/RELEASE.local
+          make -j2 GSL_DIR="$(brew --prefix gsl)"
+          arch=$(./base-7.0.10/startup/EpicsHostArch)
+          ./bin/$arch/numericBenchmark 64 100 macos-ci
+          for test in numericTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
+            ./bin/$arch/$test
+          done
+          for test in numericFftIocTest numericWindowIocTest numericArrayIocTest numericInterpolationIocTest numericFitIocTest numericIntegrationIocTest numericRootsIocTest numericPolynomialIocTest numericScalarIocTest numericIocTest; do
+            ./bin/$arch/$test
+            NUMERIC_TEST_NO_INIT=1 ./bin/$arch/$test
+          done
+          ./tests/example-ioc.sh "$arch"
+          ./tests/network-ack.sh "$arch"
+          ./tests/network-interruption.sh "$arch"
