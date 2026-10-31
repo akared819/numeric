@@ -18,3 +18,12 @@ record(aSub, "bad") {
     field(FTA, "LONG")
     field(FTVA, "DOUBLE")
 }
+
+record(aSub, "small") {
+    field(SNAM, "numericMean")
+    field(FTA, "DOUBLE")
+    field(NOA, "2")
+    field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+}
