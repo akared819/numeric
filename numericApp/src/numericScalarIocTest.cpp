@@ -37,6 +37,11 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    DBADDR readOnly; double replacement = 99;
+    testOk(!dbNameToAddr("scalarMean.VAL", &readOnly) &&
+           dbPutField(&readOnly, DBR_DOUBLE, &replacement, 1) != 0,
+           "result field rejects client writes");
+    testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.UDF", DBF_UCHAR, 0u);
     dbCommon* scalarRecord = testdbRecordPtr("scalarMean");
     dbScanLock(scalarRecord);
