@@ -27,3 +27,25 @@ record(aSub, "small") {
     field(FTVA, "DOUBLE")
     field(NOVA, "1")
 }
+
+record(ao, "streamSample") {}
+record(ao, "streamSequence") {}
+record(ao, "streamReset") {}
+record(ao, "streamMeanOut") {}
+record(ao, "streamCountOut") {}
+record(aSub, "stream") {
+    field(SNAM, "numericRunningMean")
+    field(FTA, "DOUBLE") field(FTB, "DOUBLE") field(FTC, "DOUBLE")
+    field(INPA, "streamSample NPP NMS")
+    field(INPB, "streamSequence NPP NMS")
+    field(INPC, "streamReset NPP NMS")
+    field(FTVA, "DOUBLE") field(FTVB, "DOUBLE")
+    field(OUTA, "streamMeanOut PP NMS")
+    field(OUTB, "streamCountOut PP NMS")
+}
+record(aSub, "stream2") {
+    field(SNAM, "numericRunningMean")
+    field(INPA, "streamSample NPP NMS")
+    field(INPB, "streamSequence NPP NMS")
+    field(INPC, "streamReset NPP NMS")
+}
