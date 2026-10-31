@@ -152,5 +152,11 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 - Add GSL centered moving mean and zeroth-order Gaussian smoothing through the registry and aSub, with per-instance workspace reuse, finite input validation, value-padded endpoints and an example database. See [moving mean and Gaussian smoothing](window-statistics.md).
 - Acceptance: verify analytical window and Gaussian impulse results, endpoint treatment, parameter and buffer validation, workspace reuse and cleanup, IOC alarms and output preservation, plus Linux CI.
-- Local macOS arm64 build and test results are recorded in the pull request. Linux validation is pending.
+- Local macOS arm64 and Linux CI validation passed for PR #21; the review added a guard against inputs exceeding the signed index range used by GSL.
 - Only these two batch operations and one endpoint mode are included; streaming filters and other GSL variants remain future work.
+
+## Phase 3 increment: moving median
+
+- Add a centered, value-padded moving median to the native registry and aSub waveform interface, reusing the per-instance GSL moving-statistics workspace. See [window statistics](window-statistics.md).
+- Acceptance: verify known medians, spike rejection, edge padding, in-place operation, validation, workspace reuse and cleanup, IOC alarms, output preservation and recovery; run Linux CI.
+- Local macOS arm64 and Linux results are recorded in the pull request. Other window statistics and endpoint modes remain future work.

@@ -20,11 +20,12 @@ bool scalar(const Input& x) {
 }
 class WindowOperation : public Operation {
     bool gaussian_;
+    bool median_;
     std::size_t window_ = 0;
     std::unique_ptr<gsl_movstat_workspace, MovFree> moving_;
     std::unique_ptr<gsl_filter_gaussian_workspace, FilterFree> filter_;
 public:
-    explicit WindowOperation(bool gaussian) : gaussian_(gaussian) {}
+    WindowOperation(bool gaussian, bool median) : gaussian_(gaussian), median_(median) {}
     void reset() override { moving_.reset(); filter_.reset(); window_ = 0; }
 protected:
     Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
@@ -61,7 +62,7 @@ protected:
                 filter_.swap(fresh);
             } else {
                 std::unique_ptr<gsl_movstat_workspace, MovFree> fresh(gsl_movstat_alloc(requested));
-                if (!fresh) return {Status::NumericalError, "moving mean workspace allocation failed"};
+                if (!fresh) return {Status::NumericalError, "moving statistics workspace allocation failed"};
                 moving_.swap(fresh);
             }
             window_ = requested;
@@ -69,6 +70,7 @@ protected:
         gsl_vector_const_view input = gsl_vector_const_view_array(x.data, x.count);
         gsl_vector_view output = gsl_vector_view_array(y.data, x.count);
         const int status = gaussian_ ? gsl_filter_gaussian(GSL_FILTER_END_PADVALUE, alpha, 0, &input.vector, &output.vector, filter_.get())
+                           : median_ ? gsl_movstat_median(GSL_MOVSTAT_END_PADVALUE, &input.vector, &output.vector, moving_.get())
                                      : gsl_movstat_mean(GSL_MOVSTAT_END_PADVALUE, &input.vector, &output.vector, moving_.get());
         if (status != GSL_SUCCESS) return {Status::NumericalError, "GSL window operation failed"};
         for (std::size_t i = 0; i < x.count; ++i)
@@ -77,14 +79,18 @@ protected:
         return {Status::Ok, "ok"};
     }
 };
-std::unique_ptr<Operation> moving() { return std::unique_ptr<Operation>(new WindowOperation(false)); }
-std::unique_ptr<Operation> gaussian() { return std::unique_ptr<Operation>(new WindowOperation(true)); }
+std::unique_ptr<Operation> moving() { return std::unique_ptr<Operation>(new WindowOperation(false, false)); }
+std::unique_ptr<Operation> median() { return std::unique_ptr<Operation>(new WindowOperation(false, true)); }
+std::unique_ptr<Operation> gaussian() { return std::unique_ptr<Operation>(new WindowOperation(true, false)); }
 }
 void registerWindowOperations(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
     r.add(Metadata{"moving_mean", "moving statistics", {array, scalarDesc}, {array},
                    "odd centered window 3..4095; endpoint value padding", false,
                    "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"}, &moving);
+    r.add(Metadata{"moving_median", "moving statistics", {array, scalarDesc}, {array},
+                   "odd centered window 3..4095; endpoint value padding", false,
+                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"}, &median);
     r.add(Metadata{"gaussian_smooth", "filter", {array, scalarDesc, scalarDesc}, {array},
                    "odd window 3..4095; alpha 0.01..10; endpoint value padding", false,
                    "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"}, &gaussian);

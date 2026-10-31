@@ -24,7 +24,7 @@ bool scalarLink(const DBLINK& link) {
     long count = 0;
     return !dbGetNelements(&link, &count) && count == 1;
 }
-long calculate(aSubRecord* rec, bool gaussian) {
+long calculate(aSubRecord* rec, bool gaussian, bool median) {
     if (!rec) return -1;
     rec->neva = 0;
     try {
@@ -45,7 +45,7 @@ long calculate(aSubRecord* rec, bool gaussian) {
             auto it = instances.find(rec);
             if (it == instances.end()) {
                 numeric::Registry registry; numeric::registerBuiltins(registry);
-                auto op = registry.create(gaussian ? "gaussian_smooth" : "moving_mean");
+                auto op = registry.create(gaussian ? "gaussian_smooth" : median ? "moving_median" : "moving_mean");
                 if (!op) throw 1;
                 it = instances.emplace(rec, std::move(op)).first;
                 rec->cadr = &release;
@@ -68,7 +68,9 @@ long calculate(aSubRecord* rec, bool gaussian) {
     }
 }
 }
-extern "C" long numericMovingMean(aSubRecord* rec) { return calculate(rec, false); }
-extern "C" long numericGaussianSmooth(aSubRecord* rec) { return calculate(rec, true); }
+extern "C" long numericMovingMean(aSubRecord* rec) { return calculate(rec, false, false); }
+extern "C" long numericMovingMedian(aSubRecord* rec) { return calculate(rec, false, true); }
+extern "C" long numericGaussianSmooth(aSubRecord* rec) { return calculate(rec, true, false); }
 epicsRegisterFunction(numericMovingMean);
+epicsRegisterFunction(numericMovingMedian);
 epicsRegisterFunction(numericGaussianSmooth);

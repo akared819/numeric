@@ -29,11 +29,21 @@ MAIN(numericWindowIocTest) {
         testdbGetFieldEqual("movingMean.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("movingMean.NEVA", DBF_ULONG, 0u);
         testdbGetFieldEqual("movingMean.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("movingMedian.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("movingMedian.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("movingMedian.SEVR", DBF_STRING, "INVALID");
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
     testdbGetFieldEqual("movingMean.VAL", DBF_LONG, 0);
     testdbGetFieldEqual("movingMean.NEVA", DBF_ULONG, 5u);
     testOk(matches("movingMeanOutput", expected), "moving mean and edge padding");
+    double medianInput[] = {9,1,3,2,5}, medianExpected[] = {9,3,2,3,5};
+    testdbPutArrFieldOk("windowInput", DBF_DOUBLE, 5, medianInput);
+    testdbPutFieldOk("movingMedian.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("movingMedian.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("movingMedian.NEVA", DBF_ULONG, 5u);
+    testOk(matches("movingMedianOutput", medianExpected), "median uses centered value-padded windows");
+    testdbPutArrFieldOk("windowInput", DBF_DOUBLE, 5, values);
     const double wider[] = {1.6,2.2,3,3.8,4.4};
     testdbPutFieldOk("windowLength", DBF_DOUBLE, 5.0);
     testdbPutFieldOk("movingMean.PROC", DBF_LONG, 1);
@@ -43,6 +53,9 @@ MAIN(numericWindowIocTest) {
     testOk(matches("movingMeanOutput", expected), "original window size works again");
     testdbPutFieldOk("smallWindowOutput.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("smallWindowOutput.VAL", DBF_LONG, -1);
+    testdbPutFieldOk("smallMedianOutput.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("smallMedianOutput.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("smallMedianOutput.SEVR", DBF_STRING, "INVALID");
     testdbPutFieldOk("smallWindowLink.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("smallWindowLink.VAL", DBF_LONG, -1);
     testdbPutFieldOk("smallWindowInput.PROC", DBF_LONG, 1);
@@ -53,6 +66,11 @@ MAIN(numericWindowIocTest) {
     testdbGetFieldEqual("movingMean.NEVA", DBF_ULONG, 0u);
     testdbGetFieldEqual("movingMean.SEVR", DBF_STRING, "INVALID");
     testOk(matches("movingMeanOutput", expected), "invalid window preserves output");
+    testdbPutFieldOk("movingMedian.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("movingMedian.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("movingMedian.NEVA", DBF_ULONG, 0u);
+    testdbGetFieldEqual("movingMedian.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("movingMedianOutput", medianExpected), "invalid window preserves median output");
     testdbPutFieldOk("windowLength", DBF_DOUBLE, 3.0);
     double extreme[] = {std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(),
                         std::numeric_limits<double>::max(), 0, 0};
@@ -75,10 +93,17 @@ MAIN(numericWindowIocTest) {
     testdbPutFieldOk("gaussianSmooth.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("gaussianSmooth.VAL", DBF_LONG, -1);
     testOk(matches("gaussianOutput", smooth), "non-finite input preserves output");
+    testdbPutFieldOk("movingMedian.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("movingMedian.VAL", DBF_LONG, -1);
+    testOk(matches("movingMedianOutput", medianExpected), "non-finite input preserves median output");
     testdbPutArrFieldOk("windowInput", DBF_DOUBLE, 5, values);
     testdbPutFieldOk("movingMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("movingMean.VAL", DBF_LONG, 0);
     testdbGetFieldEqual("movingMean.SEVR", DBF_STRING, "NO_ALARM");
     testOk(matches("movingMeanOutput", expected), "valid data recovers");
+    testdbPutFieldOk("movingMedian.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("movingMedian.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("movingMedian.SEVR", DBF_STRING, "NO_ALARM");
+    testOk(matches("movingMedianOutput", values), "median recovers with ordered input");
     testIocShutdownOk(); testdbCleanup(); return testDone();
 }
