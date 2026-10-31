@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)varianceInput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+record(ao, "$(P)varianceResult") { field(PREC, "3") }
+record(aSub, "$(P)variance") {
+    field(SNAM, "numericVariance")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
+    field(INPA, "$(P)varianceInput NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)varianceResult PP NMS")
+}

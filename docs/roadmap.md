@@ -34,3 +34,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - [x] Define an explicitly sequenced aSub streaming prototype with reset and IOC tests; see [streaming](streaming.md).
 - [ ] Verify Linux CI for the aSub streaming prototype and expand its lifecycle and integration coverage.
 - [ ] Implement further Phase 2 statistics and a lossless, coordinated sample transport where required.
+
+## Phase 2 increment: batch sample variance
+
+- Added GSL sample variance to the registry and the `numericVariance` aSub adapter, with native and IOC tests and an example database.
+- [x] Test numerical correctness, invalid sizes, non-finite values, waveform capacity, alarms and recovery locally.
+- [ ] Verify Linux CI on this increment; continue with additional statistics and the streaming transport design.

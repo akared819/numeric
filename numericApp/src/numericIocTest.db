@@ -3,6 +3,20 @@ record(waveform, "input") {
     field(NELM, "8")
 }
 record(ao, "result") { field(PREC, "3") }
+record(ao, "varianceResult") { field(PREC, "3") }
+record(aSub, "varianceCalc") {
+    field(SNAM, "numericVariance")
+    field(FTA, "DOUBLE") field(NOA, "9")
+    field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1")
+    field(OUTA, "varianceResult PP NMS")
+}
+record(aSub, "varianceSmall") {
+    field(SNAM, "numericVariance")
+    field(FTA, "DOUBLE") field(NOA, "2")
+    field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1")
+}
 record(aSub, "calc") {
     field(SNAM, "numericMean")
     field(FTA, "DOUBLE")

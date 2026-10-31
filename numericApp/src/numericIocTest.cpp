@@ -8,7 +8,7 @@
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 MAIN(numericIocTest) {
     const bool uninitialized = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
-    testPlan(uninitialized ? 7 : 80);
+    testPlan(uninitialized ? 10 : 101);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
@@ -23,6 +23,9 @@ MAIN(numericIocTest) {
         testdbPutFieldOk("stream.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("stream.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("stream.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("varianceCalc.SEVR", DBF_STRING, "INVALID");
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
     double values[] = {1, 3, 5};
@@ -33,6 +36,29 @@ MAIN(numericIocTest) {
     testdbGetFieldEqual("calc.NEA", DBF_ULONG, 3u);
     testdbGetFieldEqual("calc.NEVA", DBF_ULONG, 1u);
     testdbGetFieldEqual("result", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
+    double fullInput[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    testdbPutArrFieldOk("input", DBF_DOUBLE, 8, fullInput);
+    testdbPutFieldOk("varianceSmall.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("varianceSmall.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("varianceSmall.SEVR", DBF_STRING, "INVALID");
+    double badInput[] = {1, std::numeric_limits<double>::quiet_NaN()};
+    testdbPutArrFieldOk("input", DBF_DOUBLE, 2, badInput);
+    testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
+    testdbPutArrFieldOk("input", DBF_DOUBLE, 1, values);
+    testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("varianceCalc.NEVA", DBF_ULONG, 0u);
+    testdbGetFieldEqual("varianceCalc.STAT", DBF_STRING, "CALC");
+    testdbGetFieldEqual("varianceCalc.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
+    testdbPutArrFieldOk("input", DBF_DOUBLE, 3, values);
+    testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
     testdbPutFieldOk("small.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("small.NEA", DBF_ULONG, 2u);
     testdbGetFieldEqual("small.VAL", DBF_LONG, -1);
