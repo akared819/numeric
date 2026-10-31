@@ -4,7 +4,7 @@
 #include <epicsUnitTest.h>
 
 int main() {
-    testPlan(7);
+    testPlan(8);
     chid input = nullptr, process = nullptr, result = nullptr;
     chid pairs = nullptr, pairsProcess = nullptr, pairsResult = nullptr;
     const bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL &&
@@ -35,6 +35,21 @@ int main() {
         ca_put(DBR_LONG, pairsProcess, &trigger) == ECA_NORMAL && ca_array_get(DBR_DOUBLE, 1, pairsResult, &value) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL && value == 4;
     testOk(pairedComputed, "example IOC calculates covariance from paired waveform data");
+    chid scalarInput = nullptr, scalarProcess = nullptr, scalarResult = nullptr;
+    const bool scalarConnected = connected &&
+        ca_create_channel("demo:scalarInput", nullptr, nullptr, CA_PRIORITY_DEFAULT, &scalarInput) == ECA_NORMAL &&
+        ca_create_channel("demo:scalarMean.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &scalarProcess) == ECA_NORMAL &&
+        ca_create_channel("demo:scalarMean.VAL", nullptr, nullptr, CA_PRIORITY_DEFAULT, &scalarResult) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    double scalarSamples[] = {1, 2, 3, 4}, scalarValue = 0;
+    const bool scalarComputed = scalarConnected && ca_array_put(DBR_DOUBLE, 4, scalarInput, scalarSamples) == ECA_NORMAL &&
+        ca_put(DBR_LONG, scalarProcess, &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 1, scalarResult, &scalarValue) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL && scalarValue == 2.5;
+    testOk(scalarComputed, "example dedicated scalar record computes mean over Channel Access");
+    if (scalarInput) ca_clear_channel(scalarInput);
+    if (scalarProcess) ca_clear_channel(scalarProcess);
+    if (scalarResult) ca_clear_channel(scalarResult);
     if (input) ca_clear_channel(input);
     if (process) ca_clear_channel(process);
     if (result) ca_clear_channel(result);

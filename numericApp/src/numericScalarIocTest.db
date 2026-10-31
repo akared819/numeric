@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "scalarOversizedInput") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(waveform, "scalarIntInput") { field(FTVL, "LONG") field(NELM, "4") }
+record(calc, "scalarProcessed") { field(INPA, "scalarProcessed.VAL NPP NMS") field(CALC, "A+1") }
+record(numericScalar, "scalarForward") {
+    field(INP, "scalarOversizedInput NPP NMS") field(OP, "mean") field(NMAX, "4")
+    field(FLNK, "scalarProcessed")
+}
+record(numericScalar, "scalarLimited") {
+    field(INP, "scalarOversizedInput NPP NMS") field(OP, "mean") field(NMAX, "4")
+}
+record(numericScalar, "scalarWrongType") {
+    field(INP, "scalarIntInput NPP NMS") field(OP, "mean") field(NMAX, "4")
+}
+record(numericScalar, "scalarInvalidOp") {
+    field(INP, "scalarOversizedInput NPP NMS") field(OP, "fft_real_radix2_forward") field(NMAX, "4")
+}
+record(numericScalar, "scalarInvalidMax") {
+    field(INP, "scalarOversizedInput NPP NMS") field(OP, "mean") field(NMAX, "0")
+}

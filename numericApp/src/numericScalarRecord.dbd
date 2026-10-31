@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+recordtype(numericScalar) {
+    include "dbCommon.dbd"
+    field(VAL, DBF_DOUBLE) {
+        prompt("Scalar result")
+        asl(ASL0)
+        special(SPC_NOMOD)
+    }
+    field(INP, DBF_INLINK) {
+        prompt("Input array link")
+        promptgroup("40 - Input")
+    }
+    field(OP, DBF_STRING) {
+        prompt("Registry operation")
+        size(40)
+        initial("mean")
+        special(SPC_NOMOD)
+    }
+    field(NMAX, DBF_ULONG) {
+        prompt("Maximum input elements")
+        initial("1024")
+        special(SPC_NOMOD)
+    }
+    field(NORD, DBF_ULONG) {
+        prompt("Input elements used")
+        special(SPC_NOMOD)
+    }
+    field(RPVT, DBF_NOACCESS) {
+        prompt("Record private state")
+        special(SPC_NOMOD)
+        extra("void *rpvt")
+    }
+    field(PREC, DBF_SHORT) {
+        prompt("Display precision")
+        initial("6")
+    }
+}

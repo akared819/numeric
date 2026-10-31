@@ -175,3 +175,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: test real and complex FFTs, inverse reconstruction, moving mean, moving median and Gaussian smoothing through the example IOC; run the existing native, IOC and Linux CI regressions.
 - Local macOS arm64, GSL 2.8 and supplied EPICS Base checkout: build and example IOC tests passed (seven existing and six Phase 3 assertions). Final Linux results are tracked in the pull request.
 - Direct real inverse, mixed-radix FFT, window functions, streaming filters and the documented EPICS Base notification crash remain outside the completed batch scope.
+
+## Phase 4 increment: scalar record
+
+- Add a registry-backed `numericScalar` record for compatible stateless DOUBLE array-to-scalar operations. See [scalar record](numeric-scalar.md) and the [Phase 4 plan](phase4-plan.md).
+- Acceptance: verify numerical results, link type/count validation, oversized data, missing initialization, alarms and recovery, monitor/forward-link behavior, resource lifetime, example IOC and Linux CI. `numericArray` and full Phase 4 acceptance remain subsequent work.
+- Local and Linux validation results are recorded in the PR.
