@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "smallWindowDest") { field(FTVL, "DOUBLE") field(NELM, "3") }
+record(aSub, "smallWindowOutput") {
+    field(SNAM, "numericMovingMean") field(FTA, "DOUBLE") field(NOA, "6") field(INPA, "windowInput NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "windowLength NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "3")
+}
+record(aSub, "smallWindowLink") {
+    field(SNAM, "numericMovingMean") field(FTA, "DOUBLE") field(NOA, "6") field(INPA, "windowInput NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "windowLength NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "5")
+    field(OUTA, "smallWindowDest PP NMS")
+}
+record(aSub, "smallWindowInput") {
+    field(SNAM, "numericMovingMean") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "windowInput NPP NMS")
+    field(FTB, "DOUBLE") field(INPB, "windowLength NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "5")
+}
