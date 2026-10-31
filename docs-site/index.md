@@ -117,7 +117,7 @@ caput -a demo:rootCoefficients 3 -2 0 1
 caput demo:rootLower 0
 caput demo:rootUpper 2
 caput demo:rootEval.PROC 1
-caget demo:rootResult             # approximately 1.414214
+caget demo:rootResult             # approximately 1.41421
 ```
 
 See the [fitting](https://github.com/akared819/numeric/blob/main/docs/fitting.md), [integration](https://github.com/akared819/numeric/blob/main/docs/integration.md), and [roots](https://github.com/akared819/numeric/blob/main/docs/roots.md) references for numerical and input constraints.
