@@ -31,6 +31,7 @@ jobs:
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericWindowTest
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFitTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericHistogramTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftIocTest
@@ -40,6 +41,8 @@ jobs:
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericArrayIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericInterpolationIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericInterpolationIocTest
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFitIocTest
+          NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFitIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericPolynomialIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericPolynomialIocTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericScalarIocTest

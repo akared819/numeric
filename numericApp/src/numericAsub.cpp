@@ -28,6 +28,7 @@ std::unique_ptr<numeric::Operation> covariance;
 std::unique_ptr<numeric::Operation> correlation;
 std::unique_ptr<numeric::Operation> fftForward, fftInverse;
 std::unique_ptr<numeric::Operation> polynomial;
+std::unique_ptr<numeric::Operation> fit;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -67,7 +68,8 @@ void setup() {
             auto fftForwardOperation = registry.create("fft_complex_radix2_forward");
             auto fftInverseOperation = registry.create("fft_complex_radix2_inverse");
             auto polynomialOperation = registry.create("polynomial_eval");
-            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation || !fftForwardOperation || !fftInverseOperation || !polynomialOperation) throw std::bad_alloc();
+            auto fitOperation = registry.create("linear_fit");
+            if (!fitOperation || !operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation || !covarianceOperation || !correlationOperation || !fftForwardOperation || !fftInverseOperation || !polynomialOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
             stddev = std::move(stddevOperation);
@@ -79,6 +81,7 @@ void setup() {
             fftForward = std::move(fftForwardOperation);
             fftInverse = std::move(fftInverseOperation);
             polynomial = std::move(polynomialOperation);
+            fit = std::move(fitOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -90,6 +93,28 @@ void setupCall(const iocshArgBuf*) { setup(); }
 void registerSetup() { iocshRegister(&setupDef, setupCall); }
 }
 bool numericIocReady() { return ready.load(std::memory_order_acquire); }
+extern "C" long numericLinearFit(aSubRecord* rec) {
+    if (!rec) return -1;
+    rec->neva = 0;
+    try {
+        if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE || rec->ftb != DBF_DOUBLE ||
+            rec->ftva != DBF_DOUBLE || !rec->a || !rec->b || !rec->vala || rec->nova < 6 ||
+            rec->inpa.type == CONSTANT || rec->inpb.type == CONSTANT ||
+            dbGetLinkDBFtype(&rec->inpa) != DBF_DOUBLE || dbGetLinkDBFtype(&rec->inpb) != DBF_DOUBLE ||
+            rec->nea >= rec->noa || rec->neb >= rec->nob) throw 1;
+        if (rec->outa.type != CONSTANT) {
+            long capacity = 0;
+            if (dbGetLinkDBFtype(&rec->outa) != DBF_DOUBLE || dbGetNelements(&rec->outa, &capacity) || capacity < 6) throw 1;
+        }
+        numeric::Input inputs[] = {
+            {static_cast<const double*>(rec->a), rec->nea, rec->noa, 1, numeric::Type::Float64, numeric::Shape::Array},
+            {static_cast<const double*>(rec->b), rec->neb, rec->nob, 1, numeric::Type::Float64, numeric::Shape::Array}};
+        numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Array};
+        if (fit->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
+        rec->neva = output.count; rec->udf = FALSE; return 0;
+    } catch (...) { recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1; }
+}
+epicsRegisterFunction(numericLinearFit);
 extern "C" long numericPolynomial(aSubRecord* rec) {
     if (!rec) return -1;
     rec->neva = 0;
