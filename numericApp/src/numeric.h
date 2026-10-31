@@ -42,6 +42,7 @@ private:
 };
 // Call once during single-threaded process startup, before any other GSL calls.
 void initializeGsl();
+bool isGslInitialized();
 void registerBuiltins(Registry& registry);
 }
 #endif

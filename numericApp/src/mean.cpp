@@ -27,9 +27,11 @@ public:
 };
 std::unique_ptr<Operation> makeMean() { return std::unique_ptr<Operation>(new Mean); }
 }
+void registerRunningStatistics(Registry&);
 void registerBuiltins(Registry& r) {
     r.add(Metadata{"mean", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "none", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeMean);
+    registerRunningStatistics(r);
 }
 }
