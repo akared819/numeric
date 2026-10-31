@@ -96,7 +96,13 @@ extern "C" long numericPolynomial(aSubRecord* rec) {
     try {
         if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE || rec->ftb != DBF_DOUBLE ||
             rec->ftva != DBF_DOUBLE || !rec->a || !rec->b || !rec->vala || rec->nova < 1 ||
+            rec->inpa.type == CONSTANT || dbGetLinkDBFtype(&rec->inpa) != DBF_DOUBLE ||
+            (rec->inpb.type != CONSTANT && dbGetLinkDBFtype(&rec->inpb) != DBF_DOUBLE) ||
             rec->nea >= rec->noa || rec->nob != 1 || rec->neb != 1 || !scalarLink(rec->inpb)) throw 1;
+        if (rec->outa.type != CONSTANT) {
+            long capacity = 0;
+            if (dbGetLinkDBFtype(&rec->outa) != DBF_DOUBLE || dbGetNelements(&rec->outa, &capacity) || capacity != 1) throw 1;
+        }
         numeric::Input inputs[] = {
             {static_cast<const double*>(rec->a), rec->nea, rec->noa, 1, numeric::Type::Float64, numeric::Shape::Array},
             {static_cast<const double*>(rec->b), 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar}};

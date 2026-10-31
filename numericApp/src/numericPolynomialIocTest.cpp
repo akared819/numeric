@@ -33,6 +33,14 @@ MAIN(numericPolynomialIocTest) {
     testdbGetFieldEqual("polyBadType.VAL", DBF_LONG, -1);
     testdbPutFieldOk("polyBadScalar.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("polyBadScalar.VAL", DBF_LONG, -1);
+    epicsInt32 longCoefficients[] = {2,3,4};
+    testdbPutArrFieldOk("polyLongCoefficients", DBF_LONG, 3, longCoefficients);
+    testdbPutFieldOk("polyLongInput.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("polyLongInput.VAL", DBF_LONG, -1);
+    testdbPutFieldOk("polyLongScalar.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("polyLongScalar.VAL", DBF_LONG, -1);
+    testdbPutFieldOk("polyLongTarget.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("polyLongTarget.VAL", DBF_LONG, -1);
     testdbPutArrFieldOk("polyCoefficients", DBF_DOUBLE, 0, coefficients);
     testdbPutFieldOk("polyEval.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("polyEval.VAL", DBF_LONG, -1);
