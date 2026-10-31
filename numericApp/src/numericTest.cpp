@@ -65,6 +65,12 @@ int main() {
     double covResult = 42;
     Output covOut{&covResult, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(covariance->execute(pair, 2, &covOut, 1).status == Status::Ok && covOut.count == 1 && std::fabs(covResult - 4) < 1e-12);
+    double interleaved[] = {1, 2, 3, 4, 5, 6};
+    Input packed[] = {{interleaved, 3, 6, 2, Type::Float64, Shape::Array},
+                      {interleaved + 1, 3, 5, 2, Type::Float64, Shape::Array}};
+    CHECK(covariance->execute(packed, 2, &covOut, 1).status == Status::Ok && covResult == 4);
+    packed[1].capacity = 4;
+    CHECK(covariance->execute(packed, 2, &covOut, 1).status == Status::InvalidArgument && covResult == 4);
     ydata[0] = 6; ydata[2] = 2;
     CHECK(covariance->execute(pair, 2, &covOut, 1).status == Status::Ok && covResult == -4);
     ydata[0] = ydata[1] = ydata[2] = 2;

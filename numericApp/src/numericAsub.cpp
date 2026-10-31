@@ -157,6 +157,27 @@ extern "C" long numericCovariance(aSubRecord* rec) {
     }
 }
 epicsRegisterFunction(numericCovariance);
+extern "C" long numericCovariancePairs(aSubRecord* rec) {
+    if (!rec) return -1;
+    rec->neva = 0;
+    try {
+        if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE || rec->ftva != DBF_DOUBLE ||
+            !rec->a || !rec->vala || rec->nova < 1 || rec->nea >= rec->noa || rec->nea < 4 || rec->nea % 2) throw 1;
+        const double* data = static_cast<const double*>(rec->a);
+        const std::size_t count = rec->nea / 2;
+        numeric::Input inputs[] = {
+            {data, count, rec->noa, 2, numeric::Type::Float64, numeric::Shape::Array},
+            {data + 1, count, rec->noa - 1, 2, numeric::Type::Float64, numeric::Shape::Array}};
+        numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar};
+        if (covariance->execute(inputs, 2, &output, 1).status != numeric::Status::Ok) throw 1;
+        rec->neva = 1; rec->udf = FALSE;
+        return 0;
+    } catch (...) {
+        recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM);
+        return -1;
+    }
+}
+epicsRegisterFunction(numericCovariancePairs);
 long numericRunning(aSubRecord* rec, bool statistics) {
     if (!rec) return -1;
     rec->neva = rec->nevb = 0;
