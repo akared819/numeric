@@ -1,10 +1,10 @@
 # GSL coverage
 
-Coverage means accessible via the documented numeric API. Status describes the implementation and test suite, not a claim that CI has passed. No EPICS-facing operations exist yet.
+Coverage means accessible via the documented numeric API. Status describes the implementation and test suite, not a claim that CI has passed. The mean operation is also exposed through the documented aSub prototype.
 
 | Category | Status | Scope |
 | --- | --- | --- |
-| Statistics | Tested | `mean` only: native tests passed on macOS with GSL 2.8 and Linux CI for the initial commit; updated tests require a fresh CI run. All other statistics not evaluated. |
+| Statistics | Tested | `mean` only: native tests passed on macOS with GSL 2.8 and Linux CI for the initial commit; updated tests require a fresh CI run. The aSub prototype has local IOC tests; Linux CI for it is pending. All other statistics not evaluated. |
 | Running statistics | Planned | Future stateful operations |
 | Moving statistics and filters | Planned | Future work |
 | FFT and wavelets | Planned | Future work |
