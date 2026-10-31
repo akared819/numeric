@@ -1,21 +1,45 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "$(P)scalarInput") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(waveform, "$(P)scalarInput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "4")
+}
+
 record(numericScalar, "$(P)scalarMean") {
-    field(INP, "$(P)scalarInput NPP NMS") field(OP, "mean") field(NMAX, "4")
+    field(INP, "$(P)scalarInput NPP NMS")
+    field(OP, "mean")
+    field(NMAX, "4")
 }
+
 record(numericScalar, "$(P)scalarVariance") {
-    field(INP, "$(P)scalarInput NPP NMS") field(OP, "variance") field(NMAX, "4")
+    field(INP, "$(P)scalarInput NPP NMS")
+    field(OP, "variance")
+    field(NMAX, "4")
 }
+
 record(numericScalar, "$(P)vectorNorm") {
-    field(INP, "$(P)scalarInput NPP NMS") field(OP, "vector_norm") field(NMAX, "4")
+    field(INP, "$(P)scalarInput NPP NMS")
+    field(OP, "vector_norm")
+    field(NMAX, "4")
 }
-record(ao, "$(P)erfInput") { field(VAL, "1") }
+
+record(ao, "$(P)erfInput") {
+    field(VAL, "1")
+}
+
 record(numericScalar, "$(P)erf") {
-    field(INP, "$(P)erfInput NPP NMS") field(OP, "erf") field(NMAX, "1")
+    field(INP, "$(P)erfInput NPP NMS")
+    field(OP, "erf")
+    field(NMAX, "1")
 }
+
 record(numericScalar, "$(P)normalCdf") {
-    field(INP, "$(P)erfInput NPP NMS") field(OP, "normal_cdf") field(NMAX, "1")
+    field(INP, "$(P)erfInput NPP NMS")
+    field(OP, "normal_cdf")
+    field(NMAX, "1")
 }
+
 record(numericScalar, "$(P)logOnePlus") {
-    field(INP, "$(P)erfInput NPP NMS") field(OP, "log1p") field(NMAX, "1")
+    field(INP, "$(P)erfInput NPP NMS")
+    field(OP, "log1p")
+    field(NMAX, "1")
 }

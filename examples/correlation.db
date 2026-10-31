@@ -1,17 +1,46 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "$(P)correlationX") { field(FTVL, "DOUBLE") field(NELM, "8") }
-record(waveform, "$(P)correlationY") { field(FTVL, "DOUBLE") field(NELM, "8") }
-record(waveform, "$(P)correlationPairsInput") { field(FTVL, "DOUBLE") field(NELM, "8") }
-record(ao, "$(P)correlationResult") { field(PREC, "5") }
-record(ao, "$(P)correlationPairsResult") { field(PREC, "5") }
+record(waveform, "$(P)correlationX") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(waveform, "$(P)correlationY") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(waveform, "$(P)correlationPairsInput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(ao, "$(P)correlationResult") {
+    field(PREC, "5")
+}
+
+record(ao, "$(P)correlationPairsResult") {
+    field(PREC, "5")
+}
+
 record(aSub, "$(P)correlation") {
     field(SNAM, "numericCorrelation")
-    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)correlationX NPP NMS")
-    field(FTB, "DOUBLE") field(NOB, "9") field(INPB, "$(P)correlationY NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)correlationResult PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
+    field(INPA, "$(P)correlationX NPP NMS")
+    field(FTB, "DOUBLE")
+    field(NOB, "9")
+    field(INPB, "$(P)correlationY NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)correlationResult PP NMS")
 }
+
 record(aSub, "$(P)correlationPairs") {
     field(SNAM, "numericCorrelationPairs")
-    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)correlationPairsInput NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)correlationPairsResult PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
+    field(INPA, "$(P)correlationPairsInput NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)correlationPairsResult PP NMS")
 }

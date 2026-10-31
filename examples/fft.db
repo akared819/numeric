@@ -1,23 +1,58 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Four complex samples, interleaved real/imaginary DOUBLE values.
-record(waveform, "$(P)fftInput") { field(FTVL, "DOUBLE") field(NELM, "8") }
-record(waveform, "$(P)fftOutput") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(waveform, "$(P)fftInput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(waveform, "$(P)fftOutput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
 record(aSub, "$(P)fftForward") {
     field(SNAM, "numericFftForward")
-    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)fftInput NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "8") field(OUTA, "$(P)fftOutput PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
+    field(INPA, "$(P)fftInput NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "8")
+    field(OUTA, "$(P)fftOutput PP NMS")
 }
-record(waveform, "$(P)ifftOutput") { field(FTVL, "DOUBLE") field(NELM, "8") }
+
+record(waveform, "$(P)ifftOutput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
 record(aSub, "$(P)fftInverse") {
     field(SNAM, "numericFftInverse")
-    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)fftOutput NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "8") field(OUTA, "$(P)ifftOutput PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
+    field(INPA, "$(P)fftOutput NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "8")
+    field(OUTA, "$(P)ifftOutput PP NMS")
 }
-record(waveform, "$(P)realFftInput") { field(FTVL, "DOUBLE") field(NELM, "4") }
-record(waveform, "$(P)realFftOutput") { field(FTVL, "DOUBLE") field(NELM, "8") }
+
+record(waveform, "$(P)realFftInput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "4")
+}
+
+record(waveform, "$(P)realFftOutput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
 record(aSub, "$(P)realFftForward") {
     field(SNAM, "numericRealFftForward")
-    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "$(P)realFftInput NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "8") field(OUTA, "$(P)realFftOutput PP NMS")
-    field(FTVB, "DOUBLE") field(NOVB, "8")
+    field(FTA, "DOUBLE")
+    field(NOA, "5")
+    field(INPA, "$(P)realFftInput NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "8")
+    field(OUTA, "$(P)realFftOutput PP NMS")
+    field(FTVB, "DOUBLE")
+    field(NOVB, "8")
 }

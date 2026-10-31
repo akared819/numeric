@@ -1,12 +1,33 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "$(P)integralCoefficients") { field(FTVL, "DOUBLE") field(NELM, "4") }
-record(ao, "$(P)integralLower") { field(VAL, "0") }
-record(ao, "$(P)integralUpper") { field(VAL, "2") }
-record(ao, "$(P)integralResult") { field(PREC, "6") }
+record(waveform, "$(P)integralCoefficients") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "4")
+}
+
+record(ao, "$(P)integralLower") {
+    field(VAL, "0")
+}
+
+record(ao, "$(P)integralUpper") {
+    field(VAL, "2")
+}
+
+record(ao, "$(P)integralResult") {
+    field(PREC, "6")
+}
+
 record(aSub, "$(P)integralEval") {
     field(SNAM, "numericPolynomialIntegral")
-    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "$(P)integralCoefficients NPP NMS")
-    field(FTB, "DOUBLE") field(NOB, "1") field(INPB, "$(P)integralLower NPP NMS")
-    field(FTC, "DOUBLE") field(NOC, "1") field(INPC, "$(P)integralUpper NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)integralResult PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "5")
+    field(INPA, "$(P)integralCoefficients NPP NMS")
+    field(FTB, "DOUBLE")
+    field(NOB, "1")
+    field(INPB, "$(P)integralLower NPP NMS")
+    field(FTC, "DOUBLE")
+    field(NOC, "1")
+    field(INPC, "$(P)integralUpper NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)integralResult PP NMS")
 }

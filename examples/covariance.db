@@ -1,10 +1,27 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "$(P)covarianceX") { field(FTVL, "DOUBLE") field(NELM, "8") }
-record(waveform, "$(P)covarianceY") { field(FTVL, "DOUBLE") field(NELM, "8") }
-record(ao, "$(P)covarianceResult") { field(PREC, "3") }
+record(waveform, "$(P)covarianceX") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(waveform, "$(P)covarianceY") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(ao, "$(P)covarianceResult") {
+    field(PREC, "3")
+}
+
 record(aSub, "$(P)covariance") {
     field(SNAM, "numericCovariance")
-    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "$(P)covarianceX NPP NMS")
-    field(FTB, "DOUBLE") field(NOB, "9") field(INPB, "$(P)covarianceY NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)covarianceResult PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
+    field(INPA, "$(P)covarianceX NPP NMS")
+    field(FTB, "DOUBLE")
+    field(NOB, "9")
+    field(INPB, "$(P)covarianceY NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)covarianceResult PP NMS")
 }
