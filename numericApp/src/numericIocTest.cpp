@@ -8,7 +8,7 @@
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 MAIN(numericIocTest) {
     const bool uninitialized = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
-    testPlan(uninitialized ? 4 : 21);
+    testPlan(uninitialized ? 4 : 30);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
@@ -30,6 +30,15 @@ MAIN(numericIocTest) {
     testdbGetFieldEqual("calc.NEA", DBF_ULONG, 3u);
     testdbGetFieldEqual("calc.NEVA", DBF_ULONG, 1u);
     testdbGetFieldEqual("result", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("small.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("small.NEA", DBF_ULONG, 2u);
+    testdbGetFieldEqual("small.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("small.NEVA", DBF_ULONG, 0u);
+    testdbGetFieldEqual("small.SEVR", DBF_STRING, "INVALID");
+    testdbPutArrFieldOk("input", DBF_DOUBLE, 2, values);
+    testdbPutFieldOk("small.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("small.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("small.NEVA", DBF_ULONG, 0u);
     values[0] = std::numeric_limits<double>::quiet_NaN();
     testdbPutArrFieldOk("input", DBF_DOUBLE, 1, values);
     testdbPutFieldOk("calc.PROC", DBF_LONG, 1);

@@ -40,7 +40,8 @@ extern "C" long numericMean(aSubRecord* rec) {
     if (!rec) return -1;
     rec->neva = 0;
     if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE ||
-        rec->ftva != DBF_DOUBLE || rec->nova < 1 || !rec->a || !rec->vala) {
+        rec->ftva != DBF_DOUBLE || rec->nova < 1 || !rec->a || !rec->vala ||
+        rec->nea >= rec->noa) {
         recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
     }
     try {
