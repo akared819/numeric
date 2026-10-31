@@ -279,3 +279,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add a candidate-specific checklist for compatibility, clean builds, platform validation, safety, coverage, benchmarks, licensing, artifact provenance and release approval. See [release readiness](release-readiness.md).
 - Acceptance: documented, actionable checks and evidence requirements; all checklist items remain decisions for a future candidate. A release or tag is not created by this increment.
 - Validation: documentation links and instructions are reviewed locally; Linux and macOS CI results are recorded in the PR. The Base notification issue, deployment-specific integration and release versioning remain open.
+
+## Release-candidate preparation: 0.1.0-rc.1
+
+- Prepare the first [release candidate](release-candidate.md), update build guidance, and select GSL 2.8 as the CI target and minimum supported version.
+- Acceptance: clean builds and tests against GSL 2.8 on Linux and macOS, older-header rejection, a source archive and checksum, documented limitations and a reviewable candidate PR.
+- The EPICS Base notification crash and IOC-specific GSL policy remain open; version tagging and release publication require release-owner review. Actual test and artifact results are recorded in the PR.
