@@ -80,5 +80,5 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 - Kill the separate test IOC after a test-only delay signals that event processing has begun, before the numerical consumer runs. Check that the sender reports uncertainty and a fresh session can start after restart.
 - [x] macOS arm64: build, native core tests, 194 initialized and 25 uninitialized IOC assertions, 28 same-process CA assertions and 42 separate-process CA assertions passed using GSL 2.8 and the supplied EPICS Base development checkout.
-- [ ] Linux CI validation.
+- [x] Linux CI passed on the initial PR #11 commit, including repeated crash and regression suites.
 - The test does not cover a crash after the numerical state changes, a network partition, or durable recovery. Deployment-specific restart detection and recovery remain the integrator's responsibility.
