@@ -4,8 +4,8 @@ Coverage means accessible via the documented numeric API. Status describes the i
 
 | Category | Status | Scope |
 | --- | --- | --- |
-| Statistics | Tested | `mean` and sample `variance` through core and aSub; native and IOC tests passed locally on macOS. Other statistics are not evaluated. |
-| Running statistics | Tested | `running_mean` core and aSub prototype; native and IOC tests passed locally on macOS. Other running statistics are not implemented. |
+| Statistics | Tested | `mean`, sample and population variance and standard deviation through core and aSub; native and IOC tests are provided. Other statistics are not evaluated. |
+| Running statistics | Tested | `running_mean` and grouped `running_stats`: mean, sample variance and standard deviation, RMS, minimum, maximum and count via core and aSub. Other running statistics are not implemented. |
 | Moving statistics and filters | Planned | Future work |
 | FFT and wavelets | Planned | Future work |
 | Histograms | Not evaluated | |

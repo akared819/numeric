@@ -17,6 +17,30 @@ record(aSub, "varianceSmall") {
     field(INPA, "input NPP NMS")
     field(FTVA, "DOUBLE") field(NOVA, "1")
 }
+record(aSub, "sdCalc") {
+    field(SNAM, "numericStddev")
+    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "popVarCalc") {
+    field(SNAM, "numericPopulationVariance")
+    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(aSub, "popSdCalc") {
+    field(SNAM, "numericPopulationStddev")
+    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1")
+}
+record(ao, "statsSample") {}
+record(ao, "statsSequence") {}
+record(ao, "statsReset") {}
+record(aSub, "stats") {
+    field(SNAM, "numericRunningStats")
+    field(INPA, "statsSample NPP NMS")
+    field(INPB, "statsSequence NPP NMS")
+    field(INPC, "statsReset NPP NMS")
+}
 record(aSub, "calc") {
     field(SNAM, "numericMean")
     field(FTA, "DOUBLE")
