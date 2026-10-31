@@ -4,6 +4,18 @@ record(waveform, "input") {
 }
 record(ao, "result") { field(PREC, "3") }
 record(ao, "varianceResult") { field(PREC, "3") }
+record(ao, "minmaxMin") {}
+record(ao, "minmaxMax") {}
+record(aSub, "minmaxCalc") {
+    field(SNAM, "numericMinmax")
+    field(FTA, "DOUBLE") field(NOA, "9") field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "minmaxMin PP NMS")
+    field(FTVB, "DOUBLE") field(NOVB, "1") field(OUTB, "minmaxMax PP NMS")
+}
+record(aSub, "minmaxSmall") {
+    field(SNAM, "numericMinmax") field(FTA, "DOUBLE") field(NOA, "2") field(INPA, "input NPP NMS")
+    field(FTVA, "DOUBLE") field(NOVA, "1") field(FTVB, "DOUBLE") field(NOVB, "1")
+}
 record(aSub, "varianceCalc") {
     field(SNAM, "numericVariance")
     field(FTA, "DOUBLE") field(NOA, "9")

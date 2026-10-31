@@ -89,3 +89,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - The test-only IOC verifies the coherent result after the consumer runs and pauses the same processing chain. The test kills the IOC before the sender obtains the acknowledgment and checks that the sender reports uncertainty. After restart, it demonstrates that the old first event can be accepted again and verifies a separate fresh session starts empty.
 - [x] macOS arm64: native build and core test, 194 initialized and 25 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed using GSL 2.8 and the supplied EPICS Base checkout. Linux CI results are tracked in the pull request.
 - This tests one controlled crash point, not all failure timings, a network partition, or durable recovery.
+
+## Phase 2 increment: batch minimum and maximum
+
+- Add `minmax` to the registry and `numericMinmax` aSub support, using GSL's single-pass routine. It validates the array and both outputs before calculation; the stateless instance owns no workspace.
+- Acceptance: native numerical and invalid-input tests; IOC tests for initialization, empty and truncated input, two outputs, alarms and recovery; Linux CI. The example and public contract are described in [batch statistics](asub-mean.md).
+- [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 223 initialized and 28 uninitialized IOC assertions, 28 same-process CA assertions, and 47 separate-process CA assertions passed. Linux CI results are tracked in the pull request.
+- A network partition test, deployment-specific recovery and IOC-wide GSL handler agreement remain open.

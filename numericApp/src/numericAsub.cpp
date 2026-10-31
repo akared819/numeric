@@ -23,6 +23,7 @@ std::unique_ptr<numeric::Operation> mean;
 std::unique_ptr<numeric::Operation> variance;
 std::unique_ptr<numeric::Operation> stddev;
 std::unique_ptr<numeric::Operation> populationVariance, populationStddev;
+std::unique_ptr<numeric::Operation> minmax;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -56,12 +57,14 @@ void setup() {
             auto stddevOperation = registry.create("stddev");
             auto popVarOperation = registry.create("population_variance");
             auto popSdOperation = registry.create("population_stddev");
-            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation) throw std::bad_alloc();
+            auto minmaxOperation = registry.create("minmax");
+            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation || !minmaxOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
             stddev = std::move(stddevOperation);
             populationVariance = std::move(popVarOperation);
             populationStddev = std::move(popSdOperation);
+            minmax = std::move(minmaxOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -109,6 +112,28 @@ epicsRegisterFunction(numericVariance);
 epicsRegisterFunction(numericStddev);
 epicsRegisterFunction(numericPopulationVariance);
 epicsRegisterFunction(numericPopulationStddev);
+extern "C" long numericMinmax(aSubRecord* rec) {
+    if (!rec) return -1;
+    rec->neva = rec->nevb = 0;
+    try {
+        if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE ||
+            rec->ftva != DBF_DOUBLE || rec->ftvb != DBF_DOUBLE || !rec->a || !rec->vala || !rec->valb ||
+            rec->nova < 1 || rec->novb < 1 || rec->nea >= rec->noa) throw 1;
+        numeric::Input input{static_cast<const double*>(rec->a), rec->nea, rec->noa, 1,
+                             numeric::Type::Float64, numeric::Shape::Array};
+        numeric::Output outputs[] = {
+            {static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar},
+            {static_cast<double*>(rec->valb), rec->novb, 0, numeric::Type::Float64, numeric::Shape::Scalar}};
+        if (minmax->execute(&input, 1, outputs, 2).status != numeric::Status::Ok) throw 1;
+        rec->neva = rec->nevb = 1;
+        rec->udf = FALSE;
+        return 0;
+    } catch (...) {
+        recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM);
+        return -1;
+    }
+}
+epicsRegisterFunction(numericMinmax);
 long numericRunning(aSubRecord* rec, bool statistics) {
     if (!rec) return -1;
     rec->neva = rec->nevb = 0;
