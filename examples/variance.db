@@ -3,7 +3,11 @@ record(waveform, "$(P)varianceInput") {
     field(FTVL, "DOUBLE")
     field(NELM, "8")
 }
-record(ao, "$(P)varianceResult") { field(PREC, "3") }
+
+record(ao, "$(P)varianceResult") {
+    field(PREC, "3")
+}
+
 record(aSub, "$(P)variance") {
     field(SNAM, "numericVariance")
     field(FTA, "DOUBLE")

@@ -1,24 +1,60 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "$(P)arrayInput") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(waveform, "$(P)arrayInput") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
 record(numericArray, "$(P)arrayMean") {
-    field(INP, "$(P)arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "8") field(OMAX, "8") field(WIN, "3")
+    field(INP, "$(P)arrayInput NPP NMS")
+    field(OP, "moving_mean")
+    field(NMAX, "8")
+    field(OMAX, "8")
+    field(WIN, "3")
 }
+
 record(numericArray, "$(P)arrayMedian") {
-    field(INP, "$(P)arrayInput NPP NMS") field(OP, "moving_median") field(NMAX, "8") field(OMAX, "8") field(WIN, "3")
+    field(INP, "$(P)arrayInput NPP NMS")
+    field(OP, "moving_median")
+    field(NMAX, "8")
+    field(OMAX, "8")
+    field(WIN, "3")
 }
+
 record(numericArray, "$(P)arrayGaussian") {
-    field(INP, "$(P)arrayInput NPP NMS") field(OP, "gaussian_smooth") field(NMAX, "8") field(OMAX, "8") field(WIN, "3")
+    field(INP, "$(P)arrayInput NPP NMS")
+    field(OP, "gaussian_smooth")
+    field(NMAX, "8")
+    field(OMAX, "8")
+    field(WIN, "3")
 }
+
 record(numericArray, "$(P)arrayHistogram") {
-    field(INP, "$(P)arrayInput NPP NMS") field(OP, "histogram_uniform") field(NMAX, "8") field(OMAX, "4")
-    field(HMIN, "0") field(HMAX, "1") field(NBIN, "4")
+    field(INP, "$(P)arrayInput NPP NMS")
+    field(OP, "histogram_uniform")
+    field(NMAX, "8")
+    field(OMAX, "4")
+    field(HMIN, "0")
+    field(HMAX, "1")
+    field(NBIN, "4")
 }
+
 record(numericArray, "$(P)arrayRealFft") {
-    field(INP, "$(P)arrayInput NPP NMS") field(OP, "fft_real_radix2_forward") field(NMAX, "8") field(OMAX, "16")
+    field(INP, "$(P)arrayInput NPP NMS")
+    field(OP, "fft_real_radix2_forward")
+    field(NMAX, "8")
+    field(OMAX, "16")
 }
+
 record(numericArray, "$(P)arrayComplexFft") {
-    field(INP, "$(P)arrayInput NPP NMS") field(OP, "fft_complex_radix2_forward") field(NMAX, "8") field(OMAX, "8")
+    field(INP, "$(P)arrayInput NPP NMS")
+    field(OP, "fft_complex_radix2_forward")
+    field(NMAX, "8")
+    field(OMAX, "8")
 }
+
 record(numericArray, "$(P)arrayInverse") {
-    field(INP, "$(P)arrayRealFft NPP NMS") field(OP, "fft_complex_radix2_inverse") field(NMAX, "16") field(OMAX, "16")
+    field(INP, "$(P)arrayRealFft NPP NMS")
+    field(OP, "fft_complex_radix2_inverse")
+    field(NMAX, "16")
+    field(OMAX, "16")
 }

@@ -1,11 +1,20 @@
-record(ao, "$(P)sample") {}
-record(ao, "$(P)sequence") {}
-record(ao, "$(P)resetToken") {}
+record(ao, "$(P)sample") {
+}
+
+record(ao, "$(P)sequence") {
+}
+
+record(ao, "$(P)resetToken") {
+}
+
 record(aSub, "$(P)runningMean") {
     field(SNAM, "numericRunningMean")
-    field(FTA, "DOUBLE") field(FTB, "DOUBLE") field(FTC, "DOUBLE")
+    field(FTA, "DOUBLE")
+    field(FTB, "DOUBLE")
+    field(FTC, "DOUBLE")
     field(INPA, "$(P)sample NPP NMS")
     field(INPB, "$(P)sequence NPP NMS")
     field(INPC, "$(P)resetToken NPP NMS")
-    field(FTVA, "DOUBLE") field(FTVB, "DOUBLE")
+    field(FTVA, "DOUBLE")
+    field(FTVB, "DOUBLE")
 }

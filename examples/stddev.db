@@ -3,11 +3,17 @@ record(waveform, "$(P)stddevInput") {
     field(FTVL, "DOUBLE")
     field(NELM, "8")
 }
-record(ao, "$(P)stddevResult") { field(PREC, "3") }
+
+record(ao, "$(P)stddevResult") {
+    field(PREC, "3")
+}
+
 record(aSub, "$(P)stddev") {
     field(SNAM, "numericStddev")
-    field(FTA, "DOUBLE") field(NOA, "9")
+    field(FTA, "DOUBLE")
+    field(NOA, "9")
     field(INPA, "$(P)stddevInput NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "1")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
     field(OUTA, "$(P)stddevResult PP NMS")
 }

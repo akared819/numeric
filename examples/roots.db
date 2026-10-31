@@ -1,12 +1,33 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "$(P)rootCoefficients") { field(FTVL, "DOUBLE") field(NELM, "4") }
-record(ao, "$(P)rootLower") { field(VAL, "0") }
-record(ao, "$(P)rootUpper") { field(VAL, "2") }
-record(ao, "$(P)rootResult") { field(PREC, "6") }
+record(waveform, "$(P)rootCoefficients") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "4")
+}
+
+record(ao, "$(P)rootLower") {
+    field(VAL, "0")
+}
+
+record(ao, "$(P)rootUpper") {
+    field(VAL, "2")
+}
+
+record(ao, "$(P)rootResult") {
+    field(PREC, "6")
+}
+
 record(aSub, "$(P)rootEval") {
     field(SNAM, "numericPolynomialRoot")
-    field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "$(P)rootCoefficients NPP NMS")
-    field(FTB, "DOUBLE") field(NOB, "1") field(INPB, "$(P)rootLower NPP NMS")
-    field(FTC, "DOUBLE") field(NOC, "1") field(INPC, "$(P)rootUpper NPP NMS")
-    field(FTVA, "DOUBLE") field(NOVA, "1") field(OUTA, "$(P)rootResult PP NMS")
+    field(FTA, "DOUBLE")
+    field(NOA, "5")
+    field(INPA, "$(P)rootCoefficients NPP NMS")
+    field(FTB, "DOUBLE")
+    field(NOB, "1")
+    field(INPB, "$(P)rootLower NPP NMS")
+    field(FTC, "DOUBLE")
+    field(NOC, "1")
+    field(INPC, "$(P)rootUpper NPP NMS")
+    field(FTVA, "DOUBLE")
+    field(NOVA, "1")
+    field(OUTA, "$(P)rootResult PP NMS")
 }

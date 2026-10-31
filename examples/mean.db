@@ -3,9 +3,11 @@ record(waveform, "$(P)input") {
     field(FTVL, "DOUBLE")
     field(NELM, "8")
 }
+
 record(ao, "$(P)result") {
     field(PREC, "3")
 }
+
 record(aSub, "$(P)mean") {
     field(SNAM, "numericMean")
     field(FTA, "DOUBLE")
