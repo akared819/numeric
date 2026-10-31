@@ -8,11 +8,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential libreadline-dev libgsl-dev gdb
+      - uses: actions/cache/restore@v4
+        id: epics-cache
+        with:
+          path: base-7.0.10
+          key: epics-base-7.0.10-ubuntu-24.04-numeric-debug-v1
       - name: Build EPICS Base 7.0.10
+        if: steps.epics-cache.outputs.cache-hit != 'true'
         run: |
           curl -fsSLO https://epics-controls.org/download/base/base-7.0.10.tar.gz
           tar -xzf base-7.0.10.tar.gz
           make -C base-7.0.10 -j2
+      - uses: actions/cache/save@v4
+        if: steps.epics-cache.outputs.cache-hit != 'true'
+        with:
+          path: base-7.0.10
+          key: epics-base-7.0.10-ubuntu-24.04-numeric-debug-v1
       - name: Build numeric and run native tests
         run: |
           printf 'EPICS_BASE = %s/base-7.0.10\n' "$GITHUB_WORKSPACE" > configure/RELEASE.local
@@ -22,7 +33,7 @@ jobs:
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           gdb --batch --return-child-result -ex run -ex 'thread apply all bt full' --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBaseNotifyTest
           for attempt in 1 2 3 4 5; do
-            gdb --batch --return-child-result -ex run -ex 'thread apply all bt full' --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericLocalAckRegression
+            gdb --batch --return-child-result -x tests/notify-debug.gdb --args ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericLocalAckRegression
           done
           for attempt in 1 2 3 4 5; do
             ./tests/network-ack.sh $(./base-7.0.10/startup/EpicsHostArch)
