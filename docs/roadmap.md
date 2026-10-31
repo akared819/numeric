@@ -265,3 +265,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add an Apple Silicon macOS CI job building clean EPICS Base 7.0.10 and GSL, running native and initialized/uninitialized IOC tests plus loopback example, acknowledgment and interruption tests.
 - Acceptance: the new macOS job and existing Linux job pass, with exact tested platforms and exclusions documented; no claim of coverage for Intel macOS or all EPICS Base versions.
 - Linux-specific GDB notification stress tests remain Linux-only; deployment-specific validation is still necessary. Actual CI results are recorded in the PR.
+
+## Phase 6 increment: isolated IOC benchmark
+
+- Add a native isolated test IOC benchmark for synchronous `numericScalar` mean processing with a local waveform link. See [benchmarks](benchmarks.md).
+- Acceptance: validate against GSL, report input size, type, hardware, processing time and allocation/IOC/network boundaries; run smoke checks on Linux and macOS without speed thresholds.
+- Local Apple M3 macOS arm64: build and runs at 1,024 and 65,536 elements and rejection above the record's capacity passed using GSL 2.8 and the supplied EPICS Base checkout. CI results are recorded in the PR. Timed allocations are not instrumented and production networking is outside this measurement.

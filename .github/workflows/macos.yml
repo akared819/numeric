@@ -19,6 +19,7 @@ jobs:
           printf 'EPICS_BASE = %s/base-7.0.10\n' "$GITHUB_WORKSPACE" > configure/RELEASE.local
           make -j2 GSL_DIR="$(brew --prefix gsl)"
           arch=$(./base-7.0.10/startup/EpicsHostArch)
+          ./bin/$arch/numericIocBenchmark 64 100 macos-ci
           ./bin/$arch/numericBenchmark 64 100 macos-ci
           for test in numericTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
             ./bin/$arch/$test

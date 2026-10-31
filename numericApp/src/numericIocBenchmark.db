@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "benchInput") { field(FTVL, "DOUBLE") field(NELM, "$(N)") }
+record(numericScalar, "benchMean") { field(INP, "benchInput NPP NMS") field(OP, "mean") field(NMAX, "$(N)") }
