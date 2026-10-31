@@ -43,6 +43,8 @@ MAIN(numericScalarIocTest) {
         testdbGetFieldEqual("erf.NORD", DBF_ULONG, 0u);
         testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("normalCdf.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("logOnePlus.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("logOnePlus.SEVR", DBF_STRING, "INVALID");
         testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "INVALID");
         testMonitorDestroy(valueMonitor);
@@ -54,6 +56,8 @@ MAIN(numericScalarIocTest) {
     testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("normalCdf.NORD", DBF_ULONG, 1u);
     testOk(valueNear("normalCdf.VAL", 0.8413447460685429), "standard normal CDF computes P(1)");
+    testdbPutFieldOk("logOnePlus.PROC", DBF_LONG, 1);
+    testOk(valueNear("logOnePlus.VAL", std::log(2.0)), "elementary function computes log(2)");
     testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
     testOk(valueNear("vectorNorm.VAL", std::sqrt(30.0)), "vector norm is computed through numericScalar");
     testdbGetFieldEqual("vectorNorm.NORD", DBF_ULONG, 4u);
@@ -61,6 +65,9 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("erf.NORD", DBF_ULONG, 1u);
     testOk(valueNear("erf.VAL", 0.8427007929497149), "scalar special function computes erf(1)");
     testdbPutFieldOk("erfInput", DBF_DOUBLE, -1.0);
+    testdbPutFieldOk("logOnePlus.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("logOnePlus.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("logOnePlus.VAL", std::log(2.0)), "logarithm domain error preserves the previous output");
     testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
     testOk(valueNear("erf.VAL", -0.8427007929497149), "scalar special function computes erf(-1)");
     testdbPutFieldOk("erfInput", DBF_DOUBLE, std::numeric_limits<double>::quiet_NaN());
@@ -71,6 +78,9 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("erf.SEVR", DBF_STRING, "INVALID");
     testOk(valueNear("erf.VAL", -0.8427007929497149), "invalid scalar input preserves erf result");
     testdbPutFieldOk("erfInput", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("logOnePlus.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("logOnePlus.SEVR", DBF_STRING, "NO_ALARM");
+    testdbGetFieldEqual("logOnePlus.VAL", DBF_DOUBLE, 0.0);
     testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("normalCdf.SEVR", DBF_STRING, "NO_ALARM");
     testdbGetFieldEqual("normalCdf.VAL", DBF_DOUBLE, 0.5);

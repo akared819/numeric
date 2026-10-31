@@ -5,7 +5,7 @@
 #include <cmath>
 
 int main() {
-    testPlan(12);
+    testPlan(13);
     chid input = nullptr, process = nullptr, result = nullptr;
     chid pairs = nullptr, pairsProcess = nullptr, pairsResult = nullptr;
     const bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL &&
@@ -80,6 +80,18 @@ int main() {
         ca_array_get(DBR_DOUBLE, 1, cdfResult, &cdfValue) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
         std::fabs(cdfValue - 0.8413447460685429) < 1e-12;
     testOk(cdfComputed, "example record computes standard normal CDF over Channel Access");
+    chid logProcess = nullptr, logResult = nullptr;
+    const bool logConnected = connected &&
+        ca_create_channel("demo:logOnePlus.PROC", nullptr, nullptr, CA_PRIORITY_DEFAULT, &logProcess) == ECA_NORMAL &&
+        ca_create_channel("demo:logOnePlus.VAL", nullptr, nullptr, CA_PRIORITY_DEFAULT, &logResult) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    double logValue = 0;
+    const bool logComputed = logConnected && ca_put(DBR_LONG, logProcess, &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 1, logResult, &logValue) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
+        std::fabs(logValue - std::log(2.0)) < 1e-12;
+    testOk(logComputed, "example record computes log1p over Channel Access");
+    if (logProcess) ca_clear_channel(logProcess);
+    if (logResult) ca_clear_channel(logResult);
     if (cdfProcess) ca_clear_channel(cdfProcess);
     if (cdfResult) ca_clear_channel(cdfResult);
     chid polyCoefficients = nullptr, polyProcess = nullptr, polyResult = nullptr;
