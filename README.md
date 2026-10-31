@@ -1,6 +1,6 @@
 # numeric
 
-Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). It includes a standalone core and prototype aSub interfaces for batch mean, sample and population variance and standard deviation, and running statistics. No Python runtime is needed.
+Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). It includes a standalone core and aSub interfaces for batch and running statistics, including acknowledged single-producer streaming. No Python runtime is needed.
 
 ## Build and test
 
@@ -19,11 +19,34 @@ Run the IOC integration tests from the repository root after building:
 ```sh
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
 NUMERIC_TEST_NO_INIT=1 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericIocTest
+./tests/example-ioc.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ./tests/network-ack.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ./tests/network-interruption.sh $(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)
 ```
 
-The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against a separate test IOC, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+The IOC tests load `numericApp/src/numericIocTest.db` and the installed `dbd/numericIocTest.dbd`. The CA test scripts run clients against separate IOCs, including controlled IOC and connection failures. They use loopback ports 25064, 25065, and 25066, which must be available, and stop their test processes on exit. For setup and example databases see [aSub batch statistics](docs/asub-mean.md), [running statistics](docs/streaming.md), and the [acknowledged streaming protocol](docs/streaming-transport.md). See [architecture and IOC GSL setup](docs/architecture.md), [roadmap](docs/roadmap.md), [coverage](docs/gsl-coverage.md), and [licensing](docs/licensing.md).
+
+## Example IOC
+
+From the repository root after building, run the standalone example IOC:
+
+```sh
+./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericExample examples/ioc/st.cmd
+```
+
+The script loads mean, running statistics, paired covariance, and acknowledged streaming records under the `demo:` prefix. It calls `numericInitialize` before `iocInit`; check the [process-wide GSL policy](docs/architecture.md#gsl-setup-for-an-ioc) when combining this module with other GSL users. In another terminal, with EPICS Base tools on `PATH`, try:
+
+```sh
+export PATH="$PWD/bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch):$PATH"
+caput -a demo:input 3 1 3 5
+caput demo:mean.PROC 1
+caget demo:result
+numericAckSend demo:event demo:acknowledgedStats 71 0 sample 2
+numericAckSend demo:event demo:acknowledgedStats 71 1 sample 4
+numericAckSend demo:event demo:acknowledgedStats 71 2 reset
+```
+
+The mean input link does not automatically process the record. For the streaming commands, the caller must follow the [single-producer acknowledgment protocol](docs/streaming-transport.md), including choosing a new session after an IOC restart. The example uses fixed `demo:` names; do not run another IOC with those names on the same CA network. Use `--headless` after the startup script to run without the interactive IOC shell. The startup script uses paths relative to the repository root.
 
 The build also installs `numericAckSend`, a native Channel Access sender for the acknowledged streaming example. Its usage, retry behavior, and single-producer requirements are described in the [streaming transport guide](docs/streaming-transport.md#native-channel-access-sender).
 

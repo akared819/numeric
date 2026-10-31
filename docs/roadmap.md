@@ -1,5 +1,7 @@
 # Roadmap and acceptance
 
+The general-purpose Phase 2 target and its acceptance evidence are summarized in [Phase 2 acceptance](phase2-acceptance.md). The increment sections below record work and open items as they stood at each step; later sections may supersede earlier unchecked items.
+
 ## This increment: Phase 0 and minimal Phase 1
 
 - [x] EPICS module layout, configurable Base and GSL, native test application, Linux CI definition.
@@ -124,3 +126,9 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Acceptance: native relay and test client build, controlled disconnection and replay tests pass locally and repeatedly on Linux CI; document the fault model and remaining limits.
 - [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and core test, 360 initialized and 40 uninitialized IOC assertions, 28 same-process and 47 separate-process CA assertions passed. The relay interruption test passed, including its disconnected negative control; Linux CI results are tracked in the pull request.
 - This test covers one connection failure, not arbitrary partitions or durable recovery. Deployment-specific recovery and IOC-wide GSL handler agreement remain open.
+
+## Phase 2 increment: standalone example IOC and acceptance
+
+- Add a runnable `numericExample` IOC, startup script, and native CA smoke test for batch mean, paired covariance, acknowledged streaming and reset. The mean example reserves an extra input element so a full source waveform is accepted without ambiguous truncation.
+- [x] macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout: build and native core test, 360 initialized and 40 uninitialized IOC assertions, 28 same-process and 47 separate-process CA assertions, the connection-interruption test, and two runs of the seven-assertion standalone example IOC test passed. Linux CI results are tracked in the pull request.
+- [Phase 2 acceptance](phase2-acceptance.md) records the general-purpose scope, checks and remaining deployment-specific limitations.

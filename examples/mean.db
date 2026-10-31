@@ -9,7 +9,7 @@ record(ao, "$(P)result") {
 record(aSub, "$(P)mean") {
     field(SNAM, "numericMean")
     field(FTA, "DOUBLE")
-    field(NOA, "8")
+    field(NOA, "9")
     field(INPA, "$(P)input NPP NMS")
     field(FTVA, "DOUBLE")
     field(NOVA, "1")
