@@ -146,4 +146,11 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Add forward and inverse FFT aSub functions, an example waveform database and native IOC tests; see [FFT](fft.md). Record-owned input is scratch space and output is published only after success.
 - Acceptance: exercise forward/inverse processing, length and type validation, input/output and link capacities, initialization, alarms, numerical overflow, output preservation and recovery in IOC tests; run Linux CI.
 - Local macOS arm64 validation uses GSL 2.8 and the supplied EPICS Base development checkout; commands and actual results are reported in the pull request.
-- Mixed-radix and real FFTs, windowing, moving statistics and filtering remain open. Next: choose and implement a small GSL filtering or moving-statistics operation.
+- Mixed-radix and real FFTs, windowing, moving statistics and filtering remain open. Next: implement and validate a small GSL filtering or moving-statistics operation.
+
+## Phase 3 increment: moving mean and Gaussian smoothing
+
+- Add GSL centered moving mean and zeroth-order Gaussian smoothing through the registry and aSub, with per-instance workspace reuse, finite input validation, value-padded endpoints and an example database. See [moving mean and Gaussian smoothing](window-statistics.md).
+- Acceptance: verify analytical window and Gaussian impulse results, endpoint treatment, parameter and buffer validation, workspace reuse and cleanup, IOC alarms and output preservation, plus Linux CI.
+- Local macOS arm64 build and test results are recorded in the pull request. Linux validation is pending.
+- Only these two batch operations and one endpoint mode are included; streaming filters and other GSL variants remain future work.
