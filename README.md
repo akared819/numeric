@@ -1,6 +1,6 @@
 # numeric
 
-Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). It includes a standalone core and prototype aSub interfaces for batch mean, sample variance and running mean. No Python runtime is needed.
+Native C++ scientific computing foundation for EPICS, using external GNU Scientific Library (GSL). It includes a standalone core and prototype aSub interfaces for batch mean, sample and population variance and standard deviation, and running statistics. No Python runtime is needed.
 
 ## Build and test
 

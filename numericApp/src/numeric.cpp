@@ -18,7 +18,7 @@ bool isGslInitialized() { return initialized.load(std::memory_order_acquire); }
 Result Operation::execute(const Input* inputs, std::size_t inputCount,
                           Output* outputs, std::size_t outputCount) {
     if (!isGslInitialized()) {
-        if (outputs && outputCount == 1) outputs[0].count = 0;
+        if (outputs) for (std::size_t i = 0; i < outputCount; ++i) outputs[i].count = 0;
         return {Status::NotInitialized, "GSL policy not initialized"};
     }
     return executeImpl(inputs, inputCount, outputs, outputCount);

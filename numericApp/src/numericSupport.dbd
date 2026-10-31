@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 function(numericMean)
 function(numericVariance)
+function(numericStddev)
+function(numericPopulationVariance)
+function(numericPopulationStddev)
 function(numericRunningMean)
+function(numericRunningStats)
 registrar(registerSetup)

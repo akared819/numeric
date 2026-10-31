@@ -21,6 +21,8 @@ namespace {
 std::once_flag setupOnce;
 std::unique_ptr<numeric::Operation> mean;
 std::unique_ptr<numeric::Operation> variance;
+std::unique_ptr<numeric::Operation> stddev;
+std::unique_ptr<numeric::Operation> populationVariance, populationStddev;
 std::atomic<bool> ready(false);
 struct Stream {
     std::unique_ptr<numeric::Operation> operation;
@@ -51,9 +53,15 @@ void setup() {
             numeric::registerBuiltins(registry);
             auto operation = registry.create("mean");
             auto varianceOperation = registry.create("variance");
-            if (!operation || !varianceOperation) throw std::bad_alloc();
+            auto stddevOperation = registry.create("stddev");
+            auto popVarOperation = registry.create("population_variance");
+            auto popSdOperation = registry.create("population_stddev");
+            if (!operation || !varianceOperation || !stddevOperation || !popVarOperation || !popSdOperation) throw std::bad_alloc();
             mean = std::move(operation);
             variance = std::move(varianceOperation);
+            stddev = std::move(stddevOperation);
+            populationVariance = std::move(popVarOperation);
+            populationStddev = std::move(popSdOperation);
             ready.store(true, std::memory_order_release);
         });
     } catch (...) {
@@ -64,7 +72,7 @@ const iocshFuncDef setupDef = {"numericInitialize", 0, nullptr};
 void setupCall(const iocshArgBuf*) { setup(); }
 void registerSetup() { iocshRegister(&setupDef, setupCall); }
 }
-long numericBatch(aSubRecord* rec, bool useVariance) {
+long numericBatch(aSubRecord* rec, int kind) {
     if (!rec) return -1;
     rec->neva = 0;
     if (!ready.load(std::memory_order_acquire) || rec->fta != DBF_DOUBLE ||
@@ -73,7 +81,8 @@ long numericBatch(aSubRecord* rec, bool useVariance) {
         recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
     }
     try {
-        numeric::Operation* operation = useVariance ? variance.get() : mean.get();
+        numeric::Operation* operation = kind == 0 ? mean.get() : kind == 1 ? variance.get() :
+                                        kind == 2 ? stddev.get() : kind == 3 ? populationVariance.get() : populationStddev.get();
         numeric::Input input{static_cast<const double*>(rec->a), rec->nea, rec->noa, 1,
                              numeric::Type::Float64, numeric::Shape::Array};
         numeric::Output output{static_cast<double*>(rec->vala), rec->nova, 0,
@@ -89,13 +98,20 @@ long numericBatch(aSubRecord* rec, bool useVariance) {
         recGblSetSevr(rec, CALC_ALARM, INVALID_ALARM); return -1;
     }
 }
-extern "C" long numericMean(aSubRecord* rec) { return numericBatch(rec, false); }
-extern "C" long numericVariance(aSubRecord* rec) { return numericBatch(rec, true); }
+extern "C" long numericMean(aSubRecord* rec) { return numericBatch(rec, 0); }
+extern "C" long numericVariance(aSubRecord* rec) { return numericBatch(rec, 1); }
+extern "C" long numericStddev(aSubRecord* rec) { return numericBatch(rec, 2); }
+extern "C" long numericPopulationVariance(aSubRecord* rec) { return numericBatch(rec, 3); }
+extern "C" long numericPopulationStddev(aSubRecord* rec) { return numericBatch(rec, 4); }
 epicsRegisterFunction(numericMean);
 epicsRegisterFunction(numericVariance);
-extern "C" long numericRunningMean(aSubRecord* rec) {
+epicsRegisterFunction(numericStddev);
+epicsRegisterFunction(numericPopulationVariance);
+epicsRegisterFunction(numericPopulationStddev);
+long numericRunning(aSubRecord* rec, bool statistics) {
     if (!rec) return -1;
     rec->neva = rec->nevb = 0;
+    if (statistics) rec->nevc = rec->nevd = rec->neve = rec->nevf = rec->nevg = 0;
     try {
         if (!ready.load(std::memory_order_acquire) ||
             rec->fta != DBF_DOUBLE || rec->ftb != DBF_DOUBLE || rec->ftc != DBF_DOUBLE ||
@@ -105,6 +121,10 @@ extern "C" long numericRunningMean(aSubRecord* rec) {
             rec->nova < 1 || rec->novb < 1 || !rec->a || !rec->b || !rec->c ||
             !rec->vala || !rec->valb || !scalarLink(rec->inpa) ||
             !scalarLink(rec->inpb) || !scalarLink(rec->inpc)) throw 1;
+        if (statistics && (rec->ftvc != DBF_DOUBLE || rec->ftvd != DBF_DOUBLE ||
+            rec->ftve != DBF_DOUBLE || rec->ftvf != DBF_DOUBLE || rec->ftvg != DBF_DOUBLE ||
+            rec->novc < 1 || rec->novd < 1 || rec->nove < 1 || rec->novf < 1 || rec->novg < 1 ||
+            !rec->valc || !rec->vald || !rec->vale || !rec->valf || !rec->valg)) throw 1;
         const double sample = *static_cast<double*>(rec->a);
         const double sequence = *static_cast<double*>(rec->b);
         const double reset = *static_cast<double*>(rec->c);
@@ -117,7 +137,7 @@ extern "C" long numericRunningMean(aSubRecord* rec) {
                 numeric::Registry registry;
                 numeric::registerBuiltins(registry);
                 std::unique_ptr<Stream> created(new Stream);
-                created->operation = registry.create("running_mean");
+                created->operation = registry.create(statistics ? "running_stats" : "running_mean");
                 if (!created->operation) throw 1;
                 created->reset = reset;
                 found = streams.emplace(rec, std::move(created)).first;
@@ -130,22 +150,37 @@ extern "C" long numericRunningMean(aSubRecord* rec) {
             stream->operation->reset();
             stream->reset = reset;
             *static_cast<double*>(rec->vala) = std::numeric_limits<double>::quiet_NaN();
-            *static_cast<double*>(rec->valb) = 0;
+            *static_cast<double*>(rec->valb) = statistics ? std::numeric_limits<double>::quiet_NaN() : 0;
             rec->neva = rec->nevb = 1;
+            if (statistics) {
+                *static_cast<double*>(rec->valc) = std::numeric_limits<double>::quiet_NaN();
+                *static_cast<double*>(rec->vald) = std::numeric_limits<double>::quiet_NaN();
+                *static_cast<double*>(rec->vale) = std::numeric_limits<double>::quiet_NaN();
+                *static_cast<double*>(rec->valf) = std::numeric_limits<double>::quiet_NaN();
+                *static_cast<double*>(rec->valg) = 0;
+                rec->nevc = rec->nevd = rec->neve = rec->nevf = rec->nevg = 1;
+            }
             rec->udf = FALSE;
             return 0;
         }
         if (stream->hasSequence && sequence < stream->sequence) throw 1;
         if (stream->hasSequence && sequence == stream->sequence) return 1;
+        if (statistics && stream->hasSequence && sequence != stream->sequence + 1.0) throw 1;
         numeric::Input input{&sample, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar};
         numeric::Output outputs[] = {
             {static_cast<double*>(rec->vala), rec->nova, 0, numeric::Type::Float64, numeric::Shape::Scalar},
-            {static_cast<double*>(rec->valb), rec->novb, 0, numeric::Type::Float64, numeric::Shape::Scalar}
+            {static_cast<double*>(rec->valb), rec->novb, 0, numeric::Type::Float64, numeric::Shape::Scalar},
+            {static_cast<double*>(rec->valc), rec->novc, 0, numeric::Type::Float64, numeric::Shape::Scalar},
+            {static_cast<double*>(rec->vald), rec->novd, 0, numeric::Type::Float64, numeric::Shape::Scalar},
+            {static_cast<double*>(rec->vale), rec->nove, 0, numeric::Type::Float64, numeric::Shape::Scalar},
+            {static_cast<double*>(rec->valf), rec->novf, 0, numeric::Type::Float64, numeric::Shape::Scalar},
+            {static_cast<double*>(rec->valg), rec->novg, 0, numeric::Type::Float64, numeric::Shape::Scalar}
         };
-        if (stream->operation->execute(&input, 1, outputs, 2).status != numeric::Status::Ok) throw 1;
+        if (stream->operation->execute(&input, 1, outputs, statistics ? 7 : 2).status != numeric::Status::Ok) throw 1;
         stream->sequence = sequence;
         stream->hasSequence = true;
         rec->neva = rec->nevb = 1;
+        if (statistics) rec->nevc = rec->nevd = rec->neve = rec->nevf = rec->nevg = 1;
         rec->udf = FALSE;
         return 0;
     } catch (...) {
@@ -153,5 +188,8 @@ extern "C" long numericRunningMean(aSubRecord* rec) {
         return -1;
     }
 }
+extern "C" long numericRunningMean(aSubRecord* rec) { return numericRunning(rec, false); }
+extern "C" long numericRunningStats(aSubRecord* rec) { return numericRunning(rec, true); }
 epicsRegisterFunction(numericRunningMean);
+epicsRegisterFunction(numericRunningStats);
 epicsExportRegistrar(registerSetup);

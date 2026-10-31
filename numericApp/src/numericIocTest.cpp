@@ -4,11 +4,18 @@
 #include <iocsh.h>
 #include <testMain.h>
 #include <limits>
+#include <cmath>
 #include <cstdlib>
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
+static bool readDouble(const char* name, double& value) {
+    DBADDR addr;
+    long count = 1;
+    return !dbNameToAddr(name, &addr) &&
+           !dbGetField(&addr, DBR_DOUBLE, &value, nullptr, &count, nullptr) && count == 1;
+}
 MAIN(numericIocTest) {
     const bool uninitialized = std::getenv("NUMERIC_TEST_NO_INIT") != nullptr;
-    testPlan(uninitialized ? 10 : 101);
+    testPlan(uninitialized ? 22 : 154);
     testdbPrepare();
     testdbReadDatabase("dbd/numericIocTest.dbd", nullptr, nullptr);
     numericIocTest_registerRecordDeviceDriver(pdbbase);
@@ -26,6 +33,18 @@ MAIN(numericIocTest) {
         testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, -1);
         testdbGetFieldEqual("varianceCalc.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("sdCalc.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("sdCalc.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("sdCalc.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("stats.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("stats.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("popVarCalc.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("popVarCalc.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("popVarCalc.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("popSdCalc.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("popSdCalc.VAL", DBF_LONG, -1);
+        testdbGetFieldEqual("popSdCalc.SEVR", DBF_STRING, "INVALID");
         testIocShutdownOk(); testdbCleanup(); return testDone();
     }
     double values[] = {1, 3, 5};
@@ -39,6 +58,16 @@ MAIN(numericIocTest) {
     testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("varianceCalc.VAL", DBF_LONG, 0);
     testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("sdCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("sdCalc.VAL", DBF_LONG, 0);
+    testdbGetFieldEqual("sdCalc.VALA", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("popVarCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("popVarCalc.VAL", DBF_LONG, 0);
+    double popObserved = 0;
+    testOk(readDouble("popVarCalc.VALA", popObserved) && std::fabs(popObserved - 8.0 / 3.0) < 1e-12, "population variance");
+    testdbPutFieldOk("popSdCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("popSdCalc.VAL", DBF_LONG, 0);
+    testOk(readDouble("popSdCalc.VALA", popObserved) && std::fabs(popObserved - std::sqrt(8.0 / 3.0)) < 1e-12, "population standard deviation");
     double fullInput[] = {1, 2, 3, 4, 5, 6, 7, 8};
     testdbPutArrFieldOk("input", DBF_DOUBLE, 8, fullInput);
     testdbPutFieldOk("varianceSmall.PROC", DBF_LONG, 1);
@@ -55,6 +84,13 @@ MAIN(numericIocTest) {
     testdbGetFieldEqual("varianceCalc.NEVA", DBF_ULONG, 0u);
     testdbGetFieldEqual("varianceCalc.STAT", DBF_STRING, "CALC");
     testdbGetFieldEqual("varianceCalc.SEVR", DBF_STRING, "INVALID");
+    testdbPutFieldOk("sdCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("sdCalc.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("sdCalc.SEVR", DBF_STRING, "INVALID");
+    testdbPutFieldOk("popVarCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("popVarCalc.VALA", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("popSdCalc.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("popSdCalc.VALA", DBF_DOUBLE, 0.0);
     testdbGetFieldEqual("varianceResult", DBF_DOUBLE, 4.0);
     testdbPutArrFieldOk("input", DBF_DOUBLE, 3, values);
     testdbPutFieldOk("varianceCalc.PROC", DBF_LONG, 1);
@@ -134,6 +170,44 @@ MAIN(numericIocTest) {
     testdbGetFieldEqual("streamWave.VAL", DBF_LONG, -1);
     testdbGetFieldEqual("streamWave.SEVR", DBF_STRING, "INVALID");
     testdbGetFieldEqual("streamWave.NEVA", DBF_ULONG, 0u);
+    testdbPutFieldOk("statsSample", DBF_DOUBLE, 1.0);
+    testdbPutFieldOk("statsSequence", DBF_DOUBLE, 1.0);
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VALA", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("stats.VALG", DBF_DOUBLE, 1.0);
+    double observed = 0;
+    testOk(readDouble("stats.VALB", observed) && std::isnan(observed), "first sample variance is undefined");
+    testOk(readDouble("stats.VALC", observed) && std::isnan(observed), "first sample standard deviation is undefined");
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VAL", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.NEVG", DBF_ULONG, 0u);
+    testdbPutFieldOk("statsSample", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("statsSequence", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VAL", DBF_LONG, -1);
+    testdbGetFieldEqual("stats.SEVR", DBF_STRING, "INVALID");
+    testdbPutFieldOk("statsSequence", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VALA", DBF_DOUBLE, 2.0);
+    testdbGetFieldEqual("stats.VALB", DBF_DOUBLE, 2.0);
+    testOk(readDouble("stats.VALC", observed) && std::fabs(observed - std::sqrt(2.0)) < 1e-12, "running sample standard deviation");
+    testOk(readDouble("stats.VALD", observed) && std::fabs(observed - std::sqrt(5.0)) < 1e-12, "running RMS");
+    testdbGetFieldEqual("stats.VALE", DBF_DOUBLE, 1.0);
+    testdbGetFieldEqual("stats.VALF", DBF_DOUBLE, 3.0);
+    testdbGetFieldEqual("stats.VALG", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("statsSample", DBF_DOUBLE, std::numeric_limits<double>::quiet_NaN());
+    testdbPutFieldOk("statsSequence", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VAL", DBF_LONG, -1);
+    testdbPutFieldOk("statsReset", DBF_DOUBLE, 1.0);
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VALG", DBF_DOUBLE, 0.0);
+    testOk(readDouble("stats.VALA", observed) && std::isnan(observed), "reset mean is undefined");
+    testOk(readDouble("stats.VALB", observed) && std::isnan(observed), "reset variance is undefined");
+    testdbPutFieldOk("statsSample", DBF_DOUBLE, 9.0);
+    testdbPutFieldOk("stats.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stats.VALA", DBF_DOUBLE, 9.0);
+    testdbGetFieldEqual("stats.VALG", DBF_DOUBLE, 1.0);
     testIocShutdownOk();
     testdbCleanup();
     return testDone();

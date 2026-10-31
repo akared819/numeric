@@ -32,11 +32,20 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Local build and native test passed on macOS arm64 with GSL 2.8 and the supplied EPICS Base development checkout. Linux CI passed for the core increment.
 - [x] Implement and test core running mean, ownership, validation, sample counts and reset.
 - [x] Define an explicitly sequenced aSub streaming prototype with reset and IOC tests; see [streaming](streaming.md).
-- [ ] Verify Linux CI for the aSub streaming prototype and expand its lifecycle and integration coverage.
+- [x] Linux CI passed for the aSub streaming prototype (PR #4).
+- [ ] Expand streaming lifecycle and integration coverage.
 - [ ] Implement further Phase 2 statistics and a lossless, coordinated sample transport where required.
 
 ## Phase 2 increment: batch sample variance
 
 - Added GSL sample variance to the registry and the `numericVariance` aSub adapter, with native and IOC tests and an example database.
 - [x] Test numerical correctness, invalid sizes, non-finite values, waveform capacity, alarms and recovery locally.
-- [ ] Verify Linux CI on this increment; continue with additional statistics and the streaming transport design.
+- [x] Linux CI passed for this increment (PR #5).
+
+## Phase 2 increment: standard deviation and running statistics
+
+- Added batch sample standard deviation and population variance and standard deviation; grouped running mean, variance, standard deviation, RMS, minimum, maximum and sample count, with aSub interfaces and native/IOC tests.
+- [x] macOS arm64: build, native core test, 154 IOC assertions and 22 uninitialized assertions passed using GSL 2.8 and the supplied EPICS Base development checkout.
+- [ ] Verify Linux CI for this increment.
+- [ ] Implement and test atomic event delivery, bounded buffering, overflow handling and lifecycle for a lossless streaming transport. The current link-based interface detects gaps but cannot guarantee event delivery; see the [proposal](streaming-transport.md).
+- [ ] Complete remaining Phase 2 acceptance decisions, including the IOC-wide GSL policy for each deployment.

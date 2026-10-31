@@ -27,10 +27,29 @@ int main() {
     Input in{data, 3, 5, 2, Type::Float64, Shape::Array};
     Output out{&result, 1, 7, Type::Float64, Shape::Scalar};
     CHECK(op->execute(&in, 1, &out, 1).status == Status::NotInitialized && out.count == 0 && result == -1);
+    Lifetime beforeInit; Output uninitializedOut[2] = {
+        {&result, 1, 5, Type::Float64, Shape::Scalar}, {&result, 1, 5, Type::Float64, Shape::Scalar}};
+    CHECK(beforeInit.execute(nullptr, 0, uninitializedOut, 2).status == Status::NotInitialized &&
+          uninitializedOut[0].count == 0 && uninitializedOut[1].count == 0);
     CHECK(r.find("running_mean") && r.find("running_mean")->stateful && !r.create("running_mean"));
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(op->execute(&in, 1, &out, 1).status == Status::Ok && out.count == 1 && std::fabs(result - 3) < 1e-12);
     auto variance = r.create("variance");
+    auto popVar = r.create("population_variance"); auto popSd = r.create("population_stddev");
+    CHECK(popVar && popSd);
+    CHECK(popVar->execute(&in, 1, &out, 1).status == Status::Ok && std::fabs(result - 8.0 / 3.0) < 1e-12);
+    CHECK(popSd->execute(&in, 1, &out, 1).status == Status::Ok && std::fabs(result - std::sqrt(8.0 / 3.0)) < 1e-12);
+    in.count = 1;
+    CHECK(popVar->execute(&in, 1, &out, 1).status == Status::Ok && result == 0);
+    CHECK(popSd->execute(&in, 1, &out, 1).status == Status::Ok && result == 0);
+    in.count = 0; CHECK(popVar->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
+    CHECK(popSd->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
+    in.count = 3;
+    auto sd = r.create("stddev"); CHECK(sd && r.find("stddev"));
+    CHECK(sd->execute(&in, 1, &out, 1).status == Status::Ok && std::fabs(result - 2) < 1e-12);
+    in.count = 1; result = 42;
+    CHECK(sd->execute(&in, 1, &out, 1).status == Status::InvalidArgument && out.count == 0 && result == 42);
+    in.count = 3;
     CHECK(variance && r.find("variance") && !r.find("variance")->stateful);
     CHECK(variance->execute(&in, 1, &out, 1).status == Status::Ok && out.count == 1 && std::fabs(result - 4) < 1e-12);
     in.count = 1; result = 42;
@@ -41,7 +60,11 @@ int main() {
     CHECK(variance->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
     data[2] = std::numeric_limits<double>::quiet_NaN();
     CHECK(variance->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
+    CHECK(sd->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
+    CHECK(popVar->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
+    CHECK(popSd->execute(&in, 1, &out, 1).status == Status::InvalidArgument);
     data[2] = 3; CHECK(variance->execute(&in, 1, &out, 1).status == Status::Ok && result == 4);
+    CHECK(sd->execute(&in, 1, &out, 1).status == Status::Ok && result == 2);
     double identical[] = {7, 7}; Input same{identical, 2, 2, 1, Type::Float64, Shape::Array};
     CHECK(variance->execute(&same, 1, &out, 1).status == Status::Ok && result == 0);
     double large[] = {std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()};
@@ -75,6 +98,27 @@ int main() {
     { auto owned = r.create("lifetime"); CHECK(owned && destroyed == 0); }
     CHECK(destroyed == 1);
     auto running = r.create("running_mean"); auto other = r.create("running_mean"); CHECK(running && other);
+    auto stats = r.create("running_stats"); auto stats2 = r.create("running_stats");
+    CHECK(stats && stats2 && r.find("running_stats")->stateful);
+    double statValues[7] = {}; Output statOut[7];
+    for (int i = 0; i < 7; ++i) statOut[i] = {&statValues[i], 1, 0, Type::Float64, Shape::Scalar};
+    double statSample = 1; Input statInput{&statSample, 1, 1, 1, Type::Float64, Shape::Scalar};
+    CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok);
+    CHECK(statValues[0] == 1 && std::isnan(statValues[1]) && std::isnan(statValues[2]) && statValues[3] == 1 && statValues[4] == 1 && statValues[5] == 1 && statValues[6] == 1);
+    statSample = 3; CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok);
+    CHECK(statValues[0] == 2 && statValues[1] == 2 && std::fabs(statValues[2] - std::sqrt(2.0)) < 1e-12 && std::fabs(statValues[3] - std::sqrt(5.0)) < 1e-12 && statValues[4] == 1 && statValues[5] == 3 && statValues[6] == 2);
+    CHECK(stats2->execute(&statInput, 1, statOut, 7).status == Status::Ok && statValues[6] == 1);
+    statSample = std::numeric_limits<double>::infinity(); CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::InvalidArgument && statOut[0].count == 0);
+    statSample = 5; CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok && statValues[6] == 3 && statValues[0] == 3 && statValues[1] == 4 && statValues[4] == 1 && statValues[5] == 5);
+    statOut[1].data = statOut[0].data; CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::InvalidArgument);
+    statOut[1].data = &statValues[1]; stats->reset();
+    CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok && statValues[6] == 1 && statValues[0] == 5);
+    stats->reset(); statSample = std::numeric_limits<double>::max();
+    CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok);
+    statSample = -std::numeric_limits<double>::max();
+    CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::NumericalError && statOut[0].count == 0);
+    statSample = 1; CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::NumericalError);
+    stats->reset(); CHECK(stats->execute(&statInput, 1, statOut, 7).status == Status::Ok && statValues[6] == 1);
     double sample = 1, avg = -1, count = -1;
     Input sampleIn{&sample, 1, 1, 1, Type::Float64, Shape::Scalar};
     Output runningOut[] = {{&avg, 1, 0, Type::Float64, Shape::Scalar},

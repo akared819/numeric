@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(ao, "$(P)statsSample") {}
+record(ao, "$(P)statsSequence") {}
+record(ao, "$(P)statsReset") {}
+record(aSub, "$(P)runningStats") {
+    field(SNAM, "numericRunningStats")
+    field(INPA, "$(P)statsSample NPP NMS")
+    field(INPB, "$(P)statsSequence NPP NMS")
+    field(INPC, "$(P)statsReset NPP NMS")
+}

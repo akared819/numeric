@@ -16,4 +16,8 @@ A caller owns a registry, registers builtins, resolves metadata by name and crea
 
 `variance` has the same buffer and ownership contract, requires at least two values, and calls `gsl_stats_variance` for sample variance with an `N-1` denominator. See [aSub batch statistics](asub-mean.md).
 
+`stddev` uses the same validation and returns sample standard deviation using `gsl_stats_sd`. The seven-output `running_stats` operation and its per-instance workspace are described in [streaming](streaming.md).
+
+`population_variance` and `population_stddev` accept at least one element, use `gsl_stats_mean` to calculate the dataset mean and pass it to GSL's fixed-mean variance or standard-deviation routine. They return descriptive population statistics normalized by `N`, with the same ownership and error contract.
+
 Descriptors and operation signatures allow multiple inputs and outputs and scalar or array shapes. The stateful running-mean implementation is described in [streaming](streaming.md); solver callbacks and parameter schemas require further design before exposure. No raw GSL workspace is exposed. The aSub mean prototype uses a shared stateless instance and explicit IOC startup; triggering and alarms are described in its documentation.

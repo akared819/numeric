@@ -6,6 +6,7 @@ INC += numeric.h
 numeric_SRCS += numeric.cpp
 numeric_SRCS += mean.cpp
 numeric_SRCS += runningMean.cpp
+numeric_SRCS += runningStats.cpp
 PROD_HOST += numericTest
 numericTest_SRCS += numericTest.cpp
 numericTest_LIBS += numeric
