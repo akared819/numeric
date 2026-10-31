@@ -20,6 +20,7 @@ namespace {
 struct State {
     std::vector<double> buffer;
     std::unique_ptr<numeric::Operation> op;
+    numeric::Shape inputShape;
 };
 void destroyState(void* arg) { delete static_cast<State*>(arg); }
 long initRecord(dbCommon* common, int pass) {
@@ -30,11 +31,13 @@ long initRecord(dbCommon* common, int pass) {
         numeric::Registry registry; numeric::registerBuiltins(registry);
         const numeric::Metadata* m = registry.find(rec->op);
         if (!m || m->stateful || m->inputs.size() != 1 || m->outputs.size() != 1 ||
-            m->inputs[0].type != numeric::Type::Float64 || m->inputs[0].shape != numeric::Shape::Array ||
+            m->inputs[0].type != numeric::Type::Float64 ||
+            (m->inputs[0].shape != numeric::Shape::Array && m->inputs[0].shape != numeric::Shape::Scalar) ||
             m->outputs[0].type != numeric::Type::Float64 || m->outputs[0].shape != numeric::Shape::Scalar) return S_db_badField;
         std::unique_ptr<State> state(new State);
         state->buffer.resize(static_cast<std::size_t>(rec->nmax) + 1);
         state->op = registry.create(rec->op);
+        state->inputShape = m->inputs[0].shape;
         if (!state->op || epicsAtExit(destroyState, state.get())) return S_rec_outMem;
         rec->rpvt = state.release();
         return 0;
@@ -54,7 +57,7 @@ long process(dbCommon* common) {
             count > 0 && static_cast<unsigned long>(count) <= rec->nmax) {
             double value = 0;
             numeric::Input input{state->buffer.data(), static_cast<std::size_t>(count), state->buffer.size(), 1,
-                                 numeric::Type::Float64, numeric::Shape::Array};
+                                 numeric::Type::Float64, state->inputShape};
             numeric::Output output{&value, 1, 0, numeric::Type::Float64, numeric::Shape::Scalar};
             if (state->op->execute(&input, 1, &output, 1).status == numeric::Status::Ok) {
                 rec->val = value; rec->nord = static_cast<epicsUInt32>(count); rec->udf = FALSE; ok = true;

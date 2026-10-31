@@ -38,12 +38,29 @@ MAIN(numericScalarIocTest) {
     if (noInit) {
         testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
         testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 0u);
+        testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("erf.SEVR", DBF_STRING, "INVALID");
+        testdbGetFieldEqual("erf.NORD", DBF_ULONG, 0u);
         testMonitorDestroy(valueMonitor);
         return finish();
     }
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("erf.NORD", DBF_ULONG, 1u);
+    testOk(valueNear("erf.VAL", 0.8427007929497149), "scalar special function computes erf(1)");
+    testdbPutFieldOk("erfInput", DBF_DOUBLE, -1.0);
+    testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
+    testOk(valueNear("erf.VAL", -0.8427007929497149), "scalar special function computes erf(-1)");
+    testdbPutFieldOk("erfInput", DBF_DOUBLE, std::numeric_limits<double>::quiet_NaN());
+    testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("erf.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("erf.VAL", -0.8427007929497149), "invalid scalar input preserves erf result");
+    testdbPutFieldOk("erfInput", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("erf.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("erf.SEVR", DBF_STRING, "NO_ALARM");
+    testdbGetFieldEqual("erf.VAL", DBF_DOUBLE, 0.0);
     DBADDR readOnly; double replacement = 99;
     testOk(!dbNameToAddr("scalarMean.VAL", &readOnly) &&
            dbPutField(&readOnly, DBR_DOUBLE, &replacement, 1) != 0,
@@ -87,6 +104,9 @@ MAIN(numericScalarIocTest) {
     testdbPutFieldOk("scalarLimited.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarLimited.NORD", DBF_ULONG, 0u);
     testdbGetFieldEqual("scalarLimited.SEVR", DBF_STRING, "INVALID");
+    testdbPutArrFieldOk("scalarOversizedInput", DBF_DOUBLE, 2, tooMany);
+    testdbPutFieldOk("erfWrongCount.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("erfWrongCount.SEVR", DBF_STRING, "INVALID");
     testdbPutFieldOk("scalarForward.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarProcessed.VAL", DBF_DOUBLE, 1.0);
     testdbPutFieldOk("scalarWrongType.PROC", DBF_LONG, 1);
