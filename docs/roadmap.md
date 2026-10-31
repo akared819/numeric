@@ -75,3 +75,10 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 - Added a separate-process test of stream state after restarting the test IOC: old nonzero sequences are not acknowledged, a new session starts empty, and a reused first event demonstrates the lack of durable identity.
 - [x] macOS arm64: build, native core tests, 194 initialized and 25 uninitialized IOC assertions, 28 same-process CA assertions, and 39 separate-process CA assertions passed with GSL 2.8 and the supplied EPICS Base development checkout.
 - [x] Linux CI passed the restart test and existing regressions on the initial PR #10 commit. A clean process restart is not a crash during processing, and the sender does not detect restarts or reconstruct state.
+
+## Phase 2 increment: controlled IOC crash
+
+- Kill the separate test IOC after a test-only delay signals that event processing has begun, before the numerical consumer runs. Check that the sender reports uncertainty and a fresh session can start after restart.
+- [x] macOS arm64: build, native core tests, 194 initialized and 25 uninitialized IOC assertions, 28 same-process CA assertions and 42 separate-process CA assertions passed using GSL 2.8 and the supplied EPICS Base development checkout.
+- [ ] Linux CI validation.
+- The test does not cover a crash after the numerical state changes, a network partition, or durable recovery. Deployment-specific restart detection and recovery remain the integrator's responsibility.
