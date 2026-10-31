@@ -13,6 +13,7 @@ numeric_SRCS += polynomial.cpp
 numeric_SRCS += interpolation.cpp
 numeric_SRCS += elementary.cpp
 numeric_SRCS += histogram.cpp
+numeric_SRCS += fitting.cpp
 numeric_SRCS += fft.cpp
 numeric_SRCS += window.cpp
 numeric_SRCS += runningMean.cpp
@@ -116,4 +117,10 @@ PROD_HOST += numericInterpolationIocTest
 numericInterpolationIocTest_SRCS += numericInterpolationIocTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
 numericInterpolationIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 
+PROD_HOST += numericFitTest
+numericFitTest_SRCS += numericFitTest.cpp
+numericFitTest_LIBS += numeric $(EPICS_BASE_HOST_LIBS)
+PROD_HOST += numericFitIocTest
+numericFitIocTest_SRCS += numericFitIocTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
+numericFitIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES

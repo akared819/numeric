@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(aSub, "fitSmall") {
+    field(SNAM, "numericLinearFit") field(FTA, "DOUBLE") field(NOA, "4") field(INPA, "fitX NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "5") field(INPB, "fitY NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "6")
+}
+record(aSub, "fitShortOutput") {
+    field(SNAM, "numericLinearFit") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "fitX NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "5") field(INPB, "fitY NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "5")
+}
+record(waveform, "fitLong") { field(FTVL, "LONG") field(NELM, "4") }
+record(aSub, "fitBadType") {
+    field(SNAM, "numericLinearFit") field(FTA, "DOUBLE") field(NOA, "5") field(INPA, "fitLong NPP NMS")
+    field(FTB, "DOUBLE") field(NOB, "5") field(INPB, "fitY NPP NMS") field(FTVA, "DOUBLE") field(NOVA, "6")
+}

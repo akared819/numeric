@@ -1,0 +1,9 @@
+# Straight-line least-squares fitting
+
+`linear_fit` wraps [GSL's unweighted linear regression](https://www.gnu.org/software/gsl/doc/html/lls.html#linear-regression) for the model `y = c0 + c1*x`. Its native inputs are two contiguous finite DOUBLE arrays of equal length, with at least three points and nonconstant x. It returns a six-element DOUBLE array `[c0, c1, cov00, cov01, cov11, sumsq]`. GSL estimates the coefficient covariance matrix from the observed residual scatter, assuming unknown equal y errors; `sumsq` is the unweighted sum of squared residuals. This is not a weighted fit.
+
+The adapter rejects unsupported buffer shapes, insufficient capacity and non-finite values. It also rejects extreme magnitudes and tiny x spreads using conservative floating-point limits; non-finite GSL results are errors. Ill-conditioned data may still produce imprecise finite results, so users must assess data scaling and uncertainty. The output is staged and is not modified on failure. Each operation is stateless, owns no workspace and allocates no memory during execution.
+
+`numericLinearFit` accepts x and y as aSub DOUBLE waveform inputs A and B, and publishes all six values together in DOUBLE VALA. NOA and NOB must each reserve one extra element beyond the largest source waveform to detect possible truncation. NOVA and the DOUBLE output link must hold at least six elements. The example `examples/fitting.db` supports four source points. Process the aSub explicitly; updates to input links do not necessarily trigger it. The inputs are fetched separately, so producers must coordinate their updates. Failure raises CALC/INVALID and preserves the previous output. See [architecture](architecture.md) for IOC initialization and GSL error handling.
+
+Only unweighted straight-line fitting is provided; weighted, multi-parameter and nonlinear fitting are not implemented by this interface.

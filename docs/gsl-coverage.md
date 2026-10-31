@@ -15,7 +15,7 @@ Coverage means accessible via the documented numeric API. Status describes the i
 | Special functions | Tested | `erf` through the native registry and numericScalar record; other special functions are not evaluated. |
 | Polynomials | Tested | `polynomial_eval` for real coefficients and a real evaluation point through the native registry and aSub; other polynomial functions are not evaluated. |
 | Random numbers and probability distributions | Tested | `normal_cdf` (standard normal lower-tail probability) through the native registry and numericScalar record; random-number generators and other distributions are not evaluated. |
-| Least squares and fitting | Not evaluated | |
+| Least squares and fitting | Tested | `linear_fit` unweighted straight-line regression through the native registry and aSub; other fitting functions are not evaluated. |
 | Roots, optimization, and ODE solvers | Not evaluated | |
 | Other GSL modules | Tested | `log1p` from the elementary mathematical functions through the native registry and numericScalar record; other functions and modules are not evaluated. |
 
