@@ -4,7 +4,7 @@
 
 `numeric` is a native C++ EPICS support module. It connects GSL calculations to scalar and waveform process variables through a small numerical core, aSub routines, and dedicated `numericScalar` and `numericArray` records. It requires no Python runtime.
 
-> **Release candidate:** `0.1.0-rc.1` is the first candidate. See the [candidate notes](docs/release-candidate.md) for validation and limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for publication status.
+> **Release candidate:** `0.1.0-rc.2` includes native Windows support and local Linux validation. See the [candidate notes](docs/release-candidate.md) for validation and limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for publication status.
 
 ## What it provides
 
@@ -97,6 +97,8 @@ The startup script calls `numericInitialize` before `iocInit`. All GSL users in 
 ## Validation and limitations
 
 The [benchmark guide](docs/benchmarks.md) documents native and isolated-IOC measurements, including what their timings exclude. These observations are not hard-real-time guarantees.
+
+The [local Linux validation report](docs/linux-validation.md) records a successful build and all 63 Linux CI command checks on Ubuntu 26.04.1 with GCC 15.2, EPICS Base 7.0.10 and GSL 2.8, including notification stress and network recovery tests. See the [Windows guide](docs/windows.md#local-validation-evidence-2026-11-02) for the separate native Windows results.
 
 An intermittent EPICS Base notification crash remains unresolved and has been reproduced without numeric or GSL linked. Its evidence and accepted scope are described in [Phase 2 acceptance](docs/phase2-acceptance.md). Test each target IOC and review its GSL handler policy and other modules before deployment.
 
