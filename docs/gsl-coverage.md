@@ -2,6 +2,9 @@
 
 Coverage means accessible via the documented numeric API. Status describes the implementation and test suite, not a claim that CI has passed. The mean operation is also exposed through the documented aSub prototype.
 
+Windows portability adds no numerical operations or GSL coverage. The Windows
+build and existing-operation validation scope are documented in [Windows native builds](windows.md).
+
 | Category | Status | Scope |
 | --- | --- | --- |
 | Statistics | Tested | `mean`, `minmax`, sample `covariance` and Pearson `correlation` (two arrays or an interleaved aSub input), sample and population variance and standard deviation through core and aSub; compatible single-input scalar-result operations also have a numericScalar record interface. Native and IOC tests are provided. Other statistics are not evaluated. |

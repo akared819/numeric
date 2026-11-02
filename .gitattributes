@@ -1,0 +1,7 @@
+# Keep scripts and build inputs usable in MSYS2 checkouts on Windows.
+* text=auto
+*.sh text eol=lf
+Makefile text eol=lf
+configure/* text eol=lf
+*.db text eol=lf
+*.dbd text eol=lf

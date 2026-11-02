@@ -12,6 +12,8 @@ export EPICS_CA_SERVER_PORT=25064
 export EPICS_CAS_SERVER_PORT=25064
 export EPICS_CA_REPEATER_PORT=25065
 test_dir=$(mktemp -d "${TMPDIR:-/tmp}/numeric-network-interruption.XXXXXX")
+# Native Windows IOCs read this environment path without MSYS translation.
+if command -v cygpath >/dev/null 2>&1; then test_dir=$(cygpath -m "$test_dir"); fi
 export NUMERIC_TEST_PARTITION_MARKER="$test_dir/entered"
 ioc_pid=
 relay_pid=
@@ -31,12 +33,12 @@ start_relay() {
     "./bin/$1/numericCaRelay" >"$test_dir/relay.log" 2>&1 &
     relay_pid=$!
     count=0
-    while ! grep -q '^ready$' "$test_dir/relay.log" && [ "$count" -lt 100 ]; do
+    while ! grep -q '^ready[[:space:]]*$' "$test_dir/relay.log" && [ "$count" -lt 100 ]; do
         kill -0 "$relay_pid" 2>/dev/null || fail
         sleep 0.1
         count=$((count + 1))
     done
-    grep -q '^ready$' "$test_dir/relay.log" || fail
+    grep -q '^ready[[:space:]]*$' "$test_dir/relay.log" || fail
 }
 "./bin/$1/numericNetworkIoc" >"$test_dir/ioc.log" 2>&1 &
 ioc_pid=$!

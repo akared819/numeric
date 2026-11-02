@@ -11,7 +11,7 @@ struct Event { std::uint64_t session; std::uint64_t sequence; EventKind kind; do
 struct Acknowledgment { Event event; std::array<double, 7> statistics; bool replayed; };
 
 // One writer at a time; callers must serialize all access to an instance.
-class AcknowledgedStream {
+class NUMERIC_API AcknowledgedStream {
 public:
     static std::unique_ptr<AcknowledgedStream> create();
     Result submit(const Event& event, Acknowledgment& acknowledgment);

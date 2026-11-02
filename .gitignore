@@ -5,3 +5,5 @@ include/
 db/
 dbd/
 configure/RELEASE.local
+.build-windows/
+.iocsh_history

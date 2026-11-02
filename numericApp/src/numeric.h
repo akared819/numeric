@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef NUMERIC_H
 #define NUMERIC_H
+#include "numericExport.h"
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -20,7 +21,7 @@ struct Metadata {
     std::string parameters; bool stateful;
     std::string lifecycle; std::string errors;
 };
-class Operation {
+class NUMERIC_API Operation {
 public:
     virtual ~Operation() {}
     Result execute(const Input* inputs, std::size_t inputCount,
@@ -31,7 +32,7 @@ protected:
                                Output* outputs, std::size_t outputCount) = 0;
 };
 using Factory = std::unique_ptr<Operation> (*)();
-class Registry {
+class NUMERIC_API Registry {
 public:
     bool add(const Metadata& metadata, Factory factory);
     const Metadata* find(const std::string& name) const;
@@ -41,8 +42,8 @@ private:
     std::vector<Entry> entries_;
 };
 // Call once during single-threaded process startup, before any other GSL calls.
-void initializeGsl();
-bool isGslInitialized();
-void registerBuiltins(Registry& registry);
+NUMERIC_API void initializeGsl();
+NUMERIC_API bool isGslInitialized();
+NUMERIC_API void registerBuiltins(Registry& registry);
 }
 #endif

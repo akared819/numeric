@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "numericCompiler.h"
 #include <dbAccess.h>
 #include <dbStaticLib.h>
 #include <epicsExit.h>
@@ -60,7 +61,7 @@ int main(int argc,char** argv) {
         if (dbGetField(&severity,DBR_USHORT,&alarm,nullptr,&count,nullptr) || count!=1 || alarm ||
             value!=gsl_stats_mean(data.data(),1,length)) return 1;
         const double ns=std::chrono::duration<double,std::nano>(end-start).count()/iterations;
-        std::printf("hardware=%s\ncompiler=%s\ngsl=%s\nalgorithm=mean\ntype=DOUBLE\narray_length=%zu\niterations=%zu\n",argv[3],__VERSION__,gsl_version,length,iterations);
+        std::printf("hardware=%s\ncompiler=%s\ngsl=%s\nalgorithm=mean\ntype=DOUBLE\narray_length=%zu\niterations=%zu\n",argv[3],NUMERIC_COMPILER_VERSION,gsl_version,length,iterations);
         std::printf("ioc_mode=isolated_test_ioc\nrecord=numericScalar\ninput_link=local_waveform\nepics_record_and_link_overhead=yes\nnetwork_overhead=no\nsetup_and_input_write_included=no\ntimed_allocations=not_instrumented\n");
         std::printf("ioc_process_ns_per_call=%.1f\nresult=%.17g\n",ns,value);
         if (iocShutdown()) return 1;

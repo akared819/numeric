@@ -2,10 +2,16 @@
 TOP=../..
 include $(TOP)/configure/CONFIG
 # numeric uses C++14; do not rely on the compiler default.
+ifeq ($(GNU),YES)
 USR_CXXFLAGS += -std=c++14
+else ifeq ($(OS_CLASS),WIN32)
+USR_CXXFLAGS += /std:c++14
+endif
 LIBRARY_HOST += numeric
+numeric_API = numeric
 INC += numeric.h
 INC += numericAck.h
+INC += numericExport.h
 numeric_SRCS += numeric.cpp
 numeric_SRCS += mean.cpp
 numeric_SRCS += special.cpp
@@ -47,10 +53,14 @@ numericFftIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericWindowIocTest
 numericWindowIocTest_SRCS += numericWindowIocTest.cpp numericIocTest_registerRecordDeviceDriver.cpp
 numericWindowIocTest_LIBS += numericIoc numeric $(EPICS_BASE_IOC_LIBS)
-USR_SYS_LIBS += gsl gslcblas
 ifneq ($(strip $(GSL_DIR)),)
+# Let EPICS resolve custom library directories for GNU and MSVC linkers.
+USR_LIBS += gsl gslcblas
 USR_INCLUDES += -I$(GSL_DIR)/include
-USR_LDFLAGS += -L$(GSL_DIR)/lib
+gsl_DIR = $(GSL_DIR)/lib
+gslcblas_DIR = $(GSL_DIR)/lib
+else
+USR_SYS_LIBS += gsl gslcblas
 endif
 DBD += numericArrayRecord.dbd
 DBDINC += numericArrayRecord
@@ -110,6 +120,9 @@ numericNetworkTest_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericCaRelay
 numericCaRelay_SRCS += numericCaRelay.cpp
 numericCaRelay_LIBS += $(EPICS_BASE_HOST_LIBS)
+ifeq ($(OS_CLASS),WIN32)
+numericCaRelay_SYS_LIBS += ws2_32
+endif
 PROD_HOST += numericPartitionTest
 numericPartitionTest_SRCS += numericPartitionTest.cpp numericAckClient.cpp
 numericPartitionTest_LIBS += numeric $(EPICS_BASE_IOC_LIBS)

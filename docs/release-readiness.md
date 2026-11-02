@@ -8,7 +8,7 @@ This is a checklist for preparing a future numeric release; it does not declare 
 - [ ] Review public interfaces and record compatibility, including numericScalar/numericArray DBD and record support rebuild requirements. Document any breaking changes and migration steps.
 - [ ] Record exact operating systems, CPU architectures, compiler versions and EPICS Base and GSL versions actually tested. Verify the target IOC configuration separately; do not extrapolate CI to untested platforms.
 - [ ] Confirm the build and install instructions from a clean checkout and run the standalone example IOC. Record commands and results.
-- [ ] Require all Linux and macOS CI checks to pass for the candidate commit, including native and initialized/uninitialized IOC tests. Record failed or rerun jobs and their causes.
+- [ ] Require all Linux, macOS and Windows MinGW CI checks to pass for the candidate commit, including native and initialized/uninitialized IOC tests. Record failed or rerun jobs and their causes. See the [Windows validation scope](windows.md).
 - [ ] Review the known intermittent EPICS Base notification crash and decide whether its current documented limitation is acceptable for the release and intended deployments. Passing stress tests does not establish that it is fixed; see [Phase 2 acceptance](phase2-acceptance.md).
 
 ## Safety, coverage and performance
