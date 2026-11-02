@@ -100,4 +100,7 @@ system installation. Its official package SHA-256 is
   MinGW and GSL libraries, without `msys-2.0.dll`.
 - Full EPICS module build, IOC tests and process/network tests: pending while
   EPICS Base 7.0.10 is built from the official source archive on this PC.
-- Remote Windows/Linux/macOS CI results are not yet recorded for this increment.
+- At commit `68658c7`, [Linux CI](https://github.com/akared819/numeric/actions/runs/41384945992)
+  and [macOS CI](https://github.com/akared819/numeric/actions/runs/41384945991)
+  passed. Windows CI is still pending. Subsequent changes require their own CI
+  results; these links are evidence for that specific commit.

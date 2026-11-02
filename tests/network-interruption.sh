@@ -33,12 +33,12 @@ start_relay() {
     "./bin/$1/numericCaRelay" >"$test_dir/relay.log" 2>&1 &
     relay_pid=$!
     count=0
-    while ! grep -q '^ready$' "$test_dir/relay.log" && [ "$count" -lt 100 ]; do
+    while ! grep -q '^ready[[:space:]]*$' "$test_dir/relay.log" && [ "$count" -lt 100 ]; do
         kill -0 "$relay_pid" 2>/dev/null || fail
         sleep 0.1
         count=$((count + 1))
     done
-    grep -q '^ready$' "$test_dir/relay.log" || fail
+    grep -q '^ready[[:space:]]*$' "$test_dir/relay.log" || fail
 }
 "./bin/$1/numericNetworkIoc" >"$test_dir/ioc.log" 2>&1 &
 ioc_pid=$!
