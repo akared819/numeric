@@ -282,6 +282,12 @@ Next: review this narrow aSub interface and complete Phase 2 in separately teste
 
 ## Release-candidate preparation: 0.1.0-rc.1
 
-- Prepare the first [release candidate](release-candidate.md), update build guidance, and select GSL 2.8 as the CI target and minimum supported version.
+- Prepare the first release candidate, update build guidance, and select GSL 2.8 as the CI target and minimum supported version.
 - Acceptance: clean builds and tests against GSL 2.8 on Linux and macOS, older-header rejection, a source archive and checksum, documented limitations and a reviewable candidate PR.
 - The EPICS Base notification crash and IOC-specific GSL policy remain open; version tagging and release publication require release-owner review. Actual test and artifact results are recorded in the PR.
+
+## Release-candidate update: 0.1.0-rc.2
+
+- Update the [candidate notes](release-candidate.md) for native Windows support, the example usage guide and the [local Linux validation](linux-validation.md).
+- Local Linux acceptance: build with GCC 15.2.0, EPICS Base 7.0.10 and GSL 2.8 on Ubuntu 26.04.1, then execute all 63 Linux CI command checks. All passed, including 1,765 TAP assertions and the native core's non-TAP checks; no skipped TAP tests were observed.
+- The tested implementation is `f8c23b1f5c32e152742683dacbd37cf5d62fb20d`. This candidate update changes documentation only. Candidate-specific CI and the existing release-readiness decisions remain separate checks; the known Base notification limitation is unchanged.
