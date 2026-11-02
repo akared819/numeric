@@ -26,7 +26,7 @@ mkdir -p .build-windows
 cd .build-windows
 curl -fsSLO https://epics-controls.org/download/base/base-7.0.10.tar.gz
 tar -xzf base-7.0.10.tar.gz
-make -C base-7.0.10 -j2
+make -C base-7.0.10 -j2 SUBMODULES=
 cd ..
 export EPICS_BASE="$(cygpath -m "$PWD/.build-windows/base-7.0.10")"
 export GSL_DIR="$(cygpath -m /mingw64)"
@@ -36,7 +36,9 @@ make -j2 GSL_DIR="$GSL_DIR"
 sh tests/windows.sh
 ```
 
-An existing MinGW Base 7.0.10 installation can be used instead. `GSL_DIR` can
+`SUBMODULES=` omits optional PVA modules; numeric uses Base's Channel Access and
+database libraries. A full Base build also works. An existing MinGW Base 7.0.10
+installation can be used instead. `GSL_DIR` can
 point to another matching MinGW GSL installation. The module uses EPICS library
 directory variables rather than GNU-specific linker switches. The public core
 API has DLL import/export annotations without depending on EPICS headers.
@@ -98,9 +100,36 @@ system installation. Its official package SHA-256 is
   compilation with the Windows EPICS socket headers (`-Wall -Wextra`).
 - Confirmed with `objdump -p`: the core DLL is `pei-x86-64` and imports Windows,
   MinGW and GSL libraries, without `msys-2.0.dll`.
-- Full EPICS module build, IOC tests and process/network tests: pending while
-  EPICS Base 7.0.10 is built from the official source archive on this PC.
+- Passed: the standard EPICS Makefile build of numeric's two DLLs and all host
+  executables against Base 7.0.10 from the official source archive, followed by
+  `sh tests/windows.sh` (exit status 0). This includes seven native numerical
+  programs, ten IOC programs each initialized and uninitialized, benchmark smoke
+  and invalid-input checks, the example IOC, and all acknowledged-stream restart,
+  in-flight/post-update crash and relay-interruption scenarios. The 35 completed
+  TAP groups contain 1,006 passing assertions and no failures.
+- The complete module run also passed the GSL 2.7 rejection test. No GDB
+  notification-stress checks were run on Windows. The previously documented
+  EPICS notification issue remains unresolved.
 - At commit `68658c7`, [Linux CI](https://github.com/akared819/numeric/actions/runs/41384945992)
   and [macOS CI](https://github.com/akared819/numeric/actions/runs/41384945991)
   passed. Windows CI is still pending. Subsequent changes require their own CI
   results; these links are evidence for that specific commit.
+
+Local commands (after extracting the dependencies and giving the MSYS make
+binary a unique `.build-windows/msys-make.exe` name on this PC):
+
+```sh
+export EPICS_HOST_ARCH=windows-x64-mingw
+export EPICS_BASE="$(cygpath -m "$PWD/.build-windows/base-7.0.10")"
+export GSL_DIR="$(cygpath -m "$PWD/.build-windows/mingw64")"
+printf 'EPICS_BASE = %s\n' "$EPICS_BASE" > configure/RELEASE.local
+tool="$PWD/.build-windows/msys-make.exe"
+"$tool" -j4 MAKE="$tool" GSL_DIR="$GSL_DIR"
+sh tests/windows.sh
+```
+
+Acceptance: native build, numerical/invalid-input/lifetime tests, IOC integration,
+public-interface documentation and coverage inventory are verified locally.
+Candidate-specific CI remains a separate acceptance item until its runs finish.
+The next portability increment would be independent validation of MSVC builds
+with matching GSL and Base binaries; it is outside this MinGW increment.

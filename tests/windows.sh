@@ -9,7 +9,8 @@ case "$arch" in
 esac
 : "${EPICS_BASE:?Set EPICS_BASE to the matching MinGW EPICS Base installation}"
 : "${GSL_DIR:?Set GSL_DIR to the matching MinGW GSL installation}"
-export PATH="$(pwd)/bin/$arch:$EPICS_BASE/bin/$arch:$GSL_DIR/bin:$PATH"
+# EPICS makefiles use drive paths, but Bash PATH needs POSIX paths (no C:).
+export PATH="$(pwd)/bin/$arch:$(cygpath -u "$EPICS_BASE")/bin/$arch:$(cygpath -u "$GSL_DIR")/bin:$PATH"
 sh tests/gsl-version-check.sh "$GSL_DIR"
 for test in numericTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
     echo "Running $test"

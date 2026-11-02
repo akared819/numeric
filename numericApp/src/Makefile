@@ -120,6 +120,9 @@ numericNetworkTest_LIBS += numeric $(EPICS_BASE_IOC_LIBS)
 PROD_HOST += numericCaRelay
 numericCaRelay_SRCS += numericCaRelay.cpp
 numericCaRelay_LIBS += $(EPICS_BASE_HOST_LIBS)
+ifeq ($(OS_CLASS),WIN32)
+numericCaRelay_SYS_LIBS += ws2_32
+endif
 PROD_HOST += numericPartitionTest
 numericPartitionTest_SRCS += numericPartitionTest.cpp numericAckClient.cpp
 numericPartitionTest_LIBS += numeric $(EPICS_BASE_IOC_LIBS)

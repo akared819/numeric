@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Windows build
 on: [push, pull_request]
+concurrency:
+  group: windows-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: windows-2022
@@ -21,7 +24,16 @@ jobs:
             curl
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gsl
+      - name: Identify compiler
+        id: compiler
+        run: echo "version=$(g++ -dumpfullversion -dumpversion)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        id: epics-cache
+        with:
+          path: .build-windows/base-7.0.10
+          key: epics-7.0.10-windows-2022-mingw64-gcc-${{ steps.compiler.outputs.version }}-core-v1
       - name: Build EPICS Base 7.0.10
+        if: steps.epics-cache.outputs.cache-hit != 'true'
         run: |
           set -eu
           mkdir -p .build-windows
@@ -29,7 +41,13 @@ jobs:
           curl -fsSLO https://epics-controls.org/download/base/base-7.0.10.tar.gz
           tar -xzf base-7.0.10.tar.gz
           export EPICS_HOST_ARCH=windows-x64-mingw
-          make -C base-7.0.10 -j2
+          # numeric uses Channel Access and database support, not PVA submodules.
+          make -C base-7.0.10 -j2 SUBMODULES=
+      - uses: actions/cache/save@v4
+        if: steps.epics-cache.outputs.cache-hit != 'true'
+        with:
+          path: .build-windows/base-7.0.10
+          key: epics-7.0.10-windows-2022-mingw64-gcc-${{ steps.compiler.outputs.version }}-core-v1
       - name: Build and test numeric
         run: |
           set -eu
