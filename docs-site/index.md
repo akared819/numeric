@@ -172,8 +172,8 @@ dbLoadRecords("examples/variance.db", "P=myioc:")
 ## Troubleshooting
 
 - **PV is not found:** confirm the example IOC is running, the database is loaded and the prefix matches. The bundled script uses `demo:`.
-- **Value did not change:** check how the calculation record is processed. Most batch input updates do not trigger processing automatically.
+- **Value did not change:** check that the calculation record is being processed. Most batch input updates do not trigger processing automatically. For example, process the mean record once with `caput demo:mean.PROC 1`, then check its result and alarm.
 - **Record has an INVALID alarm:** inspect `.STAT` and `.SEVR`, then check type, count, output capacity and operation-specific parameters. A failed calculation may preserve the previous result; do not treat that value as fresh without checking its alarm.
 - **IOC combines multiple GSL users:** check that every component uses the same non-terminating handler. Numeric cannot prevent another component from changing it.
 
-An intermittent EPICS Base notification crash remains unresolved, including in a Base-only control. See [Phase 2 acceptance](https://github.com/akared819/numeric/blob/main/docs/phase2-acceptance.md). Validate your own IOC and deployment environment before use.
+An intermittent EPICS Base notification crash remains unresolved, including in a Base-only control. See [Phase 2 acceptance](https://github.com/akared819/numeric/blob/main/docs/phase2-acceptance.md). Thoroughly test your IOC and deployment environment before production use.
