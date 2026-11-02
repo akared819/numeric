@@ -4,9 +4,9 @@
 #include <alarm.h>
 #include <dbFldTypes.h>
 #include <dbLink.h>
-#include <epicsExport.h>
 #include <recGbl.h>
 #include <registryFunction.h>
+#include <epicsExport.h> // Must follow all imported EPICS declarations.
 #include <map>
 #include <memory>
 #include <mutex>

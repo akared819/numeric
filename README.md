@@ -19,9 +19,13 @@ Coverage is a tested subset of GSL, not its complete API. See the [coverage inve
 
 ## Requirements
 
-- EPICS Base **7.0.10**; Linux x86-64 and macOS arm64 are the CI targets.
+- EPICS Base **7.0.10**; Linux x86-64, macOS arm64, and Windows x64 MinGW have CI workflows. See the [Windows guide](docs/windows.md) for setup and validation scope.
 - GSL **2.8 or newer**, including headers and libraries. GSL 2.8 is the current stable release and the version selected by CI. Older versions are rejected at compile time; newer versions are not yet validated.
 - A C++14-capable GCC or Clang, GNU make, Perl, and the tools needed to build EPICS Base.
+
+For native Windows builds, use the [MSYS2 MinGW64 instructions](docs/windows.md).
+EPICS Base, GSL and numeric must use the same compiler toolchain; an existing
+Visual Studio EPICS installation cannot be linked into the MinGW build.
 
 GSL is an external dependency and is not bundled. [GNU's GSL page](https://www.gnu.org/software/gsl/) lists the current release and installation resources.
 

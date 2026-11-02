@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Windows build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            perl
+            tar
+            curl
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gsl
+      - name: Build EPICS Base 7.0.10
+        run: |
+          set -eu
+          mkdir -p .build-windows
+          cd .build-windows
+          curl -fsSLO https://epics-controls.org/download/base/base-7.0.10.tar.gz
+          tar -xzf base-7.0.10.tar.gz
+          export EPICS_HOST_ARCH=windows-x64-mingw
+          make -C base-7.0.10 -j2
+      - name: Build and test numeric
+        run: |
+          set -eu
+          export EPICS_HOST_ARCH=windows-x64-mingw
+          export EPICS_BASE="$(cygpath -m "$PWD/.build-windows/base-7.0.10")"
+          export GSL_DIR="$(cygpath -m /mingw64)"
+          test "$(sh /mingw64/bin/gsl-config --version)" = 2.8
+          g++ --version
+          printf 'EPICS_BASE = %s\n' "$EPICS_BASE" > configure/RELEASE.local
+          make -j2 GSL_DIR="$GSL_DIR"
+          sh tests/windows.sh

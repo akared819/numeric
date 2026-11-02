@@ -13,6 +13,8 @@ export EPICS_CAS_SERVER_PORT=25064
 export EPICS_CA_REPEATER_PORT=25065
 log_file=$(mktemp "${TMPDIR:-/tmp}/numeric-network-ioc.XXXXXX")
 test_dir=$(mktemp -d "${TMPDIR:-/tmp}/numeric-crash-test.XXXXXX")
+# Native Windows IOCs read these environment paths without MSYS translation.
+if command -v cygpath >/dev/null 2>&1; then test_dir=$(cygpath -m "$test_dir"); fi
 export NUMERIC_TEST_CRASH_MARKER="$test_dir/entered"
 export NUMERIC_TEST_AFTER_MARKER="$test_dir/updated"
 ioc_pid=

@@ -2,6 +2,9 @@
 
 The agreed Phase 6 endpoint is documented benchmarks, Linux and macOS validation, and a release-readiness checklist. Completion of this scope does not create a version, tag or release, guarantee performance, or claim comprehensive portability.
 
+The subsequent Windows MinGW portability increment, including its separate
+acceptance evidence and limits, is documented in [Windows native builds](windows.md).
+
 ## Acceptance evidence
 
 - [x] The native registry mean and isolated IOC record-processing benchmarks have reproducible commands, actual measurements, correctness checks and explicit timing boundaries in [benchmarks](benchmarks.md). Linux and macOS CI run functional smoke tests without speed thresholds.

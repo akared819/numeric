@@ -4,10 +4,10 @@
 #include <alarm.h>
 #include <dbFldTypes.h>
 #include <dbLink.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 #include <recGbl.h>
 #include <registryFunction.h>
+#include <epicsExport.h> // Must follow all imported EPICS declarations.
 
 #include <atomic>
 #include <memory>
