@@ -51,6 +51,9 @@ NUMERIC_API Result resolveArguments(const std::vector<ArgumentDescriptor>& descr
                                     const ArgumentValue* values, std::size_t count,
                                     ArgumentValue* resolved, std::size_t capacity,
                                     ArgumentValidator validator = nullptr);
+// Parse an ASCII argument with no whitespace; integer input remains exact.
+NUMERIC_API Result parseArgument(ArgumentType type, const char* text, std::size_t length,
+                                 ArgumentValue& value);
 struct Metadata {
     std::string name; std::string category;
     std::vector<Descriptor> inputs, outputs;

@@ -6,8 +6,13 @@
 #error "numeric requires GSL 2.8 or newer"
 #endif
 #include <atomic>
+#include <cerrno>
 #include <cmath>
+#include <cstdlib>
+#include <locale>
+#include <limits>
 #include <mutex>
+#include <sstream>
 namespace numeric {
 namespace {
 std::once_flag initOnce;
@@ -111,6 +116,38 @@ Result resolveArguments(const std::vector<ArgumentDescriptor>& descriptors,
     for (std::size_t i = 0; i < descriptors.size(); ++i)
         resolved[i] = i < count ? values[i] : descriptors[i].defaultValue;
     return validator ? validator(resolved, descriptors.size()) : Result{Status::Ok, "ok"};
+}
+Result parseArgument(ArgumentType type, const char* text, std::size_t length, ArgumentValue& value) {
+    if (!text || !length || length > 38) return {Status::InvalidArgument, "invalid argument text length"};
+    const std::string input(text, length);
+    if (input.find('\0') != std::string::npos) return {Status::InvalidArgument, "embedded null in argument"};
+    if (type == ArgumentType::Floating) {
+        std::istringstream stream(input); stream.imbue(std::locale::classic());
+        double parsed = 0.0;
+        stream >> std::noskipws >> parsed;
+        if (!stream || stream.peek() != std::char_traits<char>::eof() || !std::isfinite(parsed))
+            return {Status::InvalidArgument, "invalid floating argument"};
+        value = {type, parsed, 0};
+        return {Status::Ok, "ok"};
+    }
+    if (type == ArgumentType::Boolean && (input == "true" || input == "false")) {
+        value = {type, 0.0, input == "true" ? 1 : 0};
+        return {Status::Ok, "ok"};
+    }
+    if (type != ArgumentType::Integer && type != ArgumentType::Boolean && type != ArgumentType::Enumeration)
+        return {Status::InvalidArgument, "unknown argument type"};
+    std::size_t pos = (input[0] == '-' || input[0] == '+') ? 1 : 0;
+    if (pos == input.size()) return {Status::InvalidArgument, "invalid integer argument"};
+    for (; pos < input.size(); ++pos)
+        if (input[pos] < '0' || input[pos] > '9') return {Status::InvalidArgument, "invalid integer argument"};
+    errno = 0; char* end = nullptr;
+    const long long parsed = std::strtoll(input.c_str(), &end, 10);
+    if (errno == ERANGE || end != input.c_str() + input.size() ||
+        parsed < std::numeric_limits<std::int64_t>::min() || parsed > std::numeric_limits<std::int64_t>::max() ||
+        (type == ArgumentType::Boolean && parsed != 0 && parsed != 1))
+        return {Status::InvalidArgument, "integer argument out of range"};
+    value = {type, 0.0, static_cast<std::int64_t>(parsed)};
+    return {Status::Ok, "ok"};
 }
 namespace {
 bool exactlyRepresentable(std::int64_t value) {

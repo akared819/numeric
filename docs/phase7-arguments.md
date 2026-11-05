@@ -27,6 +27,11 @@ must supply a non-null pointer when the count is nonzero.
 defaults to omitted optional trailing arguments, then runs the operation's
 validator on the complete list. Missing defaults, short buffers and invalid
 values fail. Its output contents are unspecified after failure.
+`parseArgument` accepts at most 38 ASCII characters and rejects whitespace,
+overflow, non-finite floating values and trailing characters. Integers and
+enumerations use decimal notation, and Booleans accept `0`, `1`, `true` or
+`false`. Floating parsing uses the classic C++ locale independent of the IOC's
+global locale. Parsing may allocate; it is not yet used in the processing path.
 
 Each descriptor can map to an index in the legacy scalar input list. Registered
 mappings must identify distinct Float64 scalar inputs. This describes where an
