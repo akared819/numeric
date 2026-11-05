@@ -17,5 +17,18 @@ private:
     std::size_t maxElements_;
     std::vector<double> workspace_;
 };
+// Mean retaining both components. Each instance owns its scratch buffer.
+class NUMERIC_API TypedComplexMean {
+public:
+    explicit TypedComplexMean(std::size_t maxElements);
+    TypedComplexMean(const TypedComplexMean&) = delete;
+    TypedComplexMean& operator=(const TypedComplexMean&) = delete;
+    Result reserve();
+    Result execute(const ArrayView& input, ElementValue& output);
+    void reset();
+private:
+    std::size_t maxElements_;
+    std::vector<double> workspace_;
+};
 }
 #endif

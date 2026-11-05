@@ -53,4 +53,50 @@ Result TypedMean::execute(const ArrayView& input, double& output) {
     if (!std::isfinite(result)) return {Status::NumericalError, "non-finite mean result"};
     output = result; return {Status::Ok, "ok"};
 }
+TypedComplexMean::TypedComplexMean(std::size_t maxElements) : maxElements_(maxElements) {}
+Result TypedComplexMean::reserve() {
+    if (!maxElements_ || maxElements_ > workspace_.max_size() / 2) return {Status::InvalidArgument, "invalid maximum element count"};
+    try { workspace_.reserve(maxElements_ * 2); }
+    catch (const std::bad_alloc&) { return {Status::NumericalError, "mean workspace allocation failed"}; }
+    catch (const std::length_error&) { return {Status::InvalidArgument, "mean workspace too large"}; }
+    return {Status::Ok, "ok"};
+}
+void TypedComplexMean::reset() { std::vector<double>().swap(workspace_); }
+Result TypedComplexMean::execute(const ArrayView& input, ElementValue& output) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    const Result valid = validateArray(input);
+    if (valid.status != Status::Ok) return valid;
+    std::size_t count = 1;
+    for (std::size_t i = 0; i < input.rank; ++i) {
+        if (!input.extents[i]) return {Status::InvalidArgument, "mean input is empty"};
+        if (input.extents[i] > std::numeric_limits<std::size_t>::max() / count)
+            return {Status::InvalidArgument, "mean element count overflow"};
+        count *= input.extents[i];
+    }
+    if (!maxElements_ || count > maxElements_ || count > workspace_.max_size() / 2)
+        return {Status::InvalidArgument, "mean input exceeds configured limit"};
+    try { workspace_.resize(count * 2); }
+    catch (const std::bad_alloc&) { return {Status::NumericalError, "mean workspace allocation failed"}; }
+    catch (const std::length_error&) { return {Status::InvalidArgument, "mean workspace too large"}; }
+    std::array<std::size_t, 8> indices{};
+    for (std::size_t i = 0; i < count; ++i) {
+        std::size_t offset = 0;
+        for (std::size_t axis = 0; axis < input.rank; ++axis) offset += indices[axis] * input.stridesBytes[axis];
+        ElementValue element{}, converted{};
+        const Result read = detail::readValidatedElement(input, offset, element);
+        if (read.status != Status::Ok) return read;
+        const Result conversion = convertElement(element, ElementType::Complex128, converted);
+        if (conversion.status != Status::Ok) return conversion;
+        workspace_[2 * i] = converted.real; workspace_[2 * i + 1] = converted.imaginary;
+        for (std::size_t j = input.rank; j > 0; --j) {
+            const std::size_t axis = j - 1;
+            if (++indices[axis] < input.extents[axis]) break;
+            indices[axis] = 0;
+        }
+    }
+    const double real = gsl_stats_mean(workspace_.data(), 2, count);
+    const double imaginary = gsl_stats_mean(workspace_.data() + 1, 2, count);
+    if (!std::isfinite(real) || !std::isfinite(imaginary)) return {Status::NumericalError, "non-finite mean result"};
+    output = {ElementType::Complex128, 0, real, imaginary}; return {Status::Ok, "ok"};
+}
 }

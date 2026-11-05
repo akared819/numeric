@@ -48,12 +48,19 @@ before calculation. This implementation validates the view once, then copies
 and validates its elements. [Benchmarks](benchmarks.md#typed-view-comparison)
 show the cost of this path relative to the existing Float64 mean.
 
+`TypedComplexMean` accepts the same views and preserves both components in a
+Complex128 result. It composes two GSL means over interleaved real and imaginary
+components; real inputs have zero imaginary part. Its bounded per-instance
+scratch space, initialization, synchronization and failure rules match
+`TypedMean`. This is a native C++ interface; dedicated EPICS records do not
+yet expose complex values.
+
 The native `numericDataTest` covers all six types, complex layout and unaligned
 access, large Int64 values, empty views, invalid indices, capacity, overflow,
 overlapping writes and preservation on failure. `numericTypedMeanTest` checks
 GSL calculations across all six types, a strided matrix, exact-conversion
-failures, initialization, capacity, element-count overflow, reset and independent
-concurrent instances. Acceptance also requires
+failures, complex means, initialization, capacity, element-count overflow,
+reset and independent concurrent instances. Acceptance also requires
 additional numerical operations, all platform CI, and
 performance comparisons. The model must
 not claim NumPy compatibility or support arbitrary multidimensional layouts
