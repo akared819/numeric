@@ -76,8 +76,8 @@
     "interface": "scalar",
     "inputs_en": "A: sorted waveform; B: fraction",
     "inputs_ja": "A: 昇順の波形、B: 割合",
-    "result_en": "Interpolated quantile; fraction is in [0, 1]; input must be sorted.",
-    "result_ja": "補間した分位点。割合は0〜1、入力は昇順。",
+    "result_en": "Interpolated quantile; fraction is in [0, 1]. Samples must be finite and ascending; interpolation is linear between adjacent values.",
+    "result_ja": "補間した分位点。割合は0〜1、サンプルは有限かつ昇順。隣接する値の間を線形補間。",
     "doc": "numeric-scalar.md"
   },
   {
@@ -150,8 +150,8 @@
     "interface": "scalar",
     "inputs_en": "A: X waveform; B: Y waveform; C: query",
     "inputs_ja": "A: X波形、B: Y波形、C: 評価点",
-    "result_en": "Linear interpolation; X is strictly increasing and query is in range.",
-    "result_ja": "線形補間。Xは狭義単調増加、評価点は範囲内。",
+    "result_en": "Linear interpolation; X and Y have equal lengths of at least two, X is strictly increasing, and the query is inside the closed X range.",
+    "result_ja": "線形補間。XとYは同じ長さで2点以上、Xは狭義単調増加、評価点はXの範囲内（端を含む）。",
     "doc": "interpolation.md"
   },
   {
@@ -159,8 +159,8 @@
     "interface": "scalar",
     "inputs_en": "A: X waveform; B: Y waveform; C: query",
     "inputs_ja": "A: X波形、B: Y波形、C: 評価点",
-    "result_en": "Natural cubic spline; at least three points and in-range query.",
-    "result_ja": "自然三次スプライン。3点以上で評価点は範囲内。",
+    "result_en": "Natural cubic spline with zero second derivatives at the endpoints; equal lengths of at least three, strictly increasing X, and an in-range query.",
+    "result_ja": "端点の2階微分が0の自然三次スプライン。同じ長さで3点以上、Xは狭義単調増加、評価点は範囲内。",
     "doc": "interpolation.md"
   },
   {
@@ -168,8 +168,8 @@
     "interface": "scalar",
     "inputs_en": "A: coefficients; B: lower bound; C: upper bound",
     "inputs_ja": "A: 係数波形、B: 下限、C: 上限",
-    "result_en": "Polynomial definite integral.",
-    "result_ja": "多項式の定積分。",
+    "result_en": "Definite integral of 1–64 coefficients in ascending powers. Bounds may be equal or reversed; no error estimate is returned.",
+    "result_ja": "昇べき順の係数1〜64個の定積分。積分範囲は同値・逆順も可能。誤差推定値は返さない。",
     "doc": "integration.md"
   },
   {
@@ -177,8 +177,8 @@
     "interface": "scalar",
     "inputs_en": "A: coefficients; B: lower bound; C: upper bound",
     "inputs_ja": "A: 係数波形、B: 下限、C: 上限",
-    "result_en": "Bracketed polynomial root; bounds must form a valid bracket.",
-    "result_ja": "区間内の多項式の根。有効な括り区間が必要。",
+    "result_en": "A bracketed root of a polynomial with 2–64 coefficients in ascending powers. Bounds increase and endpoint values have opposite signs unless an endpoint is a root.",
+    "result_ja": "昇べき順の係数2〜64個の多項式の根。境界は増加順で、端点が根の場合を除き両端の関数値の符号が異なること。",
     "doc": "roots.md"
   },
   {
@@ -206,33 +206,33 @@
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Same-length centered moving mean.",
-    "result_ja": "入力と同じ長さの中心移動平均。",
+    "result_en": "Same-length centered moving mean; endpoints are padded by repeating the first or last sample.",
+    "result_ja": "入力と同じ長さの中心移動平均。端では先頭・末尾値を反復して補完。",
     "doc": "window-statistics.md",
-    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN.",
-    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN。"
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN (default 3).",
+    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN（既定3）。"
   },
   {
     "name": "moving_median",
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Same-length centered moving median.",
-    "result_ja": "入力と同じ長さの中心移動中央値。",
+    "result_en": "Same-length centered moving median; endpoints are padded by repeating the first or last sample.",
+    "result_ja": "入力と同じ長さの中心移動中央値。端では先頭・末尾値を反復して補完。",
     "doc": "window-statistics.md",
-    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN.",
-    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN。"
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN (default 3).",
+    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN（既定3）。"
   },
   {
     "name": "gaussian_smooth",
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Smoothed waveform.",
-    "result_ja": "平滑化波形。",
+    "result_en": "Same-length Gaussian-smoothed waveform. The centered window repeats endpoint values; sigma is (K−1)/(2×alpha) samples.",
+    "result_ja": "入力と同じ長さのガウス平滑化波形。中心窓の端は端点値を反復し、標準偏差は(K−1)/(2×alpha)サンプル。",
     "doc": "window-statistics.md",
-    "args_en": "ARGA: odd window width 3–4095, no greater than input length; ARGB: alpha 0.01–10. Blanks use WIN and ALPH.",
-    "args_ja": "ARGA：3〜4095の奇数窓幅（入力要素数以下）。ARGB：alpha 0.01〜10。空欄はWIN、ALPH。"
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; ARGB: alpha 0.01–10. Blanks use WIN (default 3) and ALPH (default 1.1774100225154747).",
+    "args_ja": "ARGA：3〜4095の奇数窓幅（入力要素数以下）。ARGB：alpha 0.01〜10。空欄はWIN（既定3）、ALPH（既定1.1774100225154747）。"
   },
   {
     "name": "histogram_uniform",
@@ -242,16 +242,16 @@
     "result_en": "Bin counts; lower bound is included and upper bound is excluded.",
     "result_ja": "ビンごとの個数。下限を含み上限を含みません。",
     "doc": "histograms.md",
-    "args_en": "ARGA: lower bound; ARGB: upper bound; ARGC: bin count 1–65536. Blanks use HMIN, HMAX and NBIN.",
-    "args_ja": "ARGA：下限、ARGB：上限、ARGC：ビン数1〜65536。空欄はHMIN、HMAX、NBIN。"
+    "args_en": "ARGA: lower bound; ARGB: upper bound; ARGC: bin count 1–65536. Blanks use HMIN=0, HMAX=1 and NBIN=10.",
+    "args_ja": "ARGA：下限、ARGB：上限、ARGC：ビン数1〜65536。空欄はHMIN=0、HMAX=1、NBIN=10。"
   },
   {
     "name": "linear_fit",
     "interface": "array",
     "inputs_en": "A: X waveform; B: Y waveform",
     "inputs_ja": "A: X波形、B: Y波形",
-    "result_en": "Six values: intercept, slope, three covariance values, residual sum of squares.",
-    "result_ja": "6要素：切片、傾き、共分散3値、残差平方和。",
+    "result_en": "Six DOUBLE values [intercept, slope, cov00, cov01, cov11, residual sum of squares]. X and Y must have equal lengths of at least three; X must not be constant.",
+    "result_ja": "DOUBLEの6要素［切片、傾き、cov00、cov01、cov11、残差平方和］。XとYは同じ長さで3点以上、Xは定数列不可。",
     "doc": "fitting.md"
   },
   {
@@ -313,8 +313,8 @@
     "interface": "array",
     "inputs_en": "A: sample count; B: sample interval",
     "inputs_ja": "A: サンプル数、B: サンプル間隔",
-    "result_en": "Signed full frequency axis in Hz; positive interval.",
-    "result_ja": "符号付きの全周波数軸（Hz）。間隔は正。",
+    "result_en": "N signed frequency-bin centers in Hz, in natural FFT order. N is a positive integer and the sample interval is positive; for even N the Nyquist bin is negative.",
+    "result_ja": "FFTの自然順で並ぶN個の符号付き周波数（Hz）。Nは正の整数、間隔は正。Nが偶数ならナイキスト成分は負側。",
     "doc": "fft.md"
   },
   {
@@ -340,8 +340,8 @@
     "interface": "array",
     "inputs_en": "A: waveform; B: segment length; C: overlap; D: sample interval",
     "inputs_ja": "A: 波形、B: 区間長、C: 重なり、D: サンプル間隔",
-    "result_en": "One-sided Welch PSD; segment length is a power of two of at least 4.",
-    "result_ja": "片側Welch PSD。区間長は4以上の2の累乗。",
+    "result_en": "One-sided PSD with N/2+1 bins. N must be a power of two at least 4, overlap is an integer in [0, N), sample interval is positive, and at least N samples are required.",
+    "result_ja": "N/2+1要素の片側PSD。Nは4以上の2の累乗、重なりは0以上N未満の整数、サンプル間隔は正、入力はN個以上。",
     "doc": "fft.md"
   },
   {
@@ -349,8 +349,8 @@
     "interface": "array",
     "inputs_en": "A: waveform; B: frame length; C: hop",
     "inputs_ja": "A: 波形、B: フレーム長、C: ホップ幅",
-    "result_en": "Complex STFT frames flattened in frame order; OMAX must hold every frame.",
-    "result_ja": "複素STFTをフレーム順に並べた配列。OMAXは全フレーム分必要。",
+    "result_en": "Flattened complex frames: N is a power of two at least 4, hop is an integer in [1, N], and output capacity is at least 2N×(1 + floor((sample_count−N)/hop)).",
+    "result_ja": "複素フレームを順番に並べた配列。Nは4以上の2の累乗、ホップ幅は1〜Nの整数。出力容量は2N×(1 + floor((サンプル数−N)/ホップ幅))以上。",
     "doc": "fft.md"
   },
   {
@@ -358,8 +358,8 @@
     "interface": "array",
     "inputs_en": "A: row-major symmetric matrix; B: dimension",
     "inputs_ja": "A: 行優先の対称行列、B: 次元",
-    "result_en": "Real eigenvalues in ascending order.",
-    "result_ja": "昇順に並べた実固有値。",
+    "result_en": "Ascending real eigenvalues; dimension is an integer 1–1024 and A must be an exactly symmetric row-major matrix with dimension squared finite elements.",
+    "result_ja": "昇順の実固有値。次元は1〜1024の整数、Aは次元の二乗個の有限値を持つ行優先の厳密な対称行列。",
     "doc": "linear-algebra.md"
   },
   {

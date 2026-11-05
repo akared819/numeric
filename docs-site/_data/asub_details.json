@@ -1,0 +1,494 @@
+[
+  {
+    "name": "numericMean",
+    "operation": "mean",
+    "db": "mean.db",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A：サンプル波形",
+    "outputs_en": "VALA: mean",
+    "outputs_ja": "VALA：平均",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "3",
+    "adapt_example": false
+  },
+  {
+    "name": "numericVariance",
+    "operation": "variance",
+    "db": "variance.db",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A：サンプル波形",
+    "outputs_en": "VALA: sample variance",
+    "outputs_ja": "VALA：標本分散",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "4",
+    "adapt_example": false
+  },
+  {
+    "name": "numericStddev",
+    "operation": "stddev",
+    "db": "stddev.db",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A：サンプル波形",
+    "outputs_en": "VALA: sample standard deviation",
+    "outputs_ja": "VALA：標本標準偏差",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "2",
+    "adapt_example": false
+  },
+  {
+    "name": "numericPopulationVariance",
+    "operation": "population_variance",
+    "db": "stddev.db",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A：サンプル波形",
+    "outputs_en": "VALA: population variance",
+    "outputs_ja": "VALA：母分散",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "2.66666666667",
+    "adapt_example": true
+  },
+  {
+    "name": "numericPopulationStddev",
+    "operation": "population_stddev",
+    "db": "stddev.db",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A：サンプル波形",
+    "outputs_en": "VALA: population standard deviation",
+    "outputs_ja": "VALA：母標準偏差",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "1.63299316186",
+    "adapt_example": true
+  },
+  {
+    "name": "numericMinmax",
+    "operation": "minmax",
+    "db": "minmax.db",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A：サンプル波形",
+    "outputs_en": "VALA: minimum; VALB: maximum",
+    "outputs_ja": "VALA：最小、VALB：最大",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "1; 5",
+    "adapt_example": false
+  },
+  {
+    "name": "numericCovariance",
+    "operation": "covariance",
+    "db": "covariance.db",
+    "inputs_en": "A: X waveform; B: Y waveform",
+    "inputs_ja": "A：X波形、B：Y波形",
+    "outputs_en": "VALA: sample covariance",
+    "outputs_ja": "VALA：標本共分散",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 2, 3]"
+      },
+      {
+        "name": "B",
+        "value": "[2, 4, 6]"
+      }
+    ],
+    "example_output": "2",
+    "adapt_example": false
+  },
+  {
+    "name": "numericCovariancePairs",
+    "operation": "covariance",
+    "db": "covariance-pairs.db",
+    "inputs_en": "A: interleaved X/Y pairs",
+    "inputs_ja": "A：X/Yを交互に並べた波形",
+    "outputs_en": "VALA: sample covariance",
+    "outputs_ja": "VALA：標本共分散",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 2, 2, 4, 3, 6]"
+      }
+    ],
+    "example_output": "2",
+    "adapt_example": false,
+    "note_en": "A must have an even number of at least four finite elements; each pair is X then Y.",
+    "note_ja": "Aは有限値を偶数個、最低4要素含み、各組はX、Yの順です。"
+  },
+  {
+    "name": "numericCorrelation",
+    "operation": "correlation",
+    "db": "correlation.db",
+    "inputs_en": "A: X waveform; B: Y waveform",
+    "inputs_ja": "A：X波形、B：Y波形",
+    "outputs_en": "VALA: Pearson correlation",
+    "outputs_ja": "VALA：ピアソン相関",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 2, 3]"
+      },
+      {
+        "name": "B",
+        "value": "[2, 4, 6]"
+      }
+    ],
+    "example_output": "1",
+    "adapt_example": false
+  },
+  {
+    "name": "numericCorrelationPairs",
+    "operation": "correlation",
+    "db": "covariance-pairs.db",
+    "inputs_en": "A: interleaved X/Y pairs",
+    "inputs_ja": "A：X/Yを交互に並べた波形",
+    "outputs_en": "VALA: Pearson correlation",
+    "outputs_ja": "VALA：ピアソン相関",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 2, 2, 4, 3, 6]"
+      }
+    ],
+    "example_output": "1",
+    "adapt_example": true,
+    "note_en": "A must have an even number of at least four finite elements; neither paired series may be constant.",
+    "note_ja": "Aは有限値を偶数個、最低4要素含み、どちらの系列も定数列にはできません。"
+  },
+  {
+    "name": "numericFftForward",
+    "operation": "fft_complex_radix2_forward",
+    "db": "fft.db",
+    "inputs_en": "A: interleaved complex waveform",
+    "inputs_ja": "A：実部・虚部を交互に並べた複素波形",
+    "outputs_en": "VALA: interleaved complex forward FFT",
+    "outputs_ja": "VALA：実部・虚部交互の複素正変換",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 0, 0, 0, 0, 0, 0, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 1, 0, 1, 0, 1, 0]",
+    "adapt_example": false
+  },
+  {
+    "name": "numericFftInverse",
+    "operation": "fft_complex_radix2_inverse",
+    "db": "fft.db",
+    "inputs_en": "A: interleaved complex spectrum",
+    "inputs_ja": "A：実部・虚部を交互に並べた複素スペクトル",
+    "outputs_en": "VALA: normalized interleaved complex inverse FFT",
+    "outputs_ja": "VALA：正規化された複素逆変換",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 0, 1, 0, 1, 0, 1, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 0, 0, 0, 0, 0, 0]",
+    "adapt_example": false
+  },
+  {
+    "name": "numericRealFftForward",
+    "operation": "fft_real_radix2_forward",
+    "db": "fft.db",
+    "inputs_en": "A: real waveform",
+    "inputs_ja": "A：実数波形",
+    "outputs_en": "VALA: interleaved spectrum; VALB is staging, not a result",
+    "outputs_ja": "VALA：実部・虚部交互のスペクトル。VALBは作業用で結果ではない",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 0, 0, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 1, 0, 1, 0, 1, 0]",
+    "adapt_example": false,
+    "note_en": "VALB is staging storage; configure FTVB as DOUBLE and NOVB at least 2N, and leave OUTB unconfigured.",
+    "note_ja": "VALBは作業領域です。FTVBをDOUBLE、NOVBを2N以上にし、OUTBは未設定にします。"
+  },
+  {
+    "name": "numericMovingMean",
+    "operation": "moving_mean",
+    "db": "window.db",
+    "inputs_en": "A: waveform; B: window width",
+    "inputs_ja": "A：波形、B：窓幅",
+    "outputs_en": "VALA: moving-mean waveform",
+    "outputs_ja": "VALA：移動平均波形",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 2, 3, 4, 5]"
+      },
+      {
+        "name": "B",
+        "value": "3"
+      }
+    ],
+    "example_output": "[1.33333333333, 2, 3, 4, 4.66666666667]",
+    "adapt_example": false
+  },
+  {
+    "name": "numericMovingMedian",
+    "operation": "moving_median",
+    "db": "window.db",
+    "inputs_en": "A: waveform; B: window width",
+    "inputs_ja": "A：波形、B：窓幅",
+    "outputs_en": "VALA: moving-median waveform",
+    "outputs_ja": "VALA：移動中央値波形",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 1, 99, 1, 1]"
+      },
+      {
+        "name": "B",
+        "value": "3"
+      }
+    ],
+    "example_output": "[1, 1, 1, 1, 1]",
+    "adapt_example": false
+  },
+  {
+    "name": "numericGaussianSmooth",
+    "operation": "gaussian_smooth",
+    "db": "window.db",
+    "inputs_en": "A: waveform; B: window width; C: alpha",
+    "inputs_ja": "A：波形、B：窓幅、C：alpha",
+    "outputs_en": "VALA: smoothed waveform",
+    "outputs_ja": "VALA：平滑化波形",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[7, 7, 7, 7, 7]"
+      },
+      {
+        "name": "B",
+        "value": "3"
+      },
+      {
+        "name": "C",
+        "value": "1"
+      }
+    ],
+    "example_output": "[7, 7, 7, 7, 7]",
+    "adapt_example": false
+  },
+  {
+    "name": "numericRunningMean",
+    "operation": "running_mean",
+    "db": "running-mean.db",
+    "inputs_en": "A: sample; B: sequence; C: reset token",
+    "inputs_ja": "A：サンプル、B：連番、C：リセットトークン",
+    "outputs_en": "VALA: mean; VALB: count",
+    "outputs_ja": "VALA：平均、VALB：個数",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "2"
+      },
+      {
+        "name": "B",
+        "value": "1"
+      },
+      {
+        "name": "C",
+        "value": "0"
+      }
+    ],
+    "example_output": "2; 1",
+    "adapt_example": false,
+    "note_en": "After the first sample, each accepted sequence must increase; incrementing C resets without consuming a sample. Tokens are exact nonnegative integers up to 2^53.",
+    "note_ja": "初回以降の連番は増加させます。Cを増やすとサンプルを消費せずリセットします。トークンは2^53以下の正確な非負整数です。"
+  },
+  {
+    "name": "numericRunningStats",
+    "operation": "running_stats",
+    "db": "running-stats.db",
+    "inputs_en": "A: sample; B: sequence; C: reset token",
+    "inputs_ja": "A：サンプル、B：連番、C：リセットトークン",
+    "outputs_en": "VALA–VALG: mean, sample variance, sample standard deviation, RMS, minimum, maximum, count",
+    "outputs_ja": "VALA〜VALG：平均、標本分散、標本標準偏差、RMS、最小、最大、個数",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "2"
+      },
+      {
+        "name": "B",
+        "value": "1"
+      },
+      {
+        "name": "C",
+        "value": "0"
+      }
+    ],
+    "example_output": "2; NaN; NaN; 2; 2; 2; 1",
+    "adapt_example": false,
+    "note_en": "After the first sample, each accepted sequence must increase by exactly one; incrementing C resets without consuming a sample. Tokens are exact nonnegative integers up to 2^53.",
+    "note_ja": "初回以降の連番は必ず1ずつ増加させます。Cを増やすとサンプルを消費せずリセットします。トークンは2^53以下の正確な非負整数です。"
+  },
+  {
+    "name": "numericAcknowledgedStats",
+    "operation": "running_stats",
+    "db": "acknowledged-stats.db",
+    "inputs_en": "A: four-element [session, sequence, kind, value] event",
+    "inputs_ja": "A：4要素の[session, sequence, kind, value]イベント",
+    "outputs_en": "VALA–VALK: statistics and event identity; VALL: coherent 11-element snapshot",
+    "outputs_ja": "VALA〜VALK：統計とイベント識別子。VALL：11要素の一貫した確認応答",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 0, 0, 2]"
+      }
+    ],
+    "example_output": "[2, NaN, NaN, 2, 2, 2, 1, 1, 0, 0, 2] (VALL)",
+    "adapt_example": false,
+    "note_en": "Session is 1–2^53; first sequence is 0 and later sequences increase by one; kind 0 means sample, kind 1 reset with value 0. Both the input and forward link must be local DB links.",
+    "note_ja": "sessionは1〜2^53、最初のsequenceは0で以降は1ずつ増加。kind 0はサンプル、1は値0のリセット。入力とフォワードリンクは両方ローカルDBリンクが必要です。"
+  },
+  {
+    "name": "numericInterpLinear",
+    "operation": "interp_linear",
+    "db": "interpolation.db",
+    "inputs_en": "A: X waveform; B: Y waveform; C: query",
+    "inputs_ja": "A：X波形、B：Y波形、C：評価点",
+    "outputs_en": "VALA: interpolated scalar",
+    "outputs_ja": "VALA：補間値",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[0, 1, 3]"
+      },
+      {
+        "name": "B",
+        "value": "[0, 2, 6]"
+      },
+      {
+        "name": "C",
+        "value": "2"
+      }
+    ],
+    "example_output": "4",
+    "adapt_example": false
+  },
+  {
+    "name": "numericLinearFit",
+    "operation": "linear_fit",
+    "db": "fitting.db",
+    "inputs_en": "A: X waveform; B: Y waveform",
+    "inputs_ja": "A：X波形、B：Y波形",
+    "outputs_en": "VALA: six fit values",
+    "outputs_ja": "VALA：フィット結果6要素",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[0, 1, 2]"
+      },
+      {
+        "name": "B",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "[1, 2, 0, 0, 0, 0]",
+    "adapt_example": false
+  },
+  {
+    "name": "numericPolynomialIntegral",
+    "operation": "polynomial_integral",
+    "db": "integration.db",
+    "inputs_en": "A: coefficients; B: lower bound; C: upper bound",
+    "inputs_ja": "A：係数波形、B：下限、C：上限",
+    "outputs_en": "VALA: definite integral",
+    "outputs_ja": "VALA：定積分",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[2, 3]"
+      },
+      {
+        "name": "B",
+        "value": "0"
+      },
+      {
+        "name": "C",
+        "value": "2"
+      }
+    ],
+    "example_output": "10",
+    "adapt_example": false
+  },
+  {
+    "name": "numericPolynomialRoot",
+    "operation": "polynomial_root",
+    "db": "roots.db",
+    "inputs_en": "A: coefficients; B: lower bound; C: upper bound",
+    "inputs_ja": "A：係数波形、B：下限、C：上限",
+    "outputs_en": "VALA: bracketed root",
+    "outputs_ja": "VALA：括り区間内の根",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[-2, 0, 1]"
+      },
+      {
+        "name": "B",
+        "value": "0"
+      },
+      {
+        "name": "C",
+        "value": "2"
+      }
+    ],
+    "example_output": "1.41421356237",
+    "adapt_example": false
+  },
+  {
+    "name": "numericPolynomial",
+    "operation": "polynomial_eval",
+    "db": "polynomial.db",
+    "inputs_en": "A: coefficients; B: evaluation point",
+    "inputs_ja": "A：係数波形、B：評価点",
+    "outputs_en": "VALA: polynomial value",
+    "outputs_ja": "VALA：多項式の値",
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[2, 3, 4]"
+      },
+      {
+        "name": "B",
+        "value": "2"
+      }
+    ],
+    "example_output": "24",
+    "adapt_example": false
+  }
+]

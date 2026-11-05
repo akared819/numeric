@@ -46,17 +46,43 @@ Update both waveform PVs, then process `SIGNAL:CORR.PROC` and inspect `VAL` and 
 {% for op in site.data.operations %}[`{{ op.name }}`](#{{ op.name }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for op in site.data.operations %}
+{% assign detail = site.data.operation_details[op.name] %}
 ### `{{ op.name }}`
 
 **Interface:** {% if op.interface == 'scalar' %}`numericScalar`{% elsif op.interface == 'array' %}`numericArray`{% else %}aSub / native registry; not a dedicated record{% endif %}.
 
-**Inputs:** {{ op.inputs_en }}.
+**Parameters:** {{ op.inputs_en }}.
 
-**Result and conditions:** {{ op.result_en }}
+{% for input in detail.types %}- `{{ input.name }}`: {% if input.shape == 'S' %}one finite numeric scalar{% else %}numeric waveform{% endif %}{% if op.interface == 'asub' %} (aSub input; use DOUBLE){% else %} (PV link, converted to DOUBLE; required, no default){% endif %}.
+{% endfor %}
+
+**Returns:** {% if detail.output_shape == 'S' %}one DOUBLE scalar in `VAL`{% elsif detail.output_shape == 'A' %}a DOUBLE array in `VAL`{% else %}{{ detail.output_shape.size }} DOUBLE scalar outputs, in the order described below{% endif %}. {{ op.result_en }}
 
 {% if op.args_en %}**Configuration arguments:** {{ op.args_en }}{% else %}**Configuration arguments:** None.{% endif %}
 
-**Details and examples:** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }}).
+**Errors:** Examples include {{ detail.error_en }}. Invalid buffers, non-finite inputs where unsupported, an uninitialized GSL policy, and numerical or allocation failures can also cause failure. Dedicated records raise `CALC/INVALID` and can retain the previous `VAL`; inspect `SEVR`. See the linked detailed specification for the complete rules.
+
+**Example:** {% if op.interface == 'asub' %}For a fresh instance, using aSub inputs{% else %}With the following input PV values and argument settings{% endif %}:
+
+{% for value in detail.example_inputs %}- `{{ value.name }}` = `{{ value.value }}`
+{% endfor %}
+Result: `{{ detail.example_output }}`{% if detail.output_shape.size > 1 %} (outputs in order){% endif %}. Values shown are approximate where floating-point rounding applies.{% if op.name == 'running_stats' %} `NaN` indicates the sample variance and standard deviation are undefined for the first sample.{% endif %}
+
+{% if op.interface != 'asub' %}For example, configure this result record after creating the named source PVs (the sources and their values above are not created by this snippet):
+
+```db
+record(numeric{% if op.interface == 'scalar' %}Scalar{% else %}Array{% endif %}, "EXAMPLE:RESULT") {
+    field(OP, "{{ op.name }}")
+{% for input in detail.types %}    field({{ input.name }}, "EXAMPLE:{{ input.name }} NPP NMS")
+{% endfor %}{% for value in detail.example_inputs %}{% if value.name contains 'ARG' %}    field({{ value.name }}, "{{ value.value }}")
+{% endif %}{% endfor %}    field(NMAX, "128")
+{% if op.interface == 'array' %}    field(OMAX, "128")
+{% endif %}}
+```
+
+Set the source PVs to the example values, process `EXAMPLE:RESULT.PROC`, then read `VAL` and `SEVR`. Use the array form of `caget` for array results. Adjust the capacities for your own data. {% endif %}
+
+**Further details:** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }}).
 {% endfor %}
 
 ## Other interfaces
@@ -67,6 +93,14 @@ Update both waveform PVs, then process `SIGNAL:CORR.PROC` and inspect `VAL` and 
 - **Native registry and array views:** [architecture and ownership](https://github.com/akared819/numeric/blob/main/docs/architecture.md), [typed data model](https://github.com/akared819/numeric/blob/main/docs/phase10-data-model-plan.md), and the public headers [`numeric.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numeric.h), [`numericData.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numericData.h), [`numericTypedMean.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numericTypedMean.h), and [`numericAck.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numericAck.h).
 
 GSL coverage is a subset, not the complete library; see the [coverage inventory](https://github.com/akared819/numeric/blob/main/docs/gsl-coverage.md).
+
+### Run the native examples
+
+After building numeric, run this from the repository root. Replace the Base path and configure the GSL shared-library search path if needed.
+
+```sh
+./tests/native-reference-examples.sh "$(/absolute/path/to/base/startup/EpicsHostArch)"
+```
 
 ## Native C++ API quick reference
 
@@ -92,3 +126,104 @@ These interfaces are synchronous and use caller-owned inputs and outputs unless 
 | `fitNonlinear` | Residual callback, initial parameters, residual count, tolerance and iteration limit; writes fitted parameters and sum of squared residuals. |
 
 Output preservation, callback restrictions, numerical limits and examples are specified in the linked [callback guide](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md), [fitting guide](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md) and [sampling guide](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md). GSL error estimates are not guaranteed bounds.
+
+<h2 id="native-numerical">Native numerical API details</h2>
+
+These are C++ APIs. Unless stated otherwise every parameter is required and has no default. Check `Result.status == Status::Ok` before using outputs. Keep callbacks and contexts alive during the call and initialize the GSL error policy first. Error estimates are not guaranteed bounds.
+
+The [complete runnable example, including callback definitions](https://github.com/akared819/numeric/blob/main/examples/native-api-reference.cpp), uses `square(x)=x*x`, `rootFn(x)=x*x-2`, `minimumFn(x)=(x-2)^2`, `ode` for `dx/dt=x`, and `residual` for a three-point exponential model. The following calls use variables defined in that example.
+
+{% for api in site.data.native_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
+
+{% for api in site.data.native_details %}
+### `{{ api.name }}`
+
+```cpp
+{{ api.signature }}
+```
+
+**Parameters:** {{ api.parameters_en }}
+
+**Returns:** `Result` (status and message). On success: {{ api.returns_en }}
+
+**Errors:** {{ api.errors_en }}
+
+**Example:**
+
+```cpp
+auto result = {{ api.example }};
+// result.status == Status::Ok: {{ api.expected }}
+```
+{% endfor %}
+
+<h2 id="native-core">Native core and utility API details</h2>
+
+These C++ APIs are not dedicated-record fields. The signature, parameters, return and failure conditions are listed below; parameters without an explicit C++ default are required. Each snippet is taken from the [complete executable example](https://github.com/akared819/numeric/blob/main/examples/native-core-reference.cpp). In real code, check every returned status and pointer and keep caller-owned buffers alive throughout each call.
+
+### Shared types and ownership
+
+| Type | Fields and meaning |
+| --- | --- |
+| `Input` | Caller-owned `const double* data`, valid element `count`, addressable `capacity`, element `stride`, `Type` and `Shape`. Capacity and valid count are distinct. |
+| `Output` | Caller-owned `double* data`, `capacity`, operation-written `count`, `Type` and `Shape`. |
+| `Descriptor` / `Type` / `Shape` | Input or output type and shape. Registry operations currently use `Float64` and `Scalar` or `Array`. |
+| `Result` / `Status` | Status is `Ok`, `InvalidArgument`, `NumericalError` or `NotInitialized`; `message` is diagnostic text. |
+| `ArgumentValue` / `ArgumentDescriptor` | Tagged integer, floating, boolean or enumeration value, plus name, required/default flags, limits, choices and mapping to legacy inputs. |
+| `Metadata` | Name, category, input/output descriptors, argument schema, statefulness, ownership and error descriptions. A `Registry::find` result is registry-owned. |
+| `ArrayView` / `MutableArrayView` | Caller-owned storage, capacity in bytes, `ElementType`, rank, extents and byte strides. Keep data, shape and stride arrays alive throughout use. |
+| `ElementValue` | `ElementType` and integer or real/imaginary components. Complex components are real then imaginary. |
+| `Event` / `Acknowledgment` | An event contains session, sequence, kind and value. An acknowledgment contains the event, seven statistics and a `replayed` flag. |
+| `ScalarCallback` | `double (*)(double x, void* context)`. A synchronous function returning a finite value. |
+| `OdeCallback` | `bool (*)(double time, const double* state, double* derivative, std::size_t dimension, void* context)`. Fill every derivative and return true. |
+| `ResidualCallback` | `bool (*)(const double* parameters, std::size_t parameterCount, double* residuals, std::size_t residualCount, void* context)`. Fill every residual and return true. |
+| `Factory` / `ArgumentValidator` | Respectively `std::unique_ptr<Operation> (*)()` and `Result (*)(const ArgumentValue*, std::size_t)`. |
+
+{% for api in site.data.native_core_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
+
+{% for api in site.data.native_core_details %}
+### `{{ api.name }}`
+
+```cpp
+{{ api.signature }}
+```
+
+**Parameters and types:** {{ api.parameters_en }}
+
+**Returns:** {{ api.returns_en }}
+
+**Errors:** {{ api.errors_en }}
+
+**Example:**
+
+```cpp
+{{ api.example }}
+```
+{% endfor %}
+
+
+<h2 id="asub-reference">aSub function details</h2>
+
+Set the function name in an `aSub` record’s `SNAM`. A, B and C are aSub inputs fetched through links such as `INPA`; **they are not the dedicated-record `ARGA` fields**. Configure the used inputs and outputs as DOUBLE. For waveform inputs reserve one more `NO*` element than the largest source waveform and allocate sufficient `NOV*` output capacity to detect truncation. See each linked specification for exceptions and further constraints. Call `numericInitialize` before `iocInit`.
+
+No operation-specific numerical input is filled automatically: configure each aSub input link or constant explicitly. Input updates generally do not schedule processing. An input-fetch failure can happen before the numeric callback, so inspect the record, links and data freshness. Previous output may remain on failure. Acknowledged streaming follows a separate processing protocol.
+
+{% for api in site.data.asub_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
+
+{% for api in site.data.asub_details %}
+{% assign operation = site.data.operation_details[api.operation] %}
+### `{{ api.name }}`
+
+**Configuration:** `SNAM="{{ api.name }}"`. {{ api.inputs_en }}. Used inputs and outputs are DOUBLE.
+
+**Parameter types and defaults:** A–C above are DOUBLE aSub inputs, not `ARGA`. Waveforms use `NO*` capacity and `NE*` valid count; scalars contain one element. No operation-specific numerical default is applied.
+
+{% if api.note_en %}**Additional conditions:** {{ api.note_en }}
+
+{% endif %}**Returns:** {{ api.outputs_en }}. Inspect the corresponding `NEV*` for valid output counts.
+
+**Errors:** {{ operation.error_en }}, among others. Invalid types or capacities, numerical failures and missing GSL initialization can also fail. {% if api.name == 'numericRunningMean' or api.name == 'numericRunningStats' %}Reprocessing the same sequence is ignored with `VAL=1`.{% elsif api.name == 'numericAcknowledgedStats' %}The acknowledgment protocol also validates session and sequence.{% else %}Failures detected inside the function normally raise `CALC/INVALID` and do not update output links.{% endif %}
+
+**Example:** {% for value in api.example_inputs %}`{{ value.name }}={{ value.value }}`{% unless forloop.last %}, {% endunless %}{% endfor %} → `{{ api.example_output }}`. Rounded values are approximate. {% if api.name == 'numericAcknowledgedStats' %}Submit this event with `numericAckSend demo:event demo:acknowledgedStats 1 0 sample 2`; do not issue a separate `.PROC` write.{% endif %}
+
+[Example configuration: {{ api.db }}](https://github.com/akared819/numeric/blob/main/examples/{{ api.db }}){% if api.adapt_example %}; change its `SNAM` to `{{ api.name }}`{% endif %}. {% if api.name == 'numericRealFftForward' %}`FTVB=DOUBLE` and `NOVB >= 2N` are required; leave OUTB unconfigured. {% endif %}[Numerical operation details](#{{ api.operation }}).
+{% endfor %}

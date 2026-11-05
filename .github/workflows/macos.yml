@@ -22,6 +22,7 @@ jobs:
           make -j2 GSL_DIR="$gsl_prefix"
           ./tests/gsl-version-check.sh "$gsl_prefix"
           arch=$(./base-7.0.10/startup/EpicsHostArch)
+          ./tests/native-reference-examples.sh "$arch"
           ./bin/$arch/numericIocBenchmark 64 100 macos-ci
           ./bin/$arch/numericBenchmark 64 100 macos-ci
           for test in numericTest numericDataTest numericTypedMeanTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do

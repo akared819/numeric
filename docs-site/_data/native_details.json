@@ -1,0 +1,74 @@
+[
+  {
+    "name": "differentiateCentral",
+    "signature": "Result differentiateCentral(ScalarCallback callback, void* context, double x, double step, double& value, double& absoluteError)",
+    "parameters_en": "callback, context: synchronous scalar callback and caller-owned context; x: finite evaluation point; step: positive finite step that changes x; value, absoluteError: distinct output references.",
+    "parameters_ja": "callback、context：同期のスカラー関数と呼び出し側のコンテキスト。x：有限の評価点。step：xを変化させられる正の有限刻み。value、absoluteError：別々の出力参照。",
+    "returns_en": "Derivative and estimated absolute error.",
+    "returns_ja": "微分値と絶対誤差の推定値。",
+    "errors_en": "Null callback, invalid step, callback exception/non-finite result or GSL failure; outputs remain unchanged.",
+    "errors_ja": "コールバックがnull、刻みが無効、コールバックの例外・非有限値、GSLエラー。出力は変更されません。",
+    "example": "differentiateCentral(square, nullptr, 2, 0.01, value, error)",
+    "expected": "4"
+  },
+  {
+    "name": "integrateAdaptive",
+    "signature": "Result integrateAdaptive(ScalarCallback callback, void* context, double lower, double upper, double absoluteTolerance, double relativeTolerance, std::size_t maxSubintervals, double& value, double& absoluteError)",
+    "parameters_en": "callback, context: callback and caller-owned context; lower, upper: finite increasing bounds; tolerances: nonnegative; maxSubintervals: 1–1000000; outputs must be distinct.",
+    "parameters_ja": "callback、context：関数と呼び出し側のコンテキスト。lower、upper：有限かつ増加する境界。許容誤差は非負。maxSubintervalsは1〜1000000。出力は別々の参照。",
+    "returns_en": "Integral and estimated absolute error; temporary workspace is released before return.",
+    "returns_ja": "積分値と絶対誤差の推定値。作業領域は呼び出し後に解放。",
+    "errors_en": "Invalid bounds/tolerances/limit, callback failure, nonconvergence or GSL failure; outputs remain unchanged. When absolute tolerance is zero, relative tolerance must be at least 50 machine epsilons.",
+    "errors_ja": "範囲・許容誤差・上限が無効、コールバック失敗、非収束、GSLエラー。出力は変更されません。絶対許容誤差が0なら相対許容誤差は機械イプシロンの50倍以上が必要。",
+    "example": "integrateAdaptive(square, nullptr, 0, 2, 1e-9, 1e-9, 100, value, error)",
+    "expected": "2.66666667"
+  },
+  {
+    "name": "findRootBrent",
+    "signature": "Result findRootBrent(ScalarCallback callback, void* context, double lower, double upper, double absoluteTolerance, double relativeTolerance, std::size_t maxIterations, double& root, double& bracketError)",
+    "parameters_en": "Finite increasing bounds bracket a root; tolerances are nonnegative with at least one positive; maxIterations is 1–1000000; outputs are distinct.",
+    "parameters_ja": "有限で増加する上下限で根を括ります。許容誤差は非負で少なくとも一方が正。maxIterationsは1〜1000000。出力は別々の参照。",
+    "returns_en": "Estimated root and maximum distance to bracket endpoints.",
+    "returns_ja": "根の推定値と、括り区間の端点までの最大距離。",
+    "errors_en": "Invalid bracket, callback failure, nonconvergence or GSL failure; outputs remain unchanged.",
+    "errors_ja": "無効な括り区間、コールバック失敗、非収束、GSLエラー。出力は変更されません。",
+    "example": "findRootBrent(rootFn, nullptr, 0, 2, 1e-12, 1e-12, 100, value, error)",
+    "expected": "1.41421356"
+  },
+  {
+    "name": "minimizeBrent",
+    "signature": "Result minimizeBrent(ScalarCallback callback, void* context, double lower, double initial, double upper, double absoluteTolerance, double relativeTolerance, std::size_t maxIterations, double& minimum, double& bracketError)",
+    "parameters_en": "Finite lower < initial < upper, with the function at initial below both endpoints; finite nonnegative tolerances with at least one positive; maxIterations 1–1000000; distinct outputs.",
+    "parameters_ja": "有限なlower < initial < upperを指定し、initialの関数値は両端より小さくします。許容誤差は有限・非負で一方以上が正。maxIterationsは1〜1000000。出力は別々の参照。",
+    "returns_en": "Minimum location and maximum distance to bracket endpoints; this is not a global-minimum guarantee.",
+    "returns_ja": "最小位置と括り区間端点までの最大距離。大域最小は保証しません。",
+    "errors_en": "Invalid bracket, callback failure, nonconvergence or GSL failure; outputs remain unchanged.",
+    "errors_ja": "括り区間が無効、コールバック失敗、非収束、GSLエラー。出力は変更されません。",
+    "example": "minimizeBrent(minimumFn, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, value, error)",
+    "expected": "2"
+  },
+  {
+    "name": "solveOdeRkf45",
+    "signature": "Result solveOdeRkf45(OdeCallback callback, void* context, double start, double finish, const double* initial, std::size_t dimension, double initialStep, double absoluteTolerance, double relativeTolerance, std::size_t maxSteps, double* output, std::size_t outputCapacity)",
+    "parameters_en": "Callback fills the derivative array and returns true; finite increasing time interval and finite initial values; dimension 1–1024; positive finite initial step; finite nonnegative tolerances with at least one positive; maxSteps 1–1000000; output capacity at least dimension.",
+    "parameters_ja": "コールバックは導関数配列を埋めてtrueを返します。時間区間は有限で増加、初期値は有限、dimensionは1〜1024、初期刻みは有限の正値、許容誤差は有限・非負で一方以上が正、maxStepsは1〜1000000。出力容量はdimension以上。",
+    "returns_en": "Writes final state to output; input and output may overlap.",
+    "returns_ja": "最終状態をoutputに書き込みます。入力と出力は重複可能。",
+    "errors_en": "Invalid buffers/parameters, callback failure, nonconvergence or GSL failure; output is unchanged.",
+    "errors_ja": "バッファー・引数が無効、コールバック失敗、非収束、GSLエラー。出力は変更されません。",
+    "example": "solveOdeRkf45(ode, nullptr, 0, 1, initial, 1, 0.01, 1e-9, 1e-9, 1000, output, 1)",
+    "expected": "output[0] ≈ 2.71828183"
+  },
+  {
+    "name": "fitNonlinear",
+    "signature": "Result fitNonlinear(ResidualCallback callback, void* context, const double* initial, std::size_t parameterCount, std::size_t residualCount, std::size_t maxIterations, double tolerance, double* parameters, std::size_t outputCapacity, double& sumSquaredResiduals)",
+    "parameters_en": "Callback fills finite residuals and returns true; parameterCount 1–64; residualCount at least parameterCount and at most 10000; positive tolerance and maxIterations 1–1000000; output capacity at least parameterCount. The parameter-output array and sumSquaredResiduals must not overlap.",
+    "parameters_ja": "コールバックは有限の残差を埋めてtrueを返します。parameterCountは1〜64、residualCountはパラメーター数以上10000以下。正の許容誤差、反復上限1〜1000000、十分な出力容量が必要。 parameters配列とsumSquaredResidualsは重複不可。",
+    "returns_en": "Fitted parameters and sum of squared residuals.",
+    "returns_ja": "推定したパラメーターと残差平方和。",
+    "errors_en": "Invalid input, callback failure, nonconvergence or GSL failure; outputs remain unchanged.",
+    "errors_ja": "入力が無効、コールバック失敗、非収束、GSLエラー。出力は変更されません。",
+    "example": "fitNonlinear(residual, nullptr, guess, 2, 3, 100, 1e-8, parameters, 2, sumsq)",
+    "expected": "parameters ≈ [2, 0.693147181]"
+  }
+]
