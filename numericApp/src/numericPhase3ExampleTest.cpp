@@ -31,7 +31,7 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(18);
+    testPlan(20);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
@@ -40,7 +40,8 @@ int main() {
         "demo:arrayMean.ARGA", "demo:arrayMean.SEVR", "demo:multiX", "demo:multiY",
         "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL",
         "demo:multiFit.PROC", "demo:multiFit.VAL", "demo:multiPower.ARGA", "demo:multiPower.PROC", "demo:multiPower.VAL",
-        "demo:typedFloatInput", "demo:typedFloatMean.PROC", "demo:typedFloatMean.VAL"};
+        "demo:typedFloatInput", "demo:typedFloatMean.PROC", "demo:typedFloatMean.VAL",
+        "demo:SPECTRAL:INPUT", "demo:SPECTRAL:PSD.PROC", "demo:SPECTRAL:PSD.VAL", "demo:SPECTRAL:STFT.PROC", "demo:SPECTRAL:STFT.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -137,6 +138,13 @@ int main() {
         ca_put(DBR_LONG, channels[34], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[35], &value) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL;
     testOk(typedMean && std::fabs(value - 2.5) < 1e-12, "numericScalar accepts a FLOAT waveform over Channel Access");
+    double spectralSamples[16], spectralResult[48] = {};
+    for (double& sample : spectralSamples) sample = 1;
+    testOk(connected && calculate(channels[36], channels[37], channels[38], spectralSamples, 16, spectralResult, 5) &&
+           std::fabs(spectralResult[0] - 7.0/150.0) < 1e-10, "example Welch PSD is accessible over Channel Access");
+    testOk(connected && calculate(channels[36], channels[39], channels[40], spectralSamples, 16, spectralResult, 48) &&
+           std::fabs(spectralResult[0] - 3.5) < 1e-10 && std::fabs(spectralResult[16] - 3.5) < 1e-10 &&
+           std::fabs(spectralResult[32] - 3.5) < 1e-10, "example STFT publishes three frames over Channel Access");
     if (subscription) ca_clear_subscription(subscription);
     for (chid channel : channels) if (channel) ca_clear_channel(channel);
     if (ca_current_context()) ca_context_destroy();

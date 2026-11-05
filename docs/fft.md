@@ -64,6 +64,23 @@ numerical failure preserves output values. numericArray exposes waveform,
 frame length and hop through INPA–INPC; separately updated links are not an
 atomic snapshot. This is a composition using GSL FFT primitives.
 
+The example IOC loads [spectral-analysis.db](../examples/spectral-analysis.db)
+with 16 samples, eight-sample frames, four-sample overlap/hop and a 0.01-second
+sample interval. For example, after starting the IOC:
+
+```sh
+caput -a demo:SPECTRAL:INPUT 16 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+caput demo:SPECTRAL:PSD.PROC 1
+caget -a demo:SPECTRAL:PSD.VAL
+caput demo:SPECTRAL:STFT.PROC 1
+caget -a demo:SPECTRAL:STFT.VAL
+```
+
+Changing an input or setting alone does not trigger processing. After changing
+frame length, overlap or hop, ensure the configured output capacity is large
+enough. Check the result severity before using values: an INVALID alarm can
+leave the previous valid output visible.
+
 The registry exposes `fft_complex_radix2_forward` and `fft_complex_radix2_inverse`. Both take one FLOAT64 array input and one FLOAT64 array output. Each complex number is represented by consecutive doubles `[real, imaginary]`, in natural sample or frequency-bin order. Counts and capacities are numbers of doubles, not complex numbers. Input stride must be 1. The input count must be even and represent a positive power-of-two number of complex values (including one); both buffers must have capacity for the full count. The output count is that same number of doubles on success and zero on failure.
 
 Forward uses the negative exponential, without normalization. Inverse uses the positive exponential and divides by the complex length, so a forward/inverse pair returns the original values within floating-point error. These conventions match the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html). Neither complex operation computes magnitudes, frequencies, or windowing. A separate real-input operation is described below.
