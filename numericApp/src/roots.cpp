@@ -65,7 +65,7 @@ std::unique_ptr<Operation> makePolynomialRoot() { return std::unique_ptr<Operati
 }
 void registerRoots(Registry& r) {
     const Descriptor array{Type::Float64,Shape::Array}, scalarDesc{Type::Float64,Shape::Scalar};
-    r.add(Metadata{"polynomial_root", "roots", {array,scalarDesc,scalarDesc}, {scalarDesc},
+    r.addWithoutArguments(Metadata{"polynomial_root", "roots", {array,scalarDesc,scalarDesc}, {scalarDesc},
         "bracketed polynomial root, Brent, abs/rel tolerance 1e-12, at most 128 iterations", false,
         "per-instance reusable GSL root solver; reset releases it", "invalid bracket, allocation, non-finite evaluation or nonconvergence"}, &makePolynomialRoot);
 }

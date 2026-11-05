@@ -115,7 +115,12 @@ int main() {
     CHECK(r.find("correlation") && r.find("correlation")->argumentSchemaComplete);
     CHECK(r.find("fft_real_radix2_forward") && r.find("fft_real_radix2_forward")->argumentSchemaComplete);
     CHECK(r.find("running_mean") && r.find("running_mean")->argumentSchemaComplete);
-    CHECK(r.find("polynomial_root") && !r.find("polynomial_root")->argumentSchemaComplete);
+    const char* completeNames[] = {"mean", "minmax", "covariance", "correlation", "variance", "stddev",
+        "population_variance", "population_stddev", "running_mean", "running_stats", "moving_mean", "moving_median",
+        "gaussian_smooth", "histogram_uniform", "fft_complex_radix2_forward", "fft_complex_radix2_inverse",
+        "fft_real_radix2_forward", "vector_norm", "erf", "log1p", "normal_cdf", "linear_fit",
+        "polynomial_eval", "interp_linear", "polynomial_integral", "polynomial_root"};
+    for (const char* name : completeNames) CHECK(r.find(name) && r.find(name)->argumentSchemaComplete);
     Metadata noArguments = *gaussMeta; noArguments.name = "wrong-no-arguments";
     CHECK(!r.addWithoutArguments(noArguments, &makeLifetime));
     CHECK(histMeta->arguments[0].inputIndex == 1 && histMeta->arguments[2].inputIndex == 3);

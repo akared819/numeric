@@ -57,7 +57,7 @@ std::unique_ptr<Operation> makeLinearInterpolation() { return std::unique_ptr<Op
 }
 void registerInterpolation(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalar{Type::Float64, Shape::Scalar};
-    r.add(Metadata{"interp_linear", "interpolation", {array, array, scalar}, {scalar},
+    r.addWithoutArguments(Metadata{"interp_linear", "interpolation", {array, array, scalar}, {scalar},
         "strictly increasing finite x, finite y and query in closed x domain", false,
         "per-instance reusable GSL interpolation and accelerator; reset releases both", "invalid input, allocation or GSL numerical error"}, &makeLinearInterpolation);
 }

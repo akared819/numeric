@@ -5,11 +5,12 @@ The registry exposes optional `Metadata::arguments` descriptors for
 and `parameters` fields and execution interface remain unchanged. The
 `argumentSchemaComplete` flag distinguishes a complete, possibly empty schema
 from one that has not been migrated. Statistics, running statistics, radix-2
-FFTs, the vector norm, `erf`, `log1p`, the normal CDF, and linear fitting are
-explicitly registered without configuration arguments. Their numerical inputs
-and constraints are unchanged. Polynomial evaluation, interpolation,
-integration and roots still need review before their schemas are marked
-complete.
+FFTs, the vector norm, `erf`, `log1p`, the normal CDF, linear fitting,
+polynomial evaluation, interpolation, integration and roots are explicitly
+registered without configuration arguments. Their numerical inputs and
+constraints are unchanged: evaluation points, integration bounds and root
+brackets remain numerical inputs, while integration order and solver tolerances
+remain fixed by their documented implementations.
 
 An argument descriptor names its position in the descriptor list, its type,
 whether it is required, whether it has a default, inclusive bounds, and
@@ -52,9 +53,7 @@ existing aggregate initializers is retained. No database interface is changed.
 
 ## Remaining work
 
-- Define complete metadata for every built-in.
-- Specify enum names and connect argument metadata to every built-in, then
-  connect these to a parameterized execution API.
+- Specify enum names and connect metadata to a parameterized execution API.
 - Remove operation-name-specific parameter dispatch from record support only
   after its legacy-field precedence and runtime update behavior are tested.
 - Verify all native and IOC regressions and required Linux, macOS and Windows

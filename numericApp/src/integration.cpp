@@ -49,7 +49,7 @@ std::unique_ptr<Operation> makePolynomialIntegral() { return std::unique_ptr<Ope
 }
 void registerIntegration(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
-    r.add(Metadata{"polynomial_integral", "numerical integration", {array,scalarDesc,scalarDesc}, {scalarDesc},
+    r.addWithoutArguments(Metadata{"polynomial_integral", "numerical integration", {array,scalarDesc,scalarDesc}, {scalarDesc},
         "32-point Gauss-Legendre integral of polynomial degree <=63", false,
         "per-instance reusable quadrature table; reset releases it", "invalid input, allocation or non-finite result"}, &makePolynomialIntegral);
 }
