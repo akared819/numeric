@@ -38,8 +38,8 @@
   {
     "name": "minimizeBrent",
     "signature": "Result minimizeBrent(ScalarCallback callback, void* context, double lower, double initial, double upper, double absoluteTolerance, double relativeTolerance, std::size_t maxIterations, double& minimum, double& bracketError)",
-    "parameters_en": "Finite lower < initial < upper; function at initial must be below both endpoints. Tolerances and iteration bound are required; outputs are distinct.",
-    "parameters_ja": "有限なlower < initial < upperを指定し、initialの関数値は両端より小さくします。許容誤差と反復上限は必須。出力は別々の参照。",
+    "parameters_en": "Finite lower < initial < upper, with the function at initial below both endpoints; finite nonnegative tolerances with at least one positive; maxIterations 1–1000000; distinct outputs.",
+    "parameters_ja": "有限なlower < initial < upperを指定し、initialの関数値は両端より小さくします。許容誤差は有限・非負で一方以上が正。maxIterationsは1〜1000000。出力は別々の参照。",
     "returns_en": "Minimum location and maximum distance to bracket endpoints; this is not a global-minimum guarantee.",
     "returns_ja": "最小位置と括り区間端点までの最大距離。大域最小は保証しません。",
     "errors_en": "Invalid bracket, callback failure, nonconvergence or GSL failure; outputs remain unchanged.",
@@ -50,8 +50,8 @@
   {
     "name": "solveOdeRkf45",
     "signature": "Result solveOdeRkf45(OdeCallback callback, void* context, double start, double finish, const double* initial, std::size_t dimension, double initialStep, double absoluteTolerance, double relativeTolerance, std::size_t maxSteps, double* output, std::size_t outputCapacity)",
-    "parameters_en": "Callback fills derivative array and returns true; finite increasing time interval; dimension 1–1024, positive initial step, valid tolerances, maxSteps 1–1000000; output capacity at least dimension.",
-    "parameters_ja": "コールバックは導関数配列を埋めてtrueを返します。時間区間は有限で増加、dimensionは1〜1024、初期刻みは正、maxStepsは1〜1000000。出力容量はdimension以上。",
+    "parameters_en": "Callback fills the derivative array and returns true; finite increasing time interval and finite initial values; dimension 1–1024; positive finite initial step; finite nonnegative tolerances with at least one positive; maxSteps 1–1000000; output capacity at least dimension.",
+    "parameters_ja": "コールバックは導関数配列を埋めてtrueを返します。時間区間は有限で増加、初期値は有限、dimensionは1〜1024、初期刻みは有限の正値、許容誤差は有限・非負で一方以上が正、maxStepsは1〜1000000。出力容量はdimension以上。",
     "returns_en": "Writes final state to output; input and output may overlap.",
     "returns_ja": "最終状態をoutputに書き込みます。入力と出力は重複可能。",
     "errors_en": "Invalid buffers/parameters, callback failure, nonconvergence or GSL failure; output is unchanged.",
@@ -62,8 +62,8 @@
   {
     "name": "fitNonlinear",
     "signature": "Result fitNonlinear(ResidualCallback callback, void* context, const double* initial, std::size_t parameterCount, std::size_t residualCount, std::size_t maxIterations, double tolerance, double* parameters, std::size_t outputCapacity, double& sumSquaredResiduals)",
-    "parameters_en": "Callback fills finite residuals and returns true; parameterCount 1–64; residualCount at least parameterCount and at most 10000; positive tolerance and maxIterations 1–1000000; output capacity at least parameterCount.",
-    "parameters_ja": "コールバックは有限の残差を埋めてtrueを返します。parameterCountは1〜64、residualCountはパラメーター数以上10000以下。正の許容誤差、反復上限1〜1000000、十分な出力容量が必要。",
+    "parameters_en": "Callback fills finite residuals and returns true; parameterCount 1–64; residualCount at least parameterCount and at most 10000; positive tolerance and maxIterations 1–1000000; output capacity at least parameterCount. The parameter-output array and sumSquaredResiduals must not overlap.",
+    "parameters_ja": "コールバックは有限の残差を埋めてtrueを返します。parameterCountは1〜64、residualCountはパラメーター数以上10000以下。正の許容誤差、反復上限1〜1000000、十分な出力容量が必要。 parameters配列とsumSquaredResidualsは重複不可。",
     "returns_en": "Fitted parameters and sum of squared residuals.",
     "returns_ja": "推定したパラメーターと残差平方和。",
     "errors_en": "Invalid input, callback failure, nonconvergence or GSL failure; outputs remain unchanged.",
