@@ -72,6 +72,18 @@ bool exactFloat(double value, float& converted) {
     converted = static_cast<float>(value);
     return std::isfinite(converted) && static_cast<double>(converted) == value;
 }
+bool exactInteger(std::int64_t value, int precision) {
+    std::uint64_t magnitude = value < 0 ? static_cast<std::uint64_t>(-(value + 1)) + 1 :
+                                          static_cast<std::uint64_t>(value);
+    const std::uint64_t limit = UINT64_C(1) << precision;
+    while (magnitude > limit) {
+        if (magnitude & 1u) return false;
+        magnitude >>= 1;
+    }
+    return true;
+}
+bool integerType(ElementType type) { return type == ElementType::Int32 || type == ElementType::Int64; }
+bool complexType(ElementType type) { return type == ElementType::Complex64 || type == ElementType::Complex128; }
 }
 Result validateArray(const ArrayView& view) { return checkLayout(view, false); }
 Result validateWritableArray(const MutableArrayView& view) { return checkLayout(asReadView(view), true); }
@@ -93,6 +105,44 @@ Result readElement(const ArrayView& view, const std::size_t* indices, std::size_
         (!std::isfinite(result.real) || !std::isfinite(result.imaginary)))
         return {Status::InvalidArgument, "non-finite array element"};
     value = result; return {Status::Ok, "ok"};
+}
+Result convertElement(const ElementValue& source, ElementType destination, ElementValue& converted) {
+    if (!elementSize(source.type) || !elementSize(destination)) return {Status::InvalidArgument, "invalid element type"};
+    float ignored = 0;
+    if (source.type == ElementType::Int32 &&
+        (source.integer < std::numeric_limits<std::int32_t>::min() || source.integer > std::numeric_limits<std::int32_t>::max()))
+        return {Status::InvalidArgument, "source Int32 out of range"};
+    if (!integerType(source.type) && (!std::isfinite(source.real) || (complexType(source.type) && !std::isfinite(source.imaginary))))
+        return {Status::InvalidArgument, "non-finite source"};
+    if ((source.type == ElementType::Float32 || source.type == ElementType::Complex64) &&
+        (!exactFloat(source.real, ignored) || (complexType(source.type) && !exactFloat(source.imaginary, ignored))))
+        return {Status::InvalidArgument, "inexact source representation"};
+    if (complexType(source.type) && !complexType(destination) && source.imaginary != 0.0)
+        return {Status::InvalidArgument, "nonzero imaginary part"};
+    ElementValue result{destination, 0, 0.0, 0.0};
+    if (integerType(destination)) {
+        if (integerType(source.type)) result.integer = source.integer;
+        else {
+            const double x = source.real;
+            if (std::floor(x) != x || x < -9223372036854775808.0 || x >= 9223372036854775808.0)
+                return {Status::InvalidArgument, "inexact integer conversion"};
+            result.integer = static_cast<std::int64_t>(x);
+        }
+        if (destination == ElementType::Int32 &&
+            (result.integer < std::numeric_limits<std::int32_t>::min() || result.integer > std::numeric_limits<std::int32_t>::max()))
+            return {Status::InvalidArgument, "destination Int32 out of range"};
+    } else {
+        const bool target32 = destination == ElementType::Float32 || destination == ElementType::Complex64;
+        if (integerType(source.type)) {
+            if (!exactInteger(source.integer, target32 ? 24 : 53)) return {Status::InvalidArgument, "inexact floating conversion"};
+            result.real = static_cast<double>(source.integer);
+        } else result.real = source.real;
+        result.imaginary = complexType(source.type) ? source.imaginary : 0.0;
+        if (target32 && (!exactFloat(result.real, ignored) ||
+            (complexType(destination) && !exactFloat(result.imaginary, ignored))))
+            return {Status::InvalidArgument, "inexact Float32 conversion"};
+    }
+    converted = result; return {Status::Ok, "ok"};
 }
 Result writeElement(const MutableArrayView& view, const std::size_t* indices,
                     std::size_t count, const ElementValue& value) {

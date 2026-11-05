@@ -29,6 +29,10 @@ NUMERIC_API Result validateArray(const ArrayView& view);
 NUMERIC_API Result validateWritableArray(const MutableArrayView& view);
 NUMERIC_API Result readElement(const ArrayView& view, const std::size_t* indices,
                                std::size_t indexCount, ElementValue& value);
+// Exact conversion only; complex-to-real requires an exactly zero imaginary part.
+// On failure, the output value is unchanged.
+NUMERIC_API Result convertElement(const ElementValue& source, ElementType destination,
+                                  ElementValue& converted);
 // Same-type exact writes only; failed writes preserve the destination.
 NUMERIC_API Result writeElement(const MutableArrayView& view, const std::size_t* indices,
                                 std::size_t indexCount, const ElementValue& value);

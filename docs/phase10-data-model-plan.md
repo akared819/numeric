@@ -1,10 +1,9 @@
 # Phase 10: typed array model — in progress
 
 The existing Float64 `Input`, `Output` and operation APIs remain supported.
-The separate `numericData.h` interface now provides typed views and exact
-same-type element reads and writes independently of GSL. It is not yet wired
-to numerical operations or EPICS records; cross-type conversion is not yet
-implemented.
+The separate `numericData.h` interface provides typed views, exact same-type
+element reads and writes, and explicit exact element conversion independently
+of GSL. It is not yet wired to numerical operations or EPICS records.
 
 The supported view types are Float32, Float64, Int32, Int64, Complex64 and
 Complex128. Complex elements use two consecutive real components
@@ -25,16 +24,16 @@ reject non-finite elements; same-type writes require exact representation and
 leave the destination unchanged on error. Caller-owned buffers and dimension
 arrays must outlive each operation invocation.
 
-Type conversion will be explicit. Integer-to-floating conversion must reject
-values that are not exactly representable where exactness is required, and
-floating-to-integer conversion must check finiteness, fractional values and
-range before casting. Conversions between complex and real values require an
-explicit policy for the imaginary component; none is silently discarded.
+`convertElement` rejects integer-to-floating conversions that are not exactly
+representable, and checks finiteness, fractional values and range before
+floating-to-integer conversion. Complex-to-real conversion requires an exactly
+zero imaginary component. All conversions are exact; nonzero imaginary values
+and lost precision are rejected. The destination value is unchanged on error.
 
 The native `numericDataTest` covers all six types, complex layout and unaligned
 access, large Int64 values, empty views, invalid indices, capacity, overflow,
 overlapping writes and preservation on failure. Acceptance also requires
-cross-type conversion and numerical operation integration, additional
+numerical operation integration, additional
 analytical tests, all platform CI, and performance comparisons. The model must
 not claim NumPy compatibility or support arbitrary multidimensional layouts
 before those cases are verified.
