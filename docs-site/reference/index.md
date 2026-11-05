@@ -213,7 +213,9 @@ No operation-specific numerical input is filled automatically: configure each aS
 
 **Parameter types and defaults:** A–C above are DOUBLE aSub inputs, not `ARGA`. Waveforms use `NO*` capacity and `NE*` valid count; scalars contain one element. No operation-specific numerical default is applied.
 
-**Returns:** {{ api.outputs_en }}. Inspect the corresponding `NEV*` for valid output counts.
+{% if api.note_en %}**Additional conditions:** {{ api.note_en }}
+
+{% endif %}**Returns:** {{ api.outputs_en }}. Inspect the corresponding `NEV*` for valid output counts.
 
 **Errors:** {{ operation.error_en }}, among others. Invalid types or capacities, numerical failures and missing GSL initialization can also fail. {% if api.name == 'numericRunningMean' or api.name == 'numericRunningStats' %}Reprocessing the same sequence is ignored with `VAL=1`.{% elsif api.name == 'numericAcknowledgedStats' %}The acknowledgment protocol also validates session and sequence.{% else %}Failures detected inside the function normally raise `CALC/INVALID` and do not update output links.{% endif %}
 

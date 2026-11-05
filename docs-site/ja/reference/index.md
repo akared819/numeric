@@ -214,7 +214,9 @@ auto result = {{ api.example }};
 
 **引数の型・既定値：** 上記のA〜CはDOUBLE入力で、`ARGA`ではありません。波形は`NO*`の容量と`NE*`の有効数を区別し、スカラーは1要素です。操作固有の数値に自動の既定値はありません。
 
-**戻り値：** {{ api.outputs_ja }}。成功時の出力個数は対応する`NEV*`を参照します。
+{% if api.note_ja %}**補足条件：** {{ api.note_ja }}
+
+{% endif %}**戻り値：** {{ api.outputs_ja }}。成功時の出力個数は対応する`NEV*`を参照します。
 
 **エラー条件：** {{ operation.error_ja }}など。無効な型・容量、数値エラー、GSL未初期化も失敗の原因です。{% if api.name == 'numericRunningMean' or api.name == 'numericRunningStats' %}同じ連番の再処理は更新せず、`VAL=1`で無視されます。{% elsif api.name == 'numericAcknowledgedStats' %}確認応答プロトコルの連番やセッションも検証します。{% else %}関数内で検出した失敗は通常`CALC/INVALID`となり、出力リンクを更新しません。{% endif %}
 

@@ -137,7 +137,9 @@
       }
     ],
     "example_output": "2",
-    "adapt_example": false
+    "adapt_example": false,
+    "note_en": "A must have an even number of at least four finite elements; each pair is X then Y.",
+    "note_ja": "Aは有限値を偶数個、最低4要素含み、各組はX、Yの順です。"
   },
   {
     "name": "numericCorrelation",
@@ -175,7 +177,9 @@
       }
     ],
     "example_output": "1",
-    "adapt_example": true
+    "adapt_example": true,
+    "note_en": "A must have an even number of at least four finite elements; neither paired series may be constant.",
+    "note_ja": "Aは有限値を偶数個、最低4要素含み、どちらの系列も定数列にはできません。"
   },
   {
     "name": "numericFftForward",
@@ -226,7 +230,9 @@
       }
     ],
     "example_output": "[1, 0, 1, 0, 1, 0, 1, 0]",
-    "adapt_example": false
+    "adapt_example": false,
+    "note_en": "VALB is staging storage; configure FTVB as DOUBLE and NOVB at least 2N, and leave OUTB unconfigured.",
+    "note_ja": "VALBは作業領域です。FTVBをDOUBLE、NOVBを2N以上にし、OUTBは未設定にします。"
   },
   {
     "name": "numericMovingMean",
@@ -318,7 +324,9 @@
       }
     ],
     "example_output": "2; 1",
-    "adapt_example": false
+    "adapt_example": false,
+    "note_en": "After the first sample, each accepted sequence must increase; incrementing C resets without consuming a sample. Tokens are exact nonnegative integers up to 2^53.",
+    "note_ja": "初回以降の連番は増加させます。Cを増やすとサンプルを消費せずリセットします。トークンは2^53以下の正確な非負整数です。"
   },
   {
     "name": "numericRunningStats",
@@ -343,7 +351,9 @@
       }
     ],
     "example_output": "2; NaN; NaN; 2; 2; 2; 1",
-    "adapt_example": false
+    "adapt_example": false,
+    "note_en": "After the first sample, each accepted sequence must increase by exactly one; incrementing C resets without consuming a sample. Tokens are exact nonnegative integers up to 2^53.",
+    "note_ja": "初回以降の連番は必ず1ずつ増加させます。Cを増やすとサンプルを消費せずリセットします。トークンは2^53以下の正確な非負整数です。"
   },
   {
     "name": "numericAcknowledgedStats",
@@ -360,7 +370,9 @@
       }
     ],
     "example_output": "[2, NaN, NaN, 2, 2, 2, 1, 1, 0, 0, 2] (VALL)",
-    "adapt_example": false
+    "adapt_example": false,
+    "note_en": "Session is 1–2^53; first sequence is 0 and later sequences increase by one; kind 0 means sample, kind 1 reset with value 0. Both the input and forward link must be local DB links.",
+    "note_ja": "sessionは1〜2^53、最初のsequenceは0で以降は1ずつ増加。kind 0はサンプル、1は値0のリセット。入力とフォワードリンクは両方ローカルDBリンクが必要です。"
   },
   {
     "name": "numericInterpLinear",
