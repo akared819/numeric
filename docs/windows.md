@@ -59,13 +59,15 @@ shown in the README. Input updates still require explicit record processing.
 
 ## Verification and limits
 
-`tests/windows.sh` runs the seven native numerical test programs, ten IOC test
+`tests/windows.sh` runs the nine native numerical test programs, ten IOC test
 programs both with and without GSL initialization, the minimum-GSL-version
 rejection check, benchmark smoke/invalid-input checks, the example IOC, and the
-acknowledged-stream restart, crash and network-interruption tests. Run from the
+multiple-input link reconnection tests and the acknowledged-stream restart,
+crash and network-interruption tests. Each native and IOC test program has a
+120-second timeout so a stalled calculation fails the runner. Run from the
 repository root with `EPICS_BASE` and `GSL_DIR` set. It adds numeric, Base and GSL
 DLL directories to the shell's `PATH`. The network tests use loopback ports
-25064–25066; do not run these scripts concurrently.
+25064–25066 and 25140–25142; do not run these scripts concurrently.
 
 The relay uses EPICS socket initialization, pointer-sized socket handles and
 `select`, including Winsock cleanup. Test marker paths are converted to Windows
@@ -133,3 +135,43 @@ public-interface documentation and coverage inventory are verified locally.
 Candidate-specific CI remains a separate acceptance item until its runs finish.
 The next portability increment would be independent validation of MSVC builds
 with matching GSL and Base binaries; it is outside this MinGW increment.
+
+## Develop validation (2026-11-05)
+
+Updated this PC to `develop` commit `98b97b0` and rebuilt against the same
+EPICS Base 7.0.10, GSL 2.8 and MinGW-w64 GCC 9.1.0 installations above.
+The initial numerical run stalled in Welch PSD. Debugger inspection and a
+standalone `std::hypot(double, double)` probe showed a self-recursive overload
+in this PC's older C++ math headers, optimized into an infinite jump. This is
+an observation about this local toolchain, not a claim that every GCC 9.1
+installation has the defect. The raw power-spectrum path used the same call.
+
+Both magnitude calculations now use the public GSL `gsl_hypot` API, keeping the
+existing normalization, overflow checks and output-preservation behavior. No
+public operation signature changed. Added analytical Welch regression cases
+with amplitudes `1e200` and `1e-200` and compensating sample intervals to verify
+that intermediate magnitude calculation does not overflow or underflow before
+scaling. The Windows runner bounds each native and IOC test program to 120
+seconds, so stalled computations report a failed run rather than waiting
+indefinitely.
+
+After these fixes, the standard EPICS build and `sh tests/windows.sh` completed
+with exit status 0:
+
+- All nine native numerical/data/typed-mean test programs passed, including
+  the additional FFT magnitude cases and the new native callback APIs.
+- All ten IOC test programs passed both initialized and uninitialized runs.
+- The example IOC, multiple-input producer disconnect/reconnect tests, and
+  acknowledged-stream restart, crash and relay-interruption tests passed.
+- The 38 completed TAP groups contain 1,451 passing assertions and no failures.
+  Native non-TAP checks, GSL 2.7 rejection and benchmark smoke/invalid-input
+  checks also passed.
+- `git diff --check` passed. Logs are retained locally under the ignored
+  `.build-windows/validation-2026-11-05/` directory; the build and runner
+  commands are the same as above.
+
+The implementation and regression tests are committed together on `develop`;
+candidate-specific CI results are available in that commit's GitHub checks.
+The macOS allocation interposer and Linux GDB notification stress suite were
+not run on this Windows PC. The existing EPICS notification limitation and
+the separate MSVC validation requirement still apply.
