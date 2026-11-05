@@ -1,9 +1,32 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numeric.h"
+#include <gsl/gsl_rng.h>
 #include <gsl/gsl_cdf.h>
 #include <cmath>
 
 namespace numeric {
+UniformRandomStream::UniformRandomStream() : rng_(nullptr), seed_(0) {}
+UniformRandomStream::~UniformRandomStream() { if (rng_) gsl_rng_free(static_cast<gsl_rng*>(rng_)); }
+Result UniformRandomStream::initialize(std::uint32_t seed) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    gsl_rng* fresh = gsl_rng_alloc(gsl_rng_mt19937);
+    if (!fresh) return {Status::NumericalError, "random generator allocation failed"};
+    gsl_rng_set(fresh, static_cast<unsigned long>(seed));
+    if (rng_) gsl_rng_free(static_cast<gsl_rng*>(rng_));
+    rng_ = fresh; seed_ = seed; return {Status::Ok, "ok"};
+}
+Result UniformRandomStream::reset() {
+    if (!rng_) return {Status::NotInitialized, "random generator not initialized"};
+    gsl_rng_set(static_cast<gsl_rng*>(rng_), static_cast<unsigned long>(seed_));
+    return {Status::Ok, "ok"};
+}
+Result UniformRandomStream::fill(double* output, std::size_t count, std::size_t capacity) {
+    if (!rng_) return {Status::NotInitialized, "random generator not initialized"};
+    if (!output || !count || count > capacity) return {Status::InvalidArgument, "invalid random output buffer"};
+    gsl_rng* rng = static_cast<gsl_rng*>(rng_);
+    for (std::size_t i = 0; i < count; ++i) output[i] = gsl_rng_uniform(rng);
+    return {Status::Ok, "ok"};
+}
 namespace {
 class NormalCdf : public Operation {
 public:

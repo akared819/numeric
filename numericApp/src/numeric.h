@@ -102,6 +102,20 @@ NUMERIC_API Result differentiateCentral(ScalarCallback callback, void* context, 
 NUMERIC_API Result integrateAdaptive(ScalarCallback callback, void* context, double lower, double upper,
                                      double absoluteTolerance, double relativeTolerance, std::size_t maxSubintervals,
                                      double& value, double& absoluteError);
+// Independent deterministic GSL MT19937 stream; instances are not thread-safe.
+class NUMERIC_API UniformRandomStream {
+public:
+    UniformRandomStream();
+    ~UniformRandomStream();
+    UniformRandomStream(const UniformRandomStream&) = delete;
+    UniformRandomStream& operator=(const UniformRandomStream&) = delete;
+    Result initialize(std::uint32_t seed);
+    Result reset();
+    Result fill(double* output, std::size_t count, std::size_t capacity);
+private:
+    void* rng_;
+    std::uint32_t seed_;
+};
 NUMERIC_API void registerBuiltins(Registry& registry);
 }
 #endif

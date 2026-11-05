@@ -2,6 +2,7 @@
 #include "numeric.h"
 #include "numericAck.h"
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_rng.h>
 #include <atomic>
 #include <climits>
 #include <cmath>
@@ -190,9 +191,24 @@ int main() {
     Output interpolationOut{&iv, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::NotInitialized && iv == 42);
     double derivative = 7, derivativeError = 8, multiplier = 3;
+    UniformRandomStream random;
+    double samples[4] = {};
+    CHECK(random.initialize(123).status == Status::NotInitialized && random.fill(samples,4,4).status == Status::NotInitialized);
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::NotInitialized && derivative == 7 && derivativeError == 8);
     CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    CHECK(random.initialize(123).status == Status::Ok && random.fill(samples,4,4).status == Status::Ok);
+    gsl_rng* referenceRng = gsl_rng_alloc(gsl_rng_mt19937); CHECK(referenceRng); gsl_rng_set(referenceRng, 123);
+    for (double sample : samples) CHECK(sample == gsl_rng_uniform(referenceRng) && sample >= 0 && sample < 1);
+    gsl_rng_free(referenceRng);
+    double savedSamples[4]; for (int i = 0; i < 4; ++i) savedSamples[i] = samples[i];
+    CHECK(random.reset().status == Status::Ok);
+    CHECK(random.fill(samples,4,3).status == Status::InvalidArgument && samples[0] == savedSamples[0]);
+    CHECK(random.fill(samples,4,4).status == Status::Ok);
+    for (int i = 0; i < 4; ++i) CHECK(samples[i] == savedSamples[i]);
+    UniformRandomStream secondRandom;
+    CHECK(secondRandom.initialize(123).status == Status::Ok && secondRandom.fill(samples,4,4).status == Status::Ok);
+    for (int i = 0; i < 4; ++i) CHECK(samples[i] == savedSamples[i]);
     auto eigen = r.create("matrix_eigenvalues_symmetric"); CHECK(eigen);
     double symmetric[] = {2,1,1,2}, eigenDimension = 2, eigenValues[] = {9,9};
     Input eigenInputs[] = {{symmetric,4,4,1,Type::Float64,Shape::Array}, {&eigenDimension,1,1,1,Type::Float64,Shape::Scalar}};
