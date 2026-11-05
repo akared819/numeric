@@ -32,6 +32,7 @@ bool fitResidual(const double* p, std::size_t np, double* r, std::size_t nr, voi
     return true;
 }
 bool fitBad(const double*, std::size_t, double*, std::size_t, void*) { return true; }
+bool fitThrow(const double*, std::size_t, double*, std::size_t, void*) { throw 1; }
 int destroyed = 0;
 class Lifetime : public Operation {
 public:
@@ -292,6 +293,8 @@ int main() {
     fitResult[0] = 7; fitResult[1] = 8; fitError = 9;
     CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 1, 100, 1e-8, fitResult, 2, fitError).status == Status::InvalidArgument);
     CHECK(fitNonlinear(&fitBad, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
+    CHECK(fitNonlinear(&fitThrow, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitResult[0]).status == Status::InvalidArgument && fitResult[0] == 7);
     CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 1, 1e-14, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
     auto spline = r.create("interp_cspline"); CHECK(spline);
     double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
