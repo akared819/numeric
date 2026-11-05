@@ -31,3 +31,14 @@ of a user callback. See [GSL adaptive integration](https://www.gnu.org/software/
 
 The function is a native C++ interface, not an IOC record operation. See the
 [GSL numerical differentiation documentation](https://www.gnu.org/software/gsl/doc/html/diff.html).
+
+`numeric::findRootBrent` uses the same callback contract and GSL's bracketing
+Brent solver. Supply finite increasing endpoints with opposite-sign function
+values, nonnegative absolute and relative interval tolerances (at least one
+positive), and an iteration limit from 1 to 1,000,000. An endpoint root is
+returned directly. On convergence the distinct output references receive the
+root estimate and the maximum distance to the final bracket endpoints. This is
+conditional on the callback being continuous and the bracket enclosing a root;
+it is not a guarantee for arbitrary callbacks. Invalid input, callback failure,
+GSL failure or nonconvergence preserves both output values. The temporary GSL
+solver is freed before return. See [GSL root finding](https://www.gnu.org/software/gsl/doc/html/roots.html).

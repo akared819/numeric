@@ -4,6 +4,8 @@
 #include <gsl/gsl_poly.h>
 #include <gsl/gsl_deriv.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_roots.h>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -87,6 +89,35 @@ Result integrateAdaptive(ScalarCallback callback, void* context, double lower, d
     if (data.failed || status != GSL_SUCCESS || !std::isfinite(result) || !std::isfinite(error) || error < 0)
         return {Status::NumericalError, "integration did not converge or callback failed"};
     value = result; absoluteError = error; return {Status::Ok, "ok"};
+}
+Result findRootBrent(ScalarCallback callback, void* context, double lower, double upper,
+                     double absTol, double relTol, std::size_t maxIterations, double& root, double& bracketError) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    if (!callback || &root == &bracketError || !std::isfinite(lower) || !std::isfinite(upper) || lower >= upper ||
+        !std::isfinite(upper-lower) || !std::isfinite(absTol) || !std::isfinite(relTol) || absTol < 0 || relTol < 0 ||
+        (absTol == 0 && relTol == 0) || !maxIterations || maxIterations > 1000000)
+        return {Status::InvalidArgument, "invalid root-finding inputs"};
+    CallbackData data{callback, context, false};
+    const double fLower = invokeCallback(lower, &data), fUpper = invokeCallback(upper, &data);
+    if (data.failed) return {Status::NumericalError, "root callback failed"};
+    if (fLower == 0) { root = lower; bracketError = 0; return {Status::Ok, "ok"}; }
+    if (fUpper == 0) { root = upper; bracketError = 0; return {Status::Ok, "ok"}; }
+    if (std::signbit(fLower) == std::signbit(fUpper)) return {Status::InvalidArgument, "root is not bracketed"};
+    std::unique_ptr<gsl_root_fsolver, decltype(&gsl_root_fsolver_free)> solver(gsl_root_fsolver_alloc(gsl_root_fsolver_brent), &gsl_root_fsolver_free);
+    if (!solver) return {Status::NumericalError, "root solver allocation failed"};
+    gsl_function function{&invokeCallback, &data};
+    if (gsl_root_fsolver_set(solver.get(), &function, lower, upper) != GSL_SUCCESS || data.failed)
+        return {Status::NumericalError, "root solver initialization failed"};
+    for (std::size_t i = 0; i < maxIterations; ++i) {
+        if (gsl_root_fsolver_iterate(solver.get()) != GSL_SUCCESS || data.failed) return {Status::NumericalError, "root solver iteration failed"};
+        const double a = gsl_root_fsolver_x_lower(solver.get()), b = gsl_root_fsolver_x_upper(solver.get());
+        const double candidate = gsl_root_fsolver_root(solver.get());
+        if (!std::isfinite(a) || !std::isfinite(b) || !std::isfinite(candidate)) return {Status::NumericalError, "non-finite root result"};
+        const int status = gsl_root_test_interval(a, b, absTol, relTol);
+        if (status == GSL_SUCCESS) { root = candidate; bracketError = std::max(candidate-a, b-candidate); return {Status::Ok, "ok"}; }
+        if (status != GSL_CONTINUE) return {Status::NumericalError, "root convergence test failed"};
+    }
+    return {Status::NumericalError, "root solver did not converge"};
 }
 void registerIntegration(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};

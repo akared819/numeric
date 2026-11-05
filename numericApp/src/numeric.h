@@ -102,6 +102,9 @@ NUMERIC_API Result differentiateCentral(ScalarCallback callback, void* context, 
 NUMERIC_API Result integrateAdaptive(ScalarCallback callback, void* context, double lower, double upper,
                                      double absoluteTolerance, double relativeTolerance, std::size_t maxSubintervals,
                                      double& value, double& absoluteError);
+NUMERIC_API Result findRootBrent(ScalarCallback callback, void* context, double lower, double upper,
+                                  double absoluteTolerance, double relativeTolerance, std::size_t maxIterations,
+                                  double& root, double& bracketError);
 // Independent deterministic GSL MT19937 stream; instances are not thread-safe.
 class NUMERIC_API UniformRandomStream {
 public:
