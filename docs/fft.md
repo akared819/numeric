@@ -36,6 +36,10 @@ reset or destruction. It is a high-level arithmetic operation, exposed through
 the native registry and numericArray; invalid input or overflow preserves the
 output.
 
+Complex magnitudes in `spectrum_power` and `welch_psd` use GSL's `gsl_hypot`,
+which avoids premature overflow or underflow when combining the two components.
+Welch applies its sample-interval scaling before squaring the magnitude.
+
 `welch_psd` calculates a one-sided power spectral density by averaging
 overlapping, symmetric-Hann-windowed segments using GSL radix-2 real FFTs.
 The four inputs are the real waveform, segment length N, overlap in samples,

@@ -54,3 +54,5 @@ see [licensing](licensing.md).
 
 The [Phase 11 scope and test summary](phase11-acceptance.md) records the
 representative functionality and the local validation performed so far.
+The [0.2.0 Linux validation](linux-validation-0.2.0.md) records the separate
+development-branch run on Ubuntu 26.04.1.

@@ -14,12 +14,12 @@ export PATH="$(pwd)/bin/$arch:$(cygpath -u "$EPICS_BASE")/bin/$arch:$(cygpath -u
 sh tests/gsl-version-check.sh "$GSL_DIR"
 for test in numericTest numericDataTest numericTypedMeanTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
     echo "Running $test"
-    "./bin/$arch/$test"
+    timeout 120 "./bin/$arch/$test"
 done
 for test in numericFftIocTest numericWindowIocTest numericArrayIocTest numericInterpolationIocTest numericFitIocTest numericIntegrationIocTest numericRootsIocTest numericPolynomialIocTest numericScalarIocTest numericIocTest; do
     echo "Running $test (initialized and uninitialized)"
-    "./bin/$arch/$test"
-    NUMERIC_TEST_NO_INIT=1 "./bin/$arch/$test"
+    timeout 120 "./bin/$arch/$test"
+    NUMERIC_TEST_NO_INIT=1 timeout 120 "./bin/$arch/$test"
 done
 "./bin/$arch/numericBenchmark" 64 100 windows-validation
 "./bin/$arch/numericIocBenchmark" 64 100 windows-validation
