@@ -11,7 +11,7 @@ alternate: /reference/
 
 # 操作リファレンス
 
-各操作の利用方法、入力の順番、結果、条件を確認できます。操作名を選ぶと該当箇所へ移動します。[その他のインターフェース](#other-interfaces)には専用レコードで使用できない機能もまとめています。構成の参考にした[NumPyリファレンス](https://numpy.org/doc/stable/reference/generated/numpy.arange.html)とは異なり、numericの実行にPythonは不要です。
+各操作の利用方法、入力の順番、結果、条件を確認できます。操作名を選ぶと該当箇所へ移動します。[その他のインターフェース](#other-interfaces)には専用レコードで使用できない機能もまとめています。
 
 <h2 id="reading-fields">フィールドの読み方</h2>
 
