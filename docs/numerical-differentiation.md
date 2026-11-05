@@ -42,3 +42,13 @@ conditional on the callback being continuous and the bracket enclosing a root;
 it is not a guarantee for arbitrary callbacks. Invalid input, callback failure,
 GSL failure or nonconvergence preserves both output values. The temporary GSL
 solver is freed before return. See [GSL root finding](https://www.gnu.org/software/gsl/doc/html/roots.html).
+
+`numeric::minimizeBrent` similarly finds a local minimum using GSL's Brent
+minimizer. The caller supplies finite `lower < initial < upper`, with the
+function at `initial` strictly lower than at both endpoints, interval
+tolerances, and a bounded iteration count. Success returns the minimum's
+location and the maximum distance to the final bracket endpoints. Failure or
+nonconvergence leaves both outputs unchanged. The bound assumes the callback
+and initial bracket meet the minimizer's mathematical assumptions; it does not
+establish a global minimum. The temporary workspace is freed after the call.
+See [GSL minimization](https://www.gnu.org/software/gsl/doc/html/min.html).

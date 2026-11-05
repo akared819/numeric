@@ -18,6 +18,7 @@ double badCallback(double, void*) { return std::numeric_limits<double>::quiet_Na
 double throwingCallback(double, void*) { throw 1; }
 double sqrtCallback(double x, void*) { return std::sqrt(x); }
 double rootCallback(double x, void*) { return x*x-2; }
+double minimumCallback(double x, void*) { return (x-2)*(x-2); }
 int destroyed = 0;
 class Lifetime : public Operation {
 public:
@@ -198,6 +199,7 @@ int main() {
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::NotInitialized && derivative == 7 && derivativeError == 8);
     CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
     CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::NotInitialized);
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(random.initialize(123).status == Status::Ok && random.fill(samples,4,4).status == Status::Ok);
     gsl_rng* referenceRng = gsl_rng_alloc(gsl_rng_mt19937); CHECK(referenceRng); gsl_rng_set(referenceRng, 123);
@@ -250,6 +252,11 @@ int main() {
     CHECK(findRootBrent(&rootCallback, nullptr, 2, 3, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::InvalidArgument && derivative == 7 && derivativeError == 8);
     CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-15, 1e-15, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
     CHECK(findRootBrent(&throwingCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::Ok && std::fabs(derivative-2) < 1e-5 && derivativeError >= 0);
+    derivative = 7; derivativeError = 8;
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, .5, 1, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::InvalidArgument && derivative == 7 && derivativeError == 8);
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-15, 1e-15, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(minimizeBrent(&throwingCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
     auto spline = r.create("interp_cspline"); CHECK(spline);
     double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
     Input splineInputs[] = {{sx,3,3,1,Type::Float64,Shape::Array}, {sy,3,3,1,Type::Float64,Shape::Array}, {&sq,1,1,1,Type::Float64,Shape::Scalar}};

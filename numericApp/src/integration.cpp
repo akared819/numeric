@@ -5,6 +5,7 @@
 #include <gsl/gsl_deriv.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
+#include <gsl/gsl_min.h>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -118,6 +119,33 @@ Result findRootBrent(ScalarCallback callback, void* context, double lower, doubl
         if (status != GSL_CONTINUE) return {Status::NumericalError, "root convergence test failed"};
     }
     return {Status::NumericalError, "root solver did not converge"};
+}
+Result minimizeBrent(ScalarCallback callback, void* context, double lower, double initial, double upper,
+                     double absTol, double relTol, std::size_t maxIterations, double& minimum, double& bracketError) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    if (!callback || &minimum == &bracketError || !std::isfinite(lower) || !std::isfinite(initial) || !std::isfinite(upper) ||
+        !(lower < initial && initial < upper) || !std::isfinite(upper-lower) || !std::isfinite(absTol) || !std::isfinite(relTol) ||
+        absTol < 0 || relTol < 0 || (absTol == 0 && relTol == 0) || !maxIterations || maxIterations > 1000000)
+        return {Status::InvalidArgument, "invalid minimization inputs"};
+    CallbackData data{callback, context, false};
+    const double fl = invokeCallback(lower, &data), fm = invokeCallback(initial, &data), fu = invokeCallback(upper, &data);
+    if (data.failed) return {Status::NumericalError, "minimization callback failed"};
+    if (!(fm < fl && fm < fu)) return {Status::InvalidArgument, "minimum is not bracketed"};
+    std::unique_ptr<gsl_min_fminimizer, decltype(&gsl_min_fminimizer_free)> solver(gsl_min_fminimizer_alloc(gsl_min_fminimizer_brent), &gsl_min_fminimizer_free);
+    if (!solver) return {Status::NumericalError, "minimizer allocation failed"};
+    gsl_function function{&invokeCallback, &data};
+    if (gsl_min_fminimizer_set_with_values(solver.get(), &function, initial, fm, lower, fl, upper, fu) != GSL_SUCCESS || data.failed)
+        return {Status::NumericalError, "minimizer initialization failed"};
+    for (std::size_t i = 0; i < maxIterations; ++i) {
+        if (gsl_min_fminimizer_iterate(solver.get()) != GSL_SUCCESS || data.failed) return {Status::NumericalError, "minimizer iteration failed"};
+        const double a = gsl_min_fminimizer_x_lower(solver.get()), b = gsl_min_fminimizer_x_upper(solver.get());
+        const double candidate = gsl_min_fminimizer_x_minimum(solver.get());
+        if (!std::isfinite(a) || !std::isfinite(b) || !std::isfinite(candidate)) return {Status::NumericalError, "non-finite minimum"};
+        const int status = gsl_min_test_interval(a, b, absTol, relTol);
+        if (status == GSL_SUCCESS) { minimum = candidate; bracketError = std::max(candidate-a, b-candidate); return {Status::Ok, "ok"}; }
+        if (status != GSL_CONTINUE) return {Status::NumericalError, "minimum convergence test failed"};
+    }
+    return {Status::NumericalError, "minimizer did not converge"};
 }
 void registerIntegration(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};

@@ -105,6 +105,9 @@ NUMERIC_API Result integrateAdaptive(ScalarCallback callback, void* context, dou
 NUMERIC_API Result findRootBrent(ScalarCallback callback, void* context, double lower, double upper,
                                   double absoluteTolerance, double relativeTolerance, std::size_t maxIterations,
                                   double& root, double& bracketError);
+NUMERIC_API Result minimizeBrent(ScalarCallback callback, void* context, double lower, double initial, double upper,
+                                 double absoluteTolerance, double relativeTolerance, std::size_t maxIterations,
+                                 double& minimum, double& bracketError);
 // Independent deterministic GSL MT19937 stream; instances are not thread-safe.
 class NUMERIC_API UniformRandomStream {
 public:
