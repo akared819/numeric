@@ -8,6 +8,7 @@
 #include <testMain.h>
 #include <cmath>
 #include <cstdio>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
@@ -55,6 +56,30 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    epicsFloat32 typedFloat[] = {1, 2, 3, 4, 5}; epicsInt32 typedLong[] = {1, 2, 3, 4, 5};
+    epicsInt64 typedInt64[] = {1, 2, 3, 4, 5};
+    testdbPutArrFieldOk("arrayFloatInput", DBF_FLOAT, 5, typedFloat);
+    testdbPutArrFieldOk("arrayLongInput", DBF_LONG, 5, typedLong);
+    testdbPutArrFieldOk("arrayInt64Input", DBF_INT64, 5, typedInt64);
+    testdbPutFieldOk("arrayFloatMean.PROC", DBF_LONG, 1);
+    testOk(matches("arrayFloatMean.VAL", expected, 5), "FLOAT waveform is converted exactly");
+    testdbPutFieldOk("arrayLongMean.PROC", DBF_LONG, 1);
+    testOk(matches("arrayLongMean.VAL", expected, 5), "LONG waveform is converted exactly");
+    testdbPutFieldOk("arrayInt64Mean.PROC", DBF_LONG, 1);
+    testOk(matches("arrayInt64Mean.VAL", expected, 5), "local INT64 waveform is converted exactly");
+    typedInt64[0] = INT64_C(9007199254740993);
+    testdbPutArrFieldOk("arrayInt64Input", DBF_INT64, 5, typedInt64);
+    testdbPutFieldOk("arrayInt64Mean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayInt64Mean.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("arrayInt64Mean.VAL", expected, 5), "inexact INT64 preserves previous output");
+    typedInt64[0] = 1; testdbPutArrFieldOk("arrayInt64Input", DBF_INT64, 5, typedInt64);
+    testdbPutFieldOk("arrayInt64Mean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayInt64Mean.SEVR", DBF_STRING, "NO_ALARM");
+    typedFloat[0] = std::numeric_limits<float>::quiet_NaN();
+    testdbPutArrFieldOk("arrayFloatInput", DBF_FLOAT, 5, typedFloat);
+    testdbPutFieldOk("arrayFloatMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayFloatMean.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("arrayFloatMean.VAL", expected, 5), "non-finite FLOAT preserves previous output");
     double fitX[] = {0, 1, 2, 3}, fitY[] = {1, 2, 2, 4};
     const double fitExpected[] = {.9, .9, .245, -.105, .07, .7};
     testdbPutArrFieldOk("arrayFitX", DBF_DOUBLE, 4, fitX);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define USE_TYPED_RSET
 #include "numeric.h"
+#include "numericLinkInput.h"
 #include <alarm.h>
 #include <dbAccess.h>
 #include <dbEvent.h>
@@ -20,7 +21,7 @@
 
 namespace {
 struct State {
-    std::vector<std::vector<double>> buffers;
+    std::vector<NumericLinkInput> buffers;
     std::vector<numeric::Input> inputs;
     std::vector<DBLINK*> links;
     std::vector<numeric::Shape> shapes;
@@ -65,7 +66,7 @@ long initRecord(dbCommon* common, int pass) {
         for (std::size_t i = 0; i < state->dataIndices.size(); ++i) {
             const numeric::Descriptor& desc = m->inputs[state->dataIndices[i]];
             if (desc.type != numeric::Type::Float64 || (desc.shape != numeric::Shape::Array && desc.shape != numeric::Shape::Scalar)) return S_db_badField;
-            state->buffers[i].resize(desc.shape == numeric::Shape::Scalar ? 2 : static_cast<std::size_t>(rec->nmax) + 1);
+            state->buffers[i].configure(desc.shape == numeric::Shape::Scalar ? 2 : static_cast<std::size_t>(rec->nmax) + 1);
             state->links.push_back(legacy ? &rec->inp : namedLinks[i]);
             state->shapes.push_back(desc.shape);
         }
@@ -88,16 +89,11 @@ long process(dbCommon* common) {
         bool inputsValid = state != nullptr;
         std::size_t firstCount = 0;
         if (inputsValid) for (std::size_t i = 0; i < state->buffers.size(); ++i) {
-            long count = static_cast<long>(state->buffers[i].size());
-            if (dbGetLinkDBFtype(state->links[i]) != DBF_DOUBLE ||
-                dbGetLink(state->links[i], DBR_DOUBLE, state->buffers[i].data(), nullptr, &count) != 0 ||
-                count <= 0 || static_cast<unsigned long>(count) > rec->nmax ||
-                (state->shapes[i] == numeric::Shape::Scalar && count != 1)) {
+            numeric::Input& input = state->inputs[state->dataIndices[i]];
+            if (state->buffers[i].read(*state->links[i], state->shapes[i], rec->nmax, input).status != numeric::Status::Ok) {
                 inputsValid = false; break;
             }
-            if (i == 0) firstCount = static_cast<std::size_t>(count);
-            state->inputs[state->dataIndices[i]] = {state->buffers[i].data(), static_cast<std::size_t>(count), state->buffers[i].size(), 1,
-                                                   numeric::Type::Float64, state->shapes[i]};
+            if (i == 0) firstCount = input.count;
         }
         if (inputsValid) {
             for (std::size_t i = state->arguments.size(); i < 16; ++i) if (argFields[i][0]) inputsValid = false;

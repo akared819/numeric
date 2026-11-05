@@ -9,7 +9,13 @@ record(numericArray, "arrayFitConflict") {
     field(OP, "moving_mean") field(INP, "arrayFitX NPP NMS") field(INPA, "arrayFitX NPP NMS")
     field(NMAX, "4") field(OMAX, "6")
 }
-record(waveform, "arrayIntInput") { field(FTVL, "LONG") field(NELM, "8") }
+record(waveform, "arrayIntInput") { field(FTVL, "STRING") field(NELM, "8") }
+record(waveform, "arrayFloatInput") { field(FTVL, "FLOAT") field(NELM, "5") }
+record(waveform, "arrayLongInput") { field(FTVL, "LONG") field(NELM, "5") }
+record(waveform, "arrayInt64Input") { field(FTVL, "INT64") field(NELM, "5") }
+record(numericArray, "arrayFloatMean") { field(OP, "moving_mean") field(INP, "arrayFloatInput NPP NMS") field(NMAX, "5") field(OMAX, "5") }
+record(numericArray, "arrayLongMean") { field(OP, "moving_mean") field(INP, "arrayLongInput NPP NMS") field(NMAX, "5") field(OMAX, "5") }
+record(numericArray, "arrayInt64Mean") { field(OP, "moving_mean") field(INP, "arrayInt64Input NPP NMS") field(NMAX, "5") field(OMAX, "5") }
 record(numericArray, "arraySmallInput") {
     field(INP, "arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "4") field(OMAX, "8") field(WIN, "3")
 }

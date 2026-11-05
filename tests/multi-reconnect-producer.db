@@ -3,3 +3,7 @@ record(waveform, "multiReconnect:remote") {
     field(FTVL, "DOUBLE")
     field(NELM, "4")
 }
+record(waveform, "multiReconnect:remoteFloat") {
+    field(FTVL, "FLOAT")
+    field(NELM, "4")
+}

@@ -81,6 +81,7 @@ DBD += numericScalarRecord.dbd
 DBDINC += numericScalarRecord
 LIBRARY_IOC += numericIoc
 numericIoc_SRCS += numericAsub.cpp
+numericIoc_SRCS += numericLinkInput.cpp
 numericIoc_SRCS += numericScalarRecord.cpp
 numericIoc_SRCS += numericArrayRecord.cpp
 numericIoc_SRCS += numericRealFftAsub.cpp

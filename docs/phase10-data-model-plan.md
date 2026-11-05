@@ -5,7 +5,10 @@ The separate `numericData.h` interface provides typed views, exact same-type
 element reads and writes, and explicit exact element conversion independently
 of GSL. The separate `TypedMean` adapter connects these views to GSL's
 [`gsl_stats_mean`](https://www.gnu.org/software/gsl/doc/html/statistics.html#mean-standard-deviation-and-variance).
-It is a native C++ API and is not yet exposed through EPICS records.
+The dedicated records also accept FLOAT, DOUBLE, LONG and local INT64 inputs,
+converting them exactly to their existing Float64 operation interface as
+documented in [numericScalar](numeric-scalar.md). Their waveform interface is
+one-dimensional; complex and multidimensional views are native C++ only.
 
 The supported view types are Float32, Float64, Int32, Int64, Complex64 and
 Complex128. Complex elements use two consecutive real components
@@ -51,7 +54,7 @@ overlapping writes and preservation on failure. `numericTypedMeanTest` checks
 GSL calculations across all six types, a strided matrix, exact-conversion
 failures, initialization, capacity, element-count overflow, reset and independent
 concurrent instances. Acceptance also requires
-additional numerical operations, EPICS integration, all platform CI, and
+additional numerical operations, all platform CI, and
 performance comparisons. The model must
 not claim NumPy compatibility or support arbitrary multidimensional layouts
 before those cases are verified.

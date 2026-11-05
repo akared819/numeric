@@ -50,3 +50,12 @@ One run on Apple M3, macOS 26.6.2 arm64, Apple LLVM 21.0.0 in C++14 mode, the su
 | numericScalar mean, 65,536 | 200 | 426,006.9 |
 
 These single observations are not directly comparable to separate native runs as a precise overhead measurement: they ran at different times and do not control system load. Repeat on the intended target and report setup, allocations and EPICS/network boundaries with every result.
+
+After adding typed-link input handling, one run on 2026-11-05 on Apple M3,
+macOS 27.2 arm64, Apple LLVM 21.0.0, EPICS Base R7.0.11 and GSL 2.8 measured
+7,438.6 ns/process at 1,024 elements (10,000 iterations) and 424,829.0
+ns/process at 65,536 elements (200 iterations). This uses the same local
+DOUBLE waveform benchmark and excludes network overhead; allocations were not
+instrumented. The earlier table used a different OS and Base checkout, so this
+is not a controlled before-and-after comparison. Additional FLOAT/LONG/INT64
+conversion measurements remain necessary.

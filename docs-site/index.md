@@ -163,6 +163,7 @@ The `P` macro sets the PV prefix. The bundled [startup script](https://github.co
 | --- | --- |
 | [mean.db](https://github.com/akared819/numeric/blob/main/examples/mean.db), [scalar.db](https://github.com/akared819/numeric/blob/main/examples/scalar.db) | Batch mean and scalar-result records |
 | [multi-input.db](https://github.com/akared819/numeric/blob/main/examples/multi-input.db) | Two-waveform correlation and fitting, and waveform-plus-scalar polynomial evaluation |
+| [typed-input.db](https://github.com/akared819/numeric/blob/main/examples/typed-input.db) | Scalar and moving means of a FLOAT waveform |
 | [array.db](https://github.com/akared819/numeric/blob/main/examples/array.db), [window.db](https://github.com/akared819/numeric/blob/main/examples/window.db) | Array records, moving statistics, smoothing and histogram |
 | [fft.db](https://github.com/akared819/numeric/blob/main/examples/fft.db) | Complex and real-input FFTs |
 | [polynomial.db](https://github.com/akared819/numeric/blob/main/examples/polynomial.db), [interpolation.db](https://github.com/akared819/numeric/blob/main/examples/interpolation.db) | Polynomial evaluation and linear interpolation |

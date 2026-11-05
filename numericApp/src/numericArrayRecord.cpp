@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define USE_TYPED_RSET
 #include "numeric.h"
+#include "numericLinkInput.h"
 #include <alarm.h>
 #include <dbAccess.h>
 #include <dbEvent.h>
@@ -22,7 +23,7 @@
 
 namespace {
 struct State {
-    std::vector<std::vector<double>> buffers;
+    std::vector<NumericLinkInput> buffers;
     std::vector<double> staging, output;
     std::vector<DBLINK*> links;
     std::vector<std::size_t> dataIndices;
@@ -84,7 +85,7 @@ long initRecord(dbCommon* common, int pass) {
         state->buffers.resize(state->dataIndices.size());
         for (std::size_t i = 0; i < state->dataIndices.size(); ++i) {
             const numeric::Shape shape = m->inputs[state->dataIndices[i]].shape;
-            state->buffers[i].resize(shape == numeric::Shape::Scalar ? 2 : static_cast<std::size_t>(rec->nmax) + 1);
+            state->buffers[i].configure(shape == numeric::Shape::Scalar ? 2 : static_cast<std::size_t>(rec->nmax) + 1);
             state->links.push_back(legacy ? &rec->inp : namedLinks[i]);
         }
         state->staging.resize(rec->omax); state->output.resize(rec->omax);
@@ -109,16 +110,11 @@ long process(dbCommon* common) {
         if (inputsValid) for (std::size_t i = 0; i < state->dataIndices.size(); ++i) {
             const std::size_t index = state->dataIndices[i];
             const numeric::Shape shape = state->metadata.inputs[index].shape;
-            long count = static_cast<long>(state->buffers[i].size());
-            if (dbGetLinkDBFtype(state->links[i]) != DBF_DOUBLE ||
-                dbGetLink(state->links[i], DBR_DOUBLE, state->buffers[i].data(), nullptr, &count) != 0 ||
-                count <= 0 || static_cast<unsigned long>(count) > rec->nmax ||
-                (shape == numeric::Shape::Scalar && count != 1)) {
+            numeric::Input& input = state->inputs[index];
+            if (state->buffers[i].read(*state->links[i], shape, rec->nmax, input).status != numeric::Status::Ok) {
                 inputsValid = false; break;
             }
-            if (i == 0) firstCount = static_cast<std::size_t>(count);
-            state->inputs[index] = {state->buffers[i].data(), static_cast<std::size_t>(count), state->buffers[i].size(), 1,
-                                    numeric::Type::Float64, shape};
+            if (i == 0) firstCount = input.count;
         }
         if (inputsValid) {
             bool parametersValid = true;

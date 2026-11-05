@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)typedFloatInput") {
+    field(FTVL, "FLOAT")
+    field(NELM, "8")
+}
+
+record(numericScalar, "$(P)typedFloatMean") {
+    field(OP, "mean")
+    field(INP, "$(P)typedFloatInput NPP NMS")
+    field(NMAX, "8")
+}
+
+record(numericArray, "$(P)typedFloatMovingMean") {
+    field(OP, "moving_mean")
+    field(INP, "$(P)typedFloatInput NPP NMS")
+    field(WIN, "3")
+    field(NMAX, "8")
+    field(OMAX, "8")
+}

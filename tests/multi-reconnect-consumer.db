@@ -16,3 +16,8 @@ record(numericArray, "multiReconnect:fit") {
     field(NMAX, "4")
     field(OMAX, "6")
 }
+record(numericScalar, "multiReconnect:floatMean") {
+    field(OP, "mean")
+    field(INP, "multiReconnect:remoteFloat CA NPP NMS")
+    field(NMAX, "4")
+}

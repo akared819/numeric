@@ -31,7 +31,7 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(17);
+    testPlan(18);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
@@ -39,7 +39,8 @@ int main() {
         "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
         "demo:arrayMean.ARGA", "demo:arrayMean.SEVR", "demo:multiX", "demo:multiY",
         "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL",
-        "demo:multiFit.PROC", "demo:multiFit.VAL", "demo:multiPower.ARGA", "demo:multiPower.PROC", "demo:multiPower.VAL"};
+        "demo:multiFit.PROC", "demo:multiFit.VAL", "demo:multiPower.ARGA", "demo:multiPower.PROC", "demo:multiPower.VAL",
+        "demo:typedFloatInput", "demo:typedFloatMean.PROC", "demo:typedFloatMean.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -131,6 +132,11 @@ int main() {
         ca_put(DBR_LONG, channels[31], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[32], &value) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL;
     testOk(power && std::fabs(value - 8.0) < 1e-12, "numericScalar accepts a runtime exponent over Channel Access");
+    float typed[] = {1, 2, 3, 4};
+    const bool typedMean = connected && ca_array_put(DBR_FLOAT, 4, channels[33], typed) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[34], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[35], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(typedMean && std::fabs(value - 2.5) < 1e-12, "numericScalar accepts a FLOAT waveform over Channel Access");
     if (subscription) ca_clear_subscription(subscription);
     for (chid channel : channels) if (channel) ca_clear_channel(channel);
     if (ca_current_context()) ca_context_destroy();

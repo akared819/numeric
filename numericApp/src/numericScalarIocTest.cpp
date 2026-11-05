@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
+#include <cstdint>
 #include <limits>
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 static bool valueNear(const char* name, double expected) {
@@ -57,12 +58,35 @@ MAIN(numericScalarIocTest) {
         testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "INVALID");
         testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("scalarPower.SEVR", DBF_STRING, "INVALID");
+        epicsFloat32 typed[] = {1, 2, 3, 4};
+        testdbPutArrFieldOk("typedFloatInput", DBF_FLOAT, 4, typed);
+        testdbPutFieldOk("typedFloatScalar.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("typedFloatScalar.SEVR", DBF_STRING, "INVALID");
         testMonitorDestroy(valueMonitor);
         return finish();
     }
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    epicsFloat32 typedFloat[] = {1, 2, 3, 4}; epicsInt32 typedLong[] = {2, 4, 6, 8};
+    epicsInt64 typedInt64[] = {1, 2, 3, 4};
+    testdbPutArrFieldOk("typedFloatInput", DBF_FLOAT, 4, typedFloat);
+    testdbPutArrFieldOk("typedLongInput", DBF_LONG, 4, typedLong);
+    testdbPutArrFieldOk("typedInt64Input", DBF_INT64, 4, typedInt64);
+    testdbPutFieldOk("typedFloatScalar.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("typedFloatScalar.VAL", DBF_DOUBLE, 2.5);
+    testdbPutFieldOk("typedLongScalar.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("typedLongScalar.VAL", DBF_DOUBLE, 5.0);
+    testdbPutFieldOk("typedInt64Scalar.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("typedInt64Scalar.VAL", DBF_DOUBLE, 2.5);
+    typedInt64[0] = INT64_C(9007199254740993);
+    testdbPutArrFieldOk("typedInt64Input", DBF_INT64, 4, typedInt64);
+    testdbPutFieldOk("typedInt64Scalar.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("typedInt64Scalar.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("typedInt64Scalar.VAL", DBF_DOUBLE, 2.5);
+    typedInt64[0] = 1; testdbPutArrFieldOk("typedInt64Input", DBF_INT64, 4, typedInt64);
+    testdbPutFieldOk("typedInt64Scalar.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("typedInt64Scalar.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("scalarPower.VAL", DBF_DOUBLE, 4.0);
     testdbPutFieldOk("scalarPower.ARGA", DBF_STRING, "3");
@@ -80,6 +104,8 @@ MAIN(numericScalarIocTest) {
     double multiX[] = {1, 2, 3, 4, 5}, multiY[] = {2, 4, 6, 8, 10};
     testdbPutArrFieldOk("multiX", DBF_DOUBLE, 4, multiX);
     testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, multiY);
+    testdbPutFieldOk("typedMixedCorrelation.PROC", DBF_LONG, 1);
+    testOk(valueNear("typedMixedCorrelation.VAL", 1.0), "correlation accepts mixed DOUBLE and LONG inputs");
     testdbPutFieldOk("multiCorrelation.PROC", DBF_LONG, 1);
     testOk(valueNear("multiCorrelation.VAL", 1.0), "two linked waveforms produce correlation");
     testdbGetFieldEqual("multiCorrelation.NORD", DBF_ULONG, 4u);
