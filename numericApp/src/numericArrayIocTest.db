@@ -1,4 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(numericArray, "realInverse") {
+    field(OP, "fft_real_radix2_inverse") field(INP, "inverseSpectrum NPP NMS") field(NMAX, "8") field(OMAX, "4")
+}
 record(waveform, "arrayFitX") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(waveform, "arrayFitY") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(numericArray, "arrayFit") {

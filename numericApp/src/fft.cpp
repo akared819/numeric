@@ -48,6 +48,41 @@ protected:
         return {Status::Ok, "ok"};
     }
 };
+class RealInverseFft : public Operation {
+    std::vector<double> scratch_;
+public:
+    void reset() override { std::vector<double>().swap(scratch_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out) for (std::size_t i = 0; i < no; ++i) out[i].count = 0;
+        if (!in || !out || ni != 1 || no != 1) return {Status::InvalidArgument, "real inverse FFT requires one input and output"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || x.count < 2 || x.count % 2 ||
+            x.stride != 1 || x.count > x.capacity || y.type != Type::Float64 || y.shape != Shape::Array || !y.data)
+            return {Status::InvalidArgument, "invalid inverse FFT buffers"};
+        const std::size_t n = x.count / 2;
+        if ((n & (n - 1)) || y.capacity < n) return {Status::InvalidArgument, "inverse FFT length or output capacity invalid"};
+        for (std::size_t i = 0; i < x.count; ++i)
+            if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "FFT input must be finite"};
+        if (x.data[1] != 0 || (n > 1 && x.data[n + 1] != 0))
+            return {Status::InvalidArgument, "DC and Nyquist bins must be real"};
+        for (std::size_t k = 1; k < (n + 1) / 2; ++k)
+            if (x.data[2*k] != x.data[2*(n-k)] || x.data[2*k+1] != -x.data[2*(n-k)+1])
+                return {Status::InvalidArgument, "spectrum must be conjugate symmetric"};
+        try { scratch_.resize(n); }
+        catch (...) { return {Status::NumericalError, "inverse FFT scratch allocation failed"}; }
+        scratch_[0] = x.data[0];
+        if (n > 1) scratch_[n/2] = x.data[n];
+        for (std::size_t k = 1; k < (n + 1) / 2; ++k) {
+            scratch_[k] = x.data[2*k]; scratch_[n-k] = x.data[2*k+1];
+        }
+        if (gsl_fft_halfcomplex_radix2_inverse(scratch_.data(), 1, n) != GSL_SUCCESS)
+            return {Status::NumericalError, "GSL inverse real FFT failed"};
+        for (double value : scratch_) if (!std::isfinite(value)) return {Status::NumericalError, "non-finite inverse FFT result"};
+        for (std::size_t i = 0; i < n; ++i) y.data[i] = scratch_[i];
+        y.count = n; return {Status::Ok, "ok"};
+    }
+};
 class RealFft : public Operation {
     std::vector<double> scratch_;
 public:
@@ -82,6 +117,7 @@ protected:
 std::unique_ptr<Operation> forward() { return std::unique_ptr<Operation>(new ComplexFft(false)); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
+std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
@@ -94,5 +130,8 @@ void registerFft(Registry& r) {
     r.addWithoutArguments(Metadata{"fft_real_radix2_forward", "fft", arrays, arrays,
                    "real DOUBLE input; power-of-two length; full interleaved complex output", false,
                    "per-instance reusable scratch; reset frees it", "invalid buffers or allocation or numerical failure"}, &realForward);
+    r.addWithoutArguments(Metadata{"fft_real_radix2_inverse", "fft", arrays, arrays,
+                   "conjugate-symmetric full complex input; power-of-two length; inverse scales by 1/N", false,
+                   "per-instance reusable scratch; reset frees it", "invalid buffers or allocation or numerical failure"}, &realInverse);
 }
 }

@@ -8,6 +8,7 @@ using namespace numeric;
 int main() {
     Registry r; registerBuiltins(r);
     auto f = r.create("fft_complex_radix2_forward"), inv = r.create("fft_complex_radix2_inverse"), real = r.create("fft_real_radix2_forward");
+    auto realInv = r.create("fft_real_radix2_inverse"); CHECK(realInv);
     CHECK(f && inv && real && r.find("fft_real_radix2_forward") && r.find("fft_complex_radix2_forward") && !r.find("fft_complex_radix2_forward")->stateful);
     double signal[] = {1,0, 0,0, 0,0, 0,0}, spectrum[8] = {};
     Input x{signal, 8, 8, 1, Type::Float64, Shape::Array};
@@ -20,6 +21,19 @@ int main() {
     Output realOut{realSpectrum, 8, 0, Type::Float64, Shape::Array};
     CHECK(real->execute(&realIn, 1, &realOut, 1).status == Status::Ok && realOut.count == 8);
     for (int i=0; i<8; i+=2) CHECK(realSpectrum[i] == 1 && realSpectrum[i+1] == 0);
+    double recovered[4] = {};
+    Input inverseInput{realSpectrum,8,8,1,Type::Float64,Shape::Array};
+    Output inverseOutput{recovered,4,0,Type::Float64,Shape::Array};
+    CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::Ok && inverseOutput.count == 4);
+    for (int i=0; i<4; ++i) CHECK(std::fabs(recovered[i]-realSignal[i]) < 1e-12);
+    realSpectrum[1] = 1;
+    CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::InvalidArgument && recovered[0] == 1);
+    realSpectrum[1] = 0; realSpectrum[2] = 2;
+    CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::InvalidArgument && recovered[0] == 1);
+    realSpectrum[2] = 1; inverseOutput.capacity = 3;
+    CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::InvalidArgument);
+    inverseOutput.capacity = 4; realInv->reset();
+    CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::Ok);
     Input realTransform{realSpectrum,8,8,1,Type::Float64,Shape::Array};
     CHECK(inv->execute(&realTransform, 1, &realOut, 1).status == Status::Ok);
     for (int i=0; i<4; ++i) CHECK(std::fabs(realSpectrum[2*i] - realSignal[i]) < 1e-12 && std::fabs(realSpectrum[2*i+1]) < 1e-12);
@@ -31,6 +45,8 @@ int main() {
     CHECK(real->execute(&realIn, 1, &realOut, 1).status == Status::Ok);
     const double sineSpectrum[] = {0,0,0,-2,0,0,0,2};
     for (int i=0; i<8; ++i) CHECK(std::fabs(realSpectrum[i]-sineSpectrum[i]) < 1e-12);
+    CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::Ok);
+    for (int i=0; i<4; ++i) CHECK(std::fabs(recovered[i]-sine[i]) < 1e-12);
     double longer[] = {1,2,3,4,5,6,7,8}, longerSpectrum[16] = {};
     Input longReal{longer,8,8,1,Type::Float64,Shape::Array};
     Output longOut{longerSpectrum,16,0,Type::Float64,Shape::Array};
@@ -43,6 +59,7 @@ int main() {
     for (int i=0; i<8; ++i) CHECK(std::fabs(alias[i]-cosineSpectrum[i]) < 1e-12);
     realOut.data = realSpectrum; realIn.data = realSignal;
     realIn.count = 1; CHECK(real->execute(&realIn, 1, &realOut, 1).status == Status::Ok && realOut.count == 2 && realSpectrum[0] == 1 && realSpectrum[1] == 0);
+    inverseInput.count = 2; CHECK(realInv->execute(&inverseInput, 1, &inverseOutput, 1).status == Status::Ok && inverseOutput.count == 1 && recovered[0] == 1);
     realIn.count = 0; CHECK(real->execute(&realIn, 1, &realOut, 1).status == Status::InvalidArgument && realOut.count == 0);
     realIn.count = 3; CHECK(real->execute(&realIn, 1, &realOut, 1).status == Status::InvalidArgument);
     realIn.count = 4; realIn.capacity = 3; CHECK(real->execute(&realIn, 1, &realOut, 1).status == Status::InvalidArgument);
