@@ -45,8 +45,15 @@ validation alone is not a substitute for executing those checks.
 The histogram descriptors check finite ordered bounds and the integer bin-count
 range; the operation additionally checks output capacity and samples.
 
+The existing `numericArray` implementation uses metadata to identify parameter
+inputs and validate their values. Its legacy field names still map to argument
+names (`WIN`/`window`, `ALPH`/`alpha`, `HMIN`/`lower`, `HMAX`/`upper`, and
+`NBIN`/`bins`). Those fields remain binary64, so integer values must be finite,
+integral and within the signed 64-bit range; earlier precision lost when writing
+a binary64 field cannot be recovered. New ARG fields are not implemented yet.
+
 This is an API development increment, not completion of Phase 7. It does not
-yet connect argument metadata to record fields or populate all built-ins.
+yet provide the new runtime ARG fields or a complete named input/output schema.
 Adding fields to the C++ `Metadata` structure changes its binary layout: native
 applications must be rebuilt with the library; source compatibility for the
 existing aggregate initializers is retained. No database interface is changed.
@@ -54,8 +61,7 @@ existing aggregate initializers is retained. No database interface is changed.
 ## Remaining work
 
 - Specify enum names and connect metadata to a parameterized execution API.
-- Remove operation-name-specific parameter dispatch from record support only
-  after its legacy-field precedence and runtime update behavior are tested.
+- Specify new ARG-field precedence over legacy fields and test runtime updates.
 - Verify all native and IOC regressions and required Linux, macOS and Windows
   checks before treating Phase 7 as complete.
 

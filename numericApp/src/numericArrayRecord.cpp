@@ -15,6 +15,7 @@
 #undef GEN_SIZE_OFFSET
 #include <epicsExport.h>
 #include <cstring>
+#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -22,36 +23,47 @@ namespace {
 struct State {
     std::vector<double> input, staging, output;
     std::unique_ptr<numeric::Operation> op;
-    std::size_t parameters;
+    numeric::Metadata metadata;
+    std::vector<numeric::Input> inputs;
+    std::vector<numeric::ArgumentValue> arguments;
+    std::vector<double> slots;
+    std::vector<const double*> legacyFields;
 };
 void destroyState(void* arg) { delete static_cast<State*>(arg); }
-int parameterCount(const char* name) {
-    if (!std::strcmp(name, "fft_complex_radix2_forward") || !std::strcmp(name, "fft_complex_radix2_inverse") ||
-        !std::strcmp(name, "fft_real_radix2_forward")) return 0;
-    if (!std::strcmp(name, "moving_mean") || !std::strcmp(name, "moving_median")) return 1;
-    if (!std::strcmp(name, "gaussian_smooth")) return 2;
-    if (!std::strcmp(name, "histogram_uniform")) return 3;
-    return -1;
+const double* legacyField(numericArrayRecord* rec, const std::string& name) {
+    if (name == "window") return &rec->win;
+    if (name == "alpha") return &rec->alph;
+    if (name == "lower") return &rec->hmin;
+    if (name == "upper") return &rec->hmax;
+    if (name == "bins") return &rec->nbin;
+    return nullptr;
 }
 long initRecord(dbCommon* common, int pass) {
     if (pass != 0) return 0;
     numericArrayRecord* rec = reinterpret_cast<numericArrayRecord*>(common);
     try {
-        const int params = parameterCount(rec->op);
         if (rec->nmax < 1 || rec->nmax > 1048576 || rec->omax < 1 || rec->omax > 1048576 ||
-            rec->inp.type == CONSTANT || params < 0) return S_db_badField;
+            rec->inp.type == CONSTANT) return S_db_badField;
         numeric::Registry registry; numeric::registerBuiltins(registry);
         const numeric::Metadata* m = registry.find(rec->op);
-        if (!m || m->stateful || m->inputs.size() != static_cast<std::size_t>(params + 1) ||
+        if (!m || !m->argumentSchemaComplete || m->stateful || m->inputs.size() != m->arguments.size() + 1 ||
             m->outputs.size() != 1 || m->inputs[0].type != numeric::Type::Float64 ||
             m->inputs[0].shape != numeric::Shape::Array || m->outputs[0].type != numeric::Type::Float64 ||
             m->outputs[0].shape != numeric::Shape::Array) return S_db_badField;
-        for (int i = 1; i <= params; ++i)
+        for (std::size_t i = 1; i < m->inputs.size(); ++i)
             if (m->inputs[i].type != numeric::Type::Float64 || m->inputs[i].shape != numeric::Shape::Scalar) return S_db_badField;
         std::unique_ptr<State> state(new State);
+        state->metadata = *m;
+        state->inputs.resize(m->inputs.size());
+        state->arguments.resize(m->arguments.size()); state->slots.resize(m->arguments.size());
+        for (const auto& argument : m->arguments) {
+            const double* field = legacyField(rec, argument.name);
+            if (!field || argument.inputIndex == 0 || argument.inputIndex >= m->inputs.size()) return S_db_badField;
+            state->legacyFields.push_back(field);
+        }
         state->input.resize(static_cast<std::size_t>(rec->nmax) + 1);
         state->staging.resize(rec->omax); state->output.resize(rec->omax);
-        state->op = registry.create(rec->op); state->parameters = params;
+        state->op = registry.create(rec->op);
         if (!state->op || epicsAtExit(destroyState, state.get())) return S_rec_outMem;
         rec->rpvt = state.release();
         return 0;
@@ -69,13 +81,21 @@ long process(dbCommon* common) {
         if (state && dbGetLinkDBFtype(&rec->inp) == DBF_DOUBLE &&
             dbGetLink(&rec->inp, DBR_DOUBLE, state->input.data(), nullptr, &count) == 0 &&
             count > 0 && static_cast<unsigned long>(count) <= rec->nmax) {
-            numeric::Input inputs[] = {
-                {state->input.data(), static_cast<std::size_t>(count), state->input.size(), 1, numeric::Type::Float64, numeric::Shape::Array},
-                {state->parameters == 3 ? &rec->hmin : &rec->win, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar},
-                {state->parameters == 3 ? &rec->hmax : &rec->alph, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar},
-                {&rec->nbin, 1, 1, 1, numeric::Type::Float64, numeric::Shape::Scalar}};
+            bool parametersValid = true;
+            for (std::size_t i = 0; i < state->arguments.size(); ++i) {
+                const double value = *state->legacyFields[i];
+                const numeric::ArgumentType type = state->metadata.arguments[i].type;
+                if (!std::isfinite(value)) { parametersValid = false; break; }
+                if (type == numeric::ArgumentType::Floating) state->arguments[i] = {type, value, 0};
+                else if (std::floor(value) == value && value >= -9223372036854775808.0 && value < 9223372036854775808.0)
+                    state->arguments[i] = {type, 0.0, static_cast<std::int64_t>(value)};
+                else { parametersValid = false; break; }
+            }
+            state->inputs[0] = {state->input.data(), static_cast<std::size_t>(count), state->input.size(), 1, numeric::Type::Float64, numeric::Shape::Array};
             numeric::Output output{state->staging.data(), state->staging.size(), 0, numeric::Type::Float64, numeric::Shape::Array};
-            if (state->op->execute(inputs, 1 + state->parameters, &output, 1).status == numeric::Status::Ok) {
+            if (parametersValid && numeric::setLegacyArguments(state->metadata, state->arguments.data(), state->arguments.size(),
+                    state->inputs.data(), state->inputs.size(), state->slots.data(), state->slots.size()).status == numeric::Status::Ok &&
+                state->op->execute(state->inputs.data(), state->inputs.size(), &output, 1).status == numeric::Status::Ok) {
                 for (std::size_t i = 0; i < output.count; ++i) state->output[i] = state->staging[i];
                 rec->nin = static_cast<epicsUInt32>(count); rec->nord = static_cast<epicsUInt32>(output.count);
                 rec->udf = FALSE; ok = true;

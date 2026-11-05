@@ -63,6 +63,14 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
     testOk(matches("arrayMean.VAL", expected, 5), "invalid window preserves previous output and count");
     testMonitorWait(monitor); testOk(testMonitorCount(monitor, 1) > 0, "failure posts an alarm monitor");
+    testdbPutFieldOk("arrayMean.WIN", DBF_DOUBLE, 9223372036854775808.0);
+    testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("arrayMean.VAL", expected, 5), "out-of-range integer field preserves output");
+    testdbPutFieldOk("arrayMean.WIN", DBF_DOUBLE, std::numeric_limits<double>::quiet_NaN());
+    testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("arrayMean.VAL", expected, 5), "non-finite integer field preserves output");
     testdbPutFieldOk("arrayMean.WIN", DBF_DOUBLE, 3.0);
     testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
