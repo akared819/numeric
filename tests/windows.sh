@@ -28,5 +28,6 @@ if "./bin/$arch/numericBenchmark" 0 100 windows-validation; then
     exit 1
 fi
 sh tests/example-ioc.sh "$arch"
+sh tests/multi-reconnect.sh "$arch"
 sh tests/network-ack.sh "$arch"
 sh tests/network-interruption.sh "$arch"

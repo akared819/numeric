@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "multiReconnect:remote") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "4")
+}

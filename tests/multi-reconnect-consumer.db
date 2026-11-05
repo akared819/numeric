@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "multiReconnect:local") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "4")
+}
+record(numericScalar, "multiReconnect:correlation") {
+    field(OP, "correlation")
+    field(INPA, "multiReconnect:local NPP NMS")
+    field(INPB, "multiReconnect:remote CA NPP NMS")
+    field(NMAX, "4")
+}
+record(numericArray, "multiReconnect:fit") {
+    field(OP, "linear_fit")
+    field(INPA, "multiReconnect:local NPP NMS")
+    field(INPB, "multiReconnect:remote CA NPP NMS")
+    field(NMAX, "4")
+    field(OMAX, "6")
+}

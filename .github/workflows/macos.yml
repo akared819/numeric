@@ -32,5 +32,6 @@ jobs:
             NUMERIC_TEST_NO_INIT=1 ./bin/$arch/$test
           done
           ./tests/example-ioc.sh "$arch"
+          ./tests/multi-reconnect.sh "$arch"
           ./tests/network-ack.sh "$arch"
           ./tests/network-interruption.sh "$arch"

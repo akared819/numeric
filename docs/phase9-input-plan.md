@@ -32,8 +32,11 @@ to a local link and checks recovery. This does not test reconnection of an
 unchanged remote link. The array increment covers two-input linear fitting,
 legacy link conflict, a temporarily unconnected CA link and link restoration,
 using the same input and result preservation rules. Further
-acceptance requires unchanged-link reconnection and all applicable CI. Phase 9
-remains in progress.
+acceptance includes a separate two-IOC test that stops and restarts the
+producer, verifies retained outputs and alarms during disconnection, and checks
+that both records use changed values after the same CA links reconnect. This
+test passed locally on macOS arm64; CI validates the other platforms. Phase 9
+remains in progress pending complete CI and final review.
 
 Acceptance requires existing INP databases, two waveforms, mixed scalar and
 waveform inputs, mismatched lengths, oversized buffers, invalid types,
