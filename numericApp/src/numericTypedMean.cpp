@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numericTypedMean.h"
+#include "numericDataInternal.h"
 #include <gsl/gsl_statistics_double.h>
 #include <array>
 #include <cmath>
@@ -35,7 +36,9 @@ Result TypedMean::execute(const ArrayView& input, double& output) {
     std::array<std::size_t, 8> indices{};
     for (std::size_t i = 0; i < count; ++i) {
         ElementValue element{}, converted{};
-        const Result read = readElement(input, indices.data(), input.rank, element);
+        std::size_t offset = 0;
+        for (std::size_t axis = 0; axis < input.rank; ++axis) offset += indices[axis] * input.stridesBytes[axis];
+        const Result read = detail::readValidatedElement(input, offset, element);
         if (read.status != Status::Ok) return read;
         const Result conversion = convertElement(element, ElementType::Float64, converted);
         if (conversion.status != Status::Ok) return conversion;

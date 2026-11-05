@@ -24,7 +24,8 @@ check to reject overlap and some non-overlapping layouts it cannot prove safe.
 Element access uses `memcpy` so storage need not be aligned. Reads and writes
 reject non-finite elements; same-type writes require exact representation and
 leave the destination unchanged on error. Caller-owned buffers and dimension
-arrays must outlive each operation invocation.
+arrays must outlive each operation invocation and must not be modified
+concurrently with validation or access.
 
 `convertElement` rejects integer-to-floating conversions that are not exactly
 representable, and checks finiteness, fractional values and range before
@@ -40,8 +41,9 @@ scratch buffer. `reserve()` may allocate in advance; repeated calculations
 within that capacity reuse it, and `reset()` releases it. Concurrent calls on
 one instance require external synchronization. Invalid inputs and non-finite
 results preserve the output; `numericInitialize`/`initializeGsl` must run
-before calculation. This first implementation copies and validates elements;
-no performance advantage over the existing Float64 mean is claimed.
+before calculation. This implementation validates the view once, then copies
+and validates its elements. [Benchmarks](benchmarks.md#typed-view-comparison)
+show the cost of this path relative to the existing Float64 mean.
 
 The native `numericDataTest` covers all six types, complex layout and unaligned
 access, large Int64 values, empty views, invalid indices, capacity, overflow,

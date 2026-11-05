@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numericData.h"
+#include "numericDataInternal.h"
 #include <array>
 #include <cmath>
 #include <cstring>
@@ -90,6 +91,9 @@ Result validateWritableArray(const MutableArrayView& view) { return checkLayout(
 Result readElement(const ArrayView& view, const std::size_t* indices, std::size_t count, ElementValue& value) {
     std::size_t offset = 0; const Result status = offsetOf(view, false, indices, count, offset);
     if (status.status != Status::Ok) return status;
+    return detail::readValidatedElement(view, offset, value);
+}
+Result detail::readValidatedElement(const ArrayView& view, std::size_t offset, ElementValue& value) {
     const unsigned char* p = static_cast<const unsigned char*>(view.data) + offset;
     ElementValue result{view.type, 0, 0.0, 0.0};
     switch (view.type) {

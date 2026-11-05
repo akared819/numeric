@@ -1,6 +1,6 @@
 # Native performance baseline
 
-`numericBenchmark` compares `gsl_stats_mean` with numeric's registered `mean` operation over the same contiguous DOUBLE array. Build using the [README](../README.md), then run, for example:
+`numericBenchmark` compares `gsl_stats_mean`, numeric's registered `mean` operation and the typed-view `TypedMean` adapter over the same contiguous DOUBLE array. Build using the [README](../README.md), then run, for example:
 
 ```sh
 ./bin/$(/absolute/path/to/base-7.0.10/startup/EpicsHostArch)/numericBenchmark 1024 10000 "CPU model, operating system, architecture"
@@ -8,7 +8,18 @@
 
 Arguments are the array length (1–16777216), iteration count (1–10000000), and a nonempty hardware description supplied by the operator. The program reports the compiler, GSL version, hardware description, array size, type, iteration count and elapsed nanoseconds per call. Use an accurate hardware description and record the EPICS Base version, build configuration, operating-system version, load and run date with results. CI runs a short correctness smoke test without a speed threshold; a shared CI runner is not a controlled performance environment.
 
-The deterministic array contains repeating integers from -50 to 50. The benchmark initializes GSL, allocates the input, creates the registry and operation, and performs ten numeric warmups before timing. It then times the direct GSL loop followed by the numeric loop with a monotonic clock; both loops update a volatile checksum. Numeric checks buffer descriptors and all samples for finiteness, while direct GSL does not. Neither timed path allocates memory. Timing excludes setup, EPICS record processing, IOC scheduling and network overhead. The checksum and a reference-result check prevent the result from being discarded and detect a numerical mismatch. The direct-first ordering, warm caches, machine activity and checksum overhead can bias results; repeat runs and vary sizes before drawing conclusions. These measurements do not establish hard-real-time behavior.
+The deterministic array contains repeating integers from -50 to 50. The benchmark initializes GSL, allocates the input, creates the registry and operations, reserves the typed workspace, and performs ten numeric warmups before timing. It then times direct GSL, the existing numeric operation and typed views in that order with a monotonic clock; all loops update a volatile checksum. Numeric checks buffer descriptors and samples, while direct GSL does not. The typed adapter validates and copies every element before calling GSL. The code paths do not allocate after the typed workspace is reserved; allocations are not instrumented. Timing excludes setup, EPICS record processing, IOC scheduling and network overhead. The checksum and a reference-result check detect a numerical mismatch. The fixed ordering, warm caches, machine activity and checksum overhead can bias results; repeat runs and vary sizes before drawing conclusions. These measurements do not establish hard-real-time behavior.
+
+## Typed-view comparison
+
+One run on 2026-11-05 on Apple M3, macOS 27.2 arm64, Apple LLVM 21.0.0, EPICS Base R7.0.11 and GSL 2.8 used the command above and no IOC or network overhead:
+
+| DOUBLE array size | Iterations | Direct GSL ns/call | Existing core ns/call | Typed view ns/call |
+| --- | ---: | ---: | ---: | ---: |
+| 1,024 | 10,000 | 4,125.5 | 4,387.5 | 8,886.9 |
+| 65,536 | 200 | 272,322.9 | 284,119.6 | 577,793.1 |
+
+These single, uncontrolled measurements show the typed path taking roughly twice as long as the existing core path on this input. The typed path performs per-element type and finiteness checks and copies into its reusable workspace; the existing path reads the original DOUBLE buffer directly. This comparison does not establish which individual cost dominates. Earlier baseline measurements below used a different OS and Base version and are not a controlled regression comparison.
 
 ## Example measurement
 
