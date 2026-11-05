@@ -13,7 +13,7 @@ permalink: /ja/
 <p class="lead">numericのレコードに、どのPVを入力として渡し、どの引数を設定し、どう結果を読むかを説明します。例は同梱のIOCで試せます。</p>
 
 <div class="callout" markdown="1">
-このガイドはリリース準備中の0.2.0向けです。公開済みの0.1系とは利用できる操作やフィールドが異なります。[インストール手順](https://github.com/akared819/numeric#build-and-test)に従って対象のソースをビルドしてください。numericの実行にPythonは不要です。
+このガイドは0.2.0向けです。0.1系とは利用できる操作やフィールドが異なります。[インストール手順](https://github.com/akared819/numeric#build-and-test)に従って対象のソースをビルドしてください。numericの実行にPythonは不要です。
 </div>
 
 [フィールドの役割](#fields) · [入力リンク](#inputs) · [計算の引数](#arguments) · [実際に試す](#recipes) · [操作一覧](#operations) · [困ったとき](#troubleshooting)
@@ -207,4 +207,4 @@ caget demo:SPECTRAL:PSD.SEVR
 3. 単一入力の`INP`と`INPA`の併用、複数入力のリンク抜け、未使用の`ARG`への書き込みがないか確認します。
 4. 同じIOCで他のGSL利用モジュールと共存する場合は、[GSLエラー処理の初期化](https://github.com/akared819/numeric/blob/main/docs/architecture.md#gsl-setup-for-an-ioc)を確認します。
 
-EPICS Baseの通知に関する断続的なクラッシュは未解決です。また、aSubでは入力取得の失敗がnumericの処理前に起き、期待した警報にならない場合があります。運用するIOCと環境で十分に試験し、必要に応じて入力の鮮度を別途監視してください。詳しくは[0.2.0開発ノート](https://github.com/akared819/numeric/blob/main/docs/release-0.2.0-draft.md)を参照してください。
+EPICS Baseの通知に関する断続的なクラッシュは未解決です。また、aSubでは入力取得の失敗がnumericの処理前に起き、期待した警報にならない場合があります。運用するIOCと環境で十分に試験し、必要に応じて入力の鮮度を別途監視してください。詳しくは[0.2.0リリースノート](https://github.com/akared819/numeric/blob/main/docs/release-0.2.0-draft.md)を参照してください。
