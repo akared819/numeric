@@ -47,12 +47,16 @@ long process(dbCommon* common) {
     numericScalarRecord* rec = reinterpret_cast<numericScalarRecord*>(common);
     rec->pact = TRUE;
     State* state = static_cast<State*>(rec->rpvt);
+    const char* argFields[] = {rec->arga, rec->argb, rec->argc, rec->argd, rec->arge, rec->argf, rec->argg, rec->argh,
+                               rec->argi, rec->argj, rec->argk, rec->argl, rec->argm, rec->argn, rec->argo, rec->argp};
+    bool argumentsEmpty = true;
+    for (const char* field : argFields) if (field[0]) argumentsEmpty = false;
     bool ok = false;
     epicsUInt32 oldCount = rec->nord;
     rec->nord = 0;
     try {
         long count = static_cast<long>(rec->nmax) + 1;
-        if (state && dbGetLinkDBFtype(&rec->inp) == DBF_DOUBLE &&
+        if (state && argumentsEmpty && dbGetLinkDBFtype(&rec->inp) == DBF_DOUBLE &&
             dbGetLink(&rec->inp, DBR_DOUBLE, state->buffer.data(), nullptr, &count) == 0 &&
             count > 0 && static_cast<unsigned long>(count) <= rec->nmax) {
             double value = 0;

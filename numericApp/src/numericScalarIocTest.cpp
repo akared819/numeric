@@ -53,6 +53,14 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("scalarMean.ARGA", DBF_STRING, "1");
+    testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("scalarMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
+    testdbPutFieldOk("scalarMean.ARGA", DBF_STRING, "");
+    testdbPutFieldOk("scalarMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("normalCdf.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("normalCdf.NORD", DBF_ULONG, 1u);
     testOk(valueNear("normalCdf.VAL", 0.8413447460685429), "standard normal CDF computes P(1)");

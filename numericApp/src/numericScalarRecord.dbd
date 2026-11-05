@@ -16,6 +16,22 @@ recordtype(numericScalar) {
         initial("mean")
         special(SPC_NOMOD)
     }
+    field(ARGA, DBF_STRING) { prompt("Argument A") size(40) }
+    field(ARGB, DBF_STRING) { prompt("Argument B") size(40) }
+    field(ARGC, DBF_STRING) { prompt("Argument C") size(40) }
+    field(ARGD, DBF_STRING) { prompt("Argument D") size(40) }
+    field(ARGE, DBF_STRING) { prompt("Argument E") size(40) }
+    field(ARGF, DBF_STRING) { prompt("Argument F") size(40) }
+    field(ARGG, DBF_STRING) { prompt("Argument G") size(40) }
+    field(ARGH, DBF_STRING) { prompt("Argument H") size(40) }
+    field(ARGI, DBF_STRING) { prompt("Argument I") size(40) }
+    field(ARGJ, DBF_STRING) { prompt("Argument J") size(40) }
+    field(ARGK, DBF_STRING) { prompt("Argument K") size(40) }
+    field(ARGL, DBF_STRING) { prompt("Argument L") size(40) }
+    field(ARGM, DBF_STRING) { prompt("Argument M") size(40) }
+    field(ARGN, DBF_STRING) { prompt("Argument N") size(40) }
+    field(ARGO, DBF_STRING) { prompt("Argument O") size(40) }
+    field(ARGP, DBF_STRING) { prompt("Argument P") size(40) }
     field(NMAX, DBF_ULONG) {
         prompt("Maximum input elements")
         initial("1024")

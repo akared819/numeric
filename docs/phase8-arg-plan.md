@@ -1,6 +1,9 @@
 # Phase 8: runtime arguments — design under review
 
-This document describes a proposed interface; it is not implemented yet.
+The field and validation design below is implemented for currently compatible
+array operations. The scalar record exposes the fields but currently supports
+only operations without configuration arguments. Phase 8 remains in progress
+until its full acceptance criteria and cross-platform CI are verified.
 
 Both dedicated record types will expose 16 writable fields, `ARGA` through
 `ARGP`, ordered according to each operation's argument metadata. A blank field

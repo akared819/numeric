@@ -46,7 +46,7 @@ long initRecord(dbCommon* common, int pass) {
             rec->inp.type == CONSTANT) return S_db_badField;
         numeric::Registry registry; numeric::registerBuiltins(registry);
         const numeric::Metadata* m = registry.find(rec->op);
-        if (!m || !m->argumentSchemaComplete || m->stateful || m->inputs.size() != m->arguments.size() + 1 ||
+        if (!m || !m->argumentSchemaComplete || m->arguments.size() > 16 || m->stateful || m->inputs.size() != m->arguments.size() + 1 ||
             m->outputs.size() != 1 || m->inputs[0].type != numeric::Type::Float64 ||
             m->inputs[0].shape != numeric::Shape::Array || m->outputs[0].type != numeric::Type::Float64 ||
             m->outputs[0].shape != numeric::Shape::Array) return S_db_badField;
@@ -73,6 +73,8 @@ long process(dbCommon* common) {
     numericArrayRecord* rec = reinterpret_cast<numericArrayRecord*>(common);
     rec->pact = TRUE;
     State* state = static_cast<State*>(rec->rpvt);
+    const char* argFields[] = {rec->arga, rec->argb, rec->argc, rec->argd, rec->arge, rec->argf, rec->argg, rec->argh,
+                               rec->argi, rec->argj, rec->argk, rec->argl, rec->argm, rec->argn, rec->argo, rec->argp};
     bool ok = false;
     const epicsUInt32 oldInput = rec->nin, oldOutput = rec->nord;
     rec->nin = 0;
@@ -82,7 +84,16 @@ long process(dbCommon* common) {
             dbGetLink(&rec->inp, DBR_DOUBLE, state->input.data(), nullptr, &count) == 0 &&
             count > 0 && static_cast<unsigned long>(count) <= rec->nmax) {
             bool parametersValid = true;
+            for (std::size_t i = state->arguments.size(); i < 16; ++i)
+                if (argFields[i][0]) parametersValid = false;
             for (std::size_t i = 0; i < state->arguments.size(); ++i) {
+                if (argFields[i][0]) {
+                    if (numeric::parseArgument(state->metadata.arguments[i].type, argFields[i],
+                                               std::strlen(argFields[i]), state->arguments[i]).status != numeric::Status::Ok)
+                        parametersValid = false;
+                    if (!parametersValid) break;
+                    continue;
+                }
                 const double value = *state->legacyFields[i];
                 const numeric::ArgumentType type = state->metadata.arguments[i].type;
                 if (!std::isfinite(value)) { parametersValid = false; break; }

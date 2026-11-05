@@ -55,10 +55,11 @@ inputs and validate their values. Its legacy field names still map to argument
 names (`WIN`/`window`, `ALPH`/`alpha`, `HMIN`/`lower`, `HMAX`/`upper`, and
 `NBIN`/`bins`). Those fields remain binary64, so integer values must be finite,
 integral and within the signed 64-bit range; earlier precision lost when writing
-a binary64 field cannot be recovered. New ARG fields are not implemented yet.
+a binary64 field cannot be recovered. The new runtime overrides are documented
+in [numericArray](numeric-array.md).
 
 This is an API development increment, not completion of Phase 7. It does not
-yet provide the new runtime ARG fields or a complete named input/output schema.
+yet provide a complete named input/output schema.
 Adding fields to the C++ `Metadata` structure changes its binary layout: native
 applications must be rebuilt with the library; source compatibility for the
 existing aggregate initializers is retained. No database interface is changed.

@@ -30,12 +30,13 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(10);
+    testPlan(12);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
         "demo:movingMedianOutput", "demo:gaussianSmooth.PROC", "demo:gaussianOutput",
-        "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL"};
+        "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
+        "demo:arrayMean.ARGA"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -75,9 +76,21 @@ int main() {
     testOk(arrayComputed, "dedicated array record publishes moving mean over Channel Access");
     testOk(arrayComputed && epicsEventWaitWithTimeout(arrayMonitorEvent, 10.0) == epicsEventWaitOK,
            "dedicated array record posts a Channel Access monitor");
+    dbr_string_t windowArg = "5";
+    const bool changed = arrayComputed && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(changed && matches(result, means, 5), "ARGA write alone does not process the array record");
+    const double meansFive[] = {1.6, 2.2, 3, 3.8, 4.4};
+    const bool recalculated = changed && ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(recalculated && matches(result, meansFive, 5), "ARGA changes the next array calculation over Channel Access");
+    windowArg[0] = '\0';
+    const bool restored = recalculated && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL && matches(result, means, 5);
     double overwrite[] = {9,9,9,9,9};
-    const int putStatus = arrayComputed ? ca_array_put(DBR_DOUBLE, 5, channels[17], overwrite) : ECA_INTERNAL;
-    const bool rejected = arrayComputed && (putStatus == ECA_NORMAL || putStatus == ECA_NOWTACCESS) &&
+    const int putStatus = restored ? ca_array_put(DBR_DOUBLE, 5, channels[17], overwrite) : ECA_INTERNAL;
+    const bool rejected = restored && (putStatus == ECA_NORMAL || putStatus == ECA_NOWTACCESS) &&
         ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
         matches(result, means, 5);
     if (!rejected) testDiag("put status %s, observed first element %.17g", ca_message(putStatus), result[0]);
