@@ -91,6 +91,27 @@ Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
     }
     return validator ? validator(values, count) : Result{Status::Ok, "ok"};
 }
+Result resolveArguments(const std::vector<ArgumentDescriptor>& descriptors,
+                        const ArgumentValue* values, std::size_t count,
+                        ArgumentValue* resolved, std::size_t capacity,
+                        ArgumentValidator validator) {
+    if (count > descriptors.size() || capacity < descriptors.size() ||
+        (count && !values) || (!descriptors.empty() && !resolved))
+        return {Status::InvalidArgument, "invalid argument buffers or count"};
+    const Result schema = validateArgumentSchema(descriptors);
+    if (schema.status != Status::Ok) return schema;
+    for (std::size_t i = 0; i < descriptors.size(); ++i) {
+        if (i < count) {
+            if (!validArgumentValue(descriptors[i], values[i]))
+                return {Status::InvalidArgument, "invalid argument value"};
+        } else if (descriptors[i].required || !descriptors[i].hasDefault) {
+            return {Status::InvalidArgument, "argument missing without default"};
+        }
+    }
+    for (std::size_t i = 0; i < descriptors.size(); ++i)
+        resolved[i] = i < count ? values[i] : descriptors[i].defaultValue;
+    return validator ? validator(resolved, descriptors.size()) : Result{Status::Ok, "ok"};
+}
 namespace {
 bool exactlyRepresentable(std::int64_t value) {
     std::uint64_t magnitude = value < 0 ? static_cast<std::uint64_t>(-(value + 1)) + 1 :

@@ -17,6 +17,10 @@ and invokes an optional operation-specific validator after type/range checks.
 Missing required arguments fail. Optional trailing arguments can be omitted;
 the function does not apply defaults. The caller owns the argument buffers and
 must supply a non-null pointer when the count is nonzero.
+`resolveArguments` instead fills a separate caller-owned array, applying
+defaults to omitted optional trailing arguments, then runs the operation's
+validator on the complete list. Missing defaults, short buffers and invalid
+values fail. Its output contents are unspecified after failure.
 
 Each descriptor can map to an index in the legacy scalar input list. Registered
 mappings must identify distinct Float64 scalar inputs. This describes where an
@@ -45,7 +49,7 @@ existing aggregate initializers is retained. No database interface is changed.
 
 - Define complete metadata for every built-in and distinguish an explicitly
   empty argument list from an operation whose schema has not been migrated.
-- Specify default application and enum names, then
+- Specify enum names and connect argument metadata to every built-in, then
   connect these to a parameterized execution API.
 - Remove operation-name-specific parameter dispatch from record support only
   after its legacy-field precedence and runtime update behavior are tested.

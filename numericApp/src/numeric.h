@@ -45,6 +45,12 @@ NUMERIC_API Result validateArgumentSchema(const std::vector<ArgumentDescriptor>&
 NUMERIC_API Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
                                      const ArgumentValue* values, std::size_t count,
                                      ArgumentValidator validator = nullptr);
+// Fill caller-owned output with supplied values and trailing defaults. On
+// failure output contents are unspecified. Input and output must not overlap.
+NUMERIC_API Result resolveArguments(const std::vector<ArgumentDescriptor>& descriptors,
+                                    const ArgumentValue* values, std::size_t count,
+                                    ArgumentValue* resolved, std::size_t capacity,
+                                    ArgumentValidator validator = nullptr);
 struct Metadata {
     std::string name; std::string category;
     std::vector<Descriptor> inputs, outputs;
