@@ -3,6 +3,7 @@
 #define NUMERIC_H
 #include "numericExport.h"
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -15,11 +16,37 @@ struct Input { const double* data; std::size_t count; std::size_t capacity; std:
 struct Output { double* data; std::size_t capacity; std::size_t count; Type type; Shape shape; };
 enum class Status { Ok, InvalidArgument, NumericalError, NotInitialized };
 struct Result { Status status; const char* message; };
+// Values are tagged so integer arguments never pass through floating point.
+enum class ArgumentType { Floating, Integer, Boolean, Enumeration };
+struct ArgumentValue {
+    ArgumentType type;
+    double floating;
+    std::int64_t integer;
+};
+struct ArgumentDescriptor {
+    std::string name;
+    ArgumentType type;
+    bool required;
+    bool hasDefault;
+    ArgumentValue defaultValue;
+    bool hasMinimum;
+    bool hasMaximum;
+    ArgumentValue minimum;
+    ArgumentValue maximum;
+    std::vector<std::int64_t> choices;
+};
+using ArgumentValidator = Result (*)(const ArgumentValue*, std::size_t);
+// Validate a complete, ordered argument list; defaults are not applied here.
+NUMERIC_API Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
+                                     const ArgumentValue* values, std::size_t count,
+                                     ArgumentValidator validator = nullptr);
 struct Metadata {
     std::string name; std::string category;
     std::vector<Descriptor> inputs, outputs;
     std::string parameters; bool stateful;
     std::string lifecycle; std::string errors;
+    std::vector<ArgumentDescriptor> arguments;
+    ArgumentValidator argumentValidator = nullptr;
 };
 class NUMERIC_API Operation {
 public:

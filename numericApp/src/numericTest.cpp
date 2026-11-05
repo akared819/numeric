@@ -24,6 +24,35 @@ std::unique_ptr<Operation> makeLifetime() { return std::unique_ptr<Operation>(ne
 }
 int main() {
     Registry r; registerBuiltins(r);
+    const Metadata* gaussMeta = r.find("gaussian_smooth");
+    CHECK(gaussMeta && gaussMeta->arguments.size() == 2 && gaussMeta->arguments[0].name == "window");
+    ArgumentValue args[] = {{ArgumentType::Integer, 0.0, 7}, {ArgumentType::Floating, 1.5, 0}};
+    CHECK(validateArguments(gaussMeta->arguments, args, 2, gaussMeta->argumentValidator).status == Status::Ok);
+    args[0].integer = 8;
+    CHECK(validateArguments(gaussMeta->arguments, args, 2, gaussMeta->argumentValidator).status == Status::InvalidArgument);
+    args[0].integer = 4097;
+    CHECK(validateArguments(gaussMeta->arguments, args, 2).status == Status::InvalidArgument);
+    args[0].integer = 7; args[1].floating = std::numeric_limits<double>::quiet_NaN();
+    CHECK(validateArguments(gaussMeta->arguments, args, 2).status == Status::InvalidArgument);
+    args[1].floating = 1.5; args[0].type = ArgumentType::Floating;
+    CHECK(validateArguments(gaussMeta->arguments, args, 2).status == Status::InvalidArgument);
+    CHECK(validateArguments(gaussMeta->arguments, args, 1).status == Status::InvalidArgument);
+    CHECK(validateArguments(gaussMeta->arguments, nullptr, 2).status == Status::InvalidArgument);
+    const ArgumentValue zeroInt{ArgumentType::Integer, 0.0, 0};
+    const ArgumentValue maxInt{ArgumentType::Integer, 0.0, std::numeric_limits<std::int64_t>::max()};
+    const ArgumentValue zeroBool{ArgumentType::Boolean, 0.0, 0};
+    const ArgumentValue zeroEnum{ArgumentType::Enumeration, 0.0, 0};
+    std::vector<ArgumentDescriptor> typed{
+        {"large", ArgumentType::Integer, true, false, zeroInt, true, true, zeroInt, maxInt, {}},
+        {"enabled", ArgumentType::Boolean, true, false, zeroBool, false, false, zeroBool, zeroBool, {}},
+        {"mode", ArgumentType::Enumeration, true, false, zeroEnum, false, false, zeroEnum, zeroEnum, {3, 7}}};
+    ArgumentValue typedValues[] = {{ArgumentType::Integer, 0.0, INT64_C(9007199254740993)},
+                                   {ArgumentType::Boolean, 0.0, 1}, {ArgumentType::Enumeration, 0.0, 7}};
+    CHECK(validateArguments(typed, typedValues, 3).status == Status::Ok);
+    typedValues[1].integer = 2;
+    CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
+    typedValues[1].integer = 1; typedValues[2].integer = 4;
+    CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
     auto op = r.create("mean"); CHECK(op && r.find("mean") && !r.find("missing") && !r.create("missing"));
     double data[] = {1, 99, 3, 99, 5}; double result = -1;
     Input in{data, 3, 5, 2, Type::Float64, Shape::Array};
