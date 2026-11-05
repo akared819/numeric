@@ -3,7 +3,7 @@ layout: default
 title: Examples and usage
 ---
 
-<p class="eyebrow">A practical guide</p>
+<p class="eyebrow">numeric {{ site.numeric_version }} · A practical guide</p>
 
 # From data to results
 
