@@ -7,7 +7,7 @@ section: reference
 alternate: /reference/
 ---
 
-<p class="eyebrow">numeric 0.2.0 reference</p>
+<p class="eyebrow">numeric {{ site.numeric_version }} reference</p>
 
 # 操作リファレンス
 

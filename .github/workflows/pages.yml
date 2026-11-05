@@ -39,6 +39,13 @@ jobs:
           grep -q 'href="/numeric/ja/" hreflang="ja" aria-current="page"' _site/ja/index.html
           test -s _site/reference/index.html
           test -s _site/ja/reference/index.html
+          version=$(awk -F '"' '/^numeric_version:/ {print $2}' docs-site/_config.yml)
+          test -n "$version"
+          grep -Fq "numeric $version · A practical guide" _site/index.html
+          grep -Fq "numeric $version guide" _site/ja/index.html
+          grep -Fq "このガイドは${version}向け" _site/ja/index.html
+          grep -Fq "numeric $version reference" _site/reference/index.html
+          grep -Fq "numeric $version reference" _site/ja/reference/index.html
           grep -q 'id="welch_psd"' _site/reference/index.html
           grep -q 'id="welch_psd"' _site/ja/reference/index.html
           grep -q 'href="/numeric/ja/reference/" hreflang="ja"' _site/reference/index.html

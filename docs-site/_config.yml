@@ -1,4 +1,5 @@
 title: numeric examples
+numeric_version: "0.2.1"
 markdown: kramdown
 url: https://akared819.github.io
 baseurl: /numeric
