@@ -26,6 +26,7 @@ int main() {
     Registry r; registerBuiltins(r);
     const Metadata* gaussMeta = r.find("gaussian_smooth");
     CHECK(gaussMeta && gaussMeta->arguments.size() == 2 && gaussMeta->arguments[0].name == "window");
+    CHECK(gaussMeta->arguments[0].inputIndex == 1 && gaussMeta->arguments[1].inputIndex == 2);
     ArgumentValue args[] = {{ArgumentType::Integer, 0.0, 7}, {ArgumentType::Floating, 1.5, 0}};
     CHECK(validateArguments(gaussMeta->arguments, args, 2, gaussMeta->argumentValidator).status == Status::Ok);
     args[0].integer = 8;
@@ -70,8 +71,13 @@ int main() {
     CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
     Metadata badMeta = *gaussMeta; badMeta.name = "bad-schema"; badMeta.arguments = badSchema;
     CHECK(!r.add(badMeta, &makeLifetime));
+    badMeta = *gaussMeta; badMeta.name = "bad-mapping"; badMeta.arguments[0].inputIndex = 0;
+    CHECK(!r.add(badMeta, &makeLifetime));
+    badMeta.arguments[0].inputIndex = 99; CHECK(!r.add(badMeta, &makeLifetime));
+    badMeta.arguments[0].inputIndex = 2; CHECK(!r.add(badMeta, &makeLifetime));
     const Metadata* histMeta = r.find("histogram_uniform");
     CHECK(histMeta && histMeta->arguments.size() == 3);
+    CHECK(histMeta->arguments[0].inputIndex == 1 && histMeta->arguments[2].inputIndex == 3);
     ArgumentValue histArgs[] = {{ArgumentType::Floating, -1.0, 0},
                                 {ArgumentType::Floating, 1.0, 0}, {ArgumentType::Integer, 0.0, 10}};
     CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::Ok);

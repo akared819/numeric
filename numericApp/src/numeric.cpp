@@ -108,6 +108,14 @@ bool Registry::add(const Metadata& metadata, Factory factory) {
         if (d.type != Type::Float64 || (d.shape != Shape::Scalar && d.shape != Shape::Array)) return false;
     for (const auto& d : metadata.outputs)
         if (d.type != Type::Float64 || (d.shape != Shape::Scalar && d.shape != Shape::Array)) return false;
+    for (std::size_t i = 0; i < metadata.arguments.size(); ++i) {
+        const std::size_t index = metadata.arguments[i].inputIndex;
+        if (index == static_cast<std::size_t>(-1)) continue;
+        if (index >= metadata.inputs.size() || metadata.inputs[index].shape != Shape::Scalar ||
+            metadata.inputs[index].type != Type::Float64) return false;
+        for (std::size_t j = 0; j < i; ++j)
+            if (metadata.arguments[j].inputIndex == index) return false;
+    }
     entries_.push_back(Entry{metadata, factory});
     return true;
 }

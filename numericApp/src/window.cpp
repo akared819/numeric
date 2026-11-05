@@ -92,8 +92,9 @@ void registerWindowOperations(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
     const ArgumentValue imin{ArgumentType::Integer, 0.0, 3}, imax{ArgumentType::Integer, 0.0, 4095};
     const ArgumentValue fmin{ArgumentType::Floating, 0.01, 0}, fmax{ArgumentType::Floating, 10.0, 0};
-    const ArgumentDescriptor window{"window", ArgumentType::Integer, true, false, imin, true, true, imin, imax, {}};
-    const ArgumentDescriptor alpha{"alpha", ArgumentType::Floating, true, false, fmin, true, true, fmin, fmax, {}};
+    ArgumentDescriptor window{"window", ArgumentType::Integer, true, false, imin, true, true, imin, imax, {}};
+    ArgumentDescriptor alpha{"alpha", ArgumentType::Floating, true, false, fmin, true, true, fmin, fmax, {}};
+    window.inputIndex = 1; alpha.inputIndex = 2;
     Metadata mean{"moving_mean", "moving statistics", {array, scalarDesc}, {array},
                    "odd centered window 3..4095; endpoint value padding", false,
                    "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};

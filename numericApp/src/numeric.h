@@ -34,6 +34,9 @@ struct ArgumentDescriptor {
     ArgumentValue minimum;
     ArgumentValue maximum;
     std::vector<std::int64_t> choices;
+    // Index of the legacy scalar input consumed by this parameter, or -1 if
+    // it is not mapped to the legacy execution interface.
+    std::size_t inputIndex = static_cast<std::size_t>(-1);
 };
 using ArgumentValidator = Result (*)(const ArgumentValue*, std::size_t);
 // Check descriptor consistency, including bounds, defaults, and unique names.

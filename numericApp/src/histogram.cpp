@@ -70,9 +70,10 @@ void registerHistogram(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
     const ArgumentValue unusedFloat{ArgumentType::Floating, 0.0, 0};
     const ArgumentValue minBins{ArgumentType::Integer, 0.0, 1}, maxBins{ArgumentType::Integer, 0.0, 65536};
-    const ArgumentDescriptor lower{"lower", ArgumentType::Floating, true, false, unusedFloat, false, false, unusedFloat, unusedFloat, {}};
-    const ArgumentDescriptor upper{"upper", ArgumentType::Floating, true, false, unusedFloat, false, false, unusedFloat, unusedFloat, {}};
-    const ArgumentDescriptor bins{"bins", ArgumentType::Integer, true, false, minBins, true, true, minBins, maxBins, {}};
+    ArgumentDescriptor lower{"lower", ArgumentType::Floating, true, false, unusedFloat, false, false, unusedFloat, unusedFloat, {}};
+    ArgumentDescriptor upper{"upper", ArgumentType::Floating, true, false, unusedFloat, false, false, unusedFloat, unusedFloat, {}};
+    ArgumentDescriptor bins{"bins", ArgumentType::Integer, true, false, minBins, true, true, minBins, maxBins, {}};
+    lower.inputIndex = 1; upper.inputIndex = 2; bins.inputIndex = 3;
     Metadata metadata{"histogram_uniform", "histograms", {array, scalarDesc, scalarDesc, scalarDesc}, {array},
                    "finite samples; lower inclusive, upper exclusive; 1..65536 bins", false,
                    "per-instance reusable GSL histogram; reset releases it", "invalid input, allocation or GSL numerical error"};
