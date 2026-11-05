@@ -39,6 +39,21 @@ int main() {
     sampleInterval = .5;
     CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok && std::fabs(psd[0]-1) < 1e-12 && std::fabs(psd[1]-1) < 1e-12);
     sampleInterval = 1; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok);
+    // Magnitudes must avoid squaring unscaled FFT components: these inputs
+    // would overflow or underflow before the sample-interval scaling is applied.
+    const double amplitudes[] = {1e200, 1e-200};
+    const double intervals[] = {1e-300, 1e300}, expectedPsd[] = {2e100, 2e-100};
+    for (int test = 0; test < 2; ++test) {
+        for (double& sample : welchSamples) sample = amplitudes[test];
+        sampleInterval = intervals[test];
+        CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok && welchOutput.count == 3);
+        for (double value : psd) CHECK(std::isfinite(value));
+        CHECK(std::fabs(psd[0] / expectedPsd[test] - 1) < 1e-12);
+        CHECK(std::fabs(psd[1] / expectedPsd[test] - 1) < 1e-12 && psd[2] / expectedPsd[test] < 1e-24);
+    }
+    for (double& sample : welchSamples) sample = 1;
+    sampleInterval = 1;
+    CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok);
     overlap = 4; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument && welchOutput.count == 0 && std::fabs(psd[0]-2) < 1e-12);
     overlap = 2; segmentLength = 3; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument);
     segmentLength = 4; sampleInterval = 0; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument);

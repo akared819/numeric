@@ -4,6 +4,7 @@
 #include <gsl/gsl_fft_complex.h>
 #include <gsl/gsl_fft_real.h>
 #include <gsl/gsl_fft_halfcomplex.h>
+#include <gsl/gsl_math.h>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -87,7 +88,7 @@ protected:
             for (std::size_t i = 0; i < n; ++i) fft_[i] = x.data[start + i] * window_[i];
             if (gsl_fft_real_radix2_transform(fft_.data(), 1, n) != GSL_SUCCESS) return {Status::NumericalError, "GSL Welch FFT failed"};
             for (std::size_t k = 0; k <= n / 2; ++k) {
-                const double magnitude = k == 0 || k == n / 2 ? std::fabs(fft_[k]) : std::hypot(fft_[k], fft_[n-k]);
+                const double magnitude = k == 0 || k == n / 2 ? std::fabs(fft_[k]) : gsl_hypot(fft_[k], fft_[n-k]);
                 const double scaled = magnitude * scale * ((k == 0 || k == n / 2) ? 1.0 : std::sqrt(2.0));
                 const double value = scaled * scaled;
                 if (!std::isfinite(value)) return {Status::NumericalError, "Welch PSD overflow"};
@@ -114,7 +115,7 @@ protected:
         try { scratch_.resize(x.count / 2); }
         catch (...) { return {Status::NumericalError, "power spectrum scratch allocation failed"}; }
         for (std::size_t i = 0; i < scratch_.size(); ++i) {
-            const double magnitude = std::hypot(x.data[2*i], x.data[2*i+1]);
+            const double magnitude = gsl_hypot(x.data[2*i], x.data[2*i+1]);
             scratch_[i] = magnitude * magnitude;
             if (!std::isfinite(scratch_[i])) return {Status::NumericalError, "power spectrum overflow"};
         }
