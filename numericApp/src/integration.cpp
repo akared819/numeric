@@ -2,11 +2,24 @@
 #include "numeric.h"
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_poly.h>
+#include <gsl/gsl_deriv.h>
+#include <gsl/gsl_errno.h>
 #include <cmath>
+#include <limits>
 #include <memory>
 
 namespace numeric {
 namespace {
+struct CallbackData { ScalarCallback callback; void* context; bool failed; };
+double invokeCallback(double x, void* raw) {
+    CallbackData& data = *static_cast<CallbackData*>(raw);
+    if (!std::isfinite(x)) { data.failed = true; return std::numeric_limits<double>::quiet_NaN(); }
+    try {
+        const double value = data.callback(x, data.context);
+        if (std::isfinite(value)) return value;
+    } catch (...) {}
+    data.failed = true; return std::numeric_limits<double>::quiet_NaN();
+}
 struct TableFree { void operator()(gsl_integration_glfixed_table* p) const { if (p) gsl_integration_glfixed_table_free(p); } };
 struct FunctionData { const double* coefficients; int count; bool failed; };
 double polynomial(double x, void* data) {
@@ -46,6 +59,18 @@ protected:
     }
 };
 std::unique_ptr<Operation> makePolynomialIntegral() { return std::unique_ptr<Operation>(new PolynomialIntegral); }
+}
+Result differentiateCentral(ScalarCallback callback, void* context, double x, double step, double& value, double& absoluteError) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    if (!callback || &value == &absoluteError || !std::isfinite(x) || !std::isfinite(step) || step <= 0 ||
+        !std::isfinite(x - step) || !std::isfinite(x + step) || x - step == x || x + step == x)
+        return {Status::InvalidArgument, "invalid differentiation inputs"};
+    CallbackData data{callback, context, false}; gsl_function function{&invokeCallback, &data};
+    double result = 0, error = 0;
+    const int status = gsl_deriv_central(&function, x, step, &result, &error);
+    if (data.failed || status != GSL_SUCCESS || !std::isfinite(result) || !std::isfinite(error) || error < 0)
+        return {Status::NumericalError, "differentiation or callback failed"};
+    value = result; absoluteError = error; return {Status::Ok, "ok"};
 }
 void registerIntegration(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};

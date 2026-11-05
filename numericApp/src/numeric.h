@@ -93,6 +93,11 @@ private:
 // Call once during single-threaded process startup, before any other GSL calls.
 NUMERIC_API void initializeGsl();
 NUMERIC_API bool isGslInitialized();
+// Synchronous native callback. Caller owns context and must keep it alive for the call.
+using ScalarCallback = double (*)(double x, void* context);
+// Output values are unchanged on error. The error value is an estimate, not a bound.
+NUMERIC_API Result differentiateCentral(ScalarCallback callback, void* context, double x, double step,
+                                         double& value, double& absoluteError);
 NUMERIC_API void registerBuiltins(Registry& registry);
 }
 #endif
