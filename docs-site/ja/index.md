@@ -39,6 +39,17 @@ caget demo:scalarMean.SEVR         # NO_ALARM を確認
 
 NumPyに慣れている方は、上の例を`mean([1, 2, 3, 4])`のような計算と考えられます。ただしnumericはPythonを呼び出すものではなく、NumPyの全機能や既定値を再現するものでもありません。例えば`stddev`は標本標準偏差（分母N−1）、`population_stddev`は母標準偏差（分母N）です。NumPyの配列と引数の考え方は[NumPy入門](https://numpy.org/doc/stable/user/absolute_beginners.html)も参照できます。
 
+参考としてNumPyで同じ規約を表すと、次のようになります。このPythonコードは比較用であり、IOCで実行する必要はありません。
+
+```python
+import numpy as np
+
+x = [1, 2, 3, 4]
+np.mean(x)          # numeric の mean と同じ平均: 2.5
+np.std(x, ddof=1)   # numeric の stddev と同じ分母 N-1
+np.std(x, ddof=0)   # numeric の population_stddev と同じ分母 N
+```
+
 <h2 id="fields">フィールドは何を表す？</h2>
 
 | フィールド | 役割 | 例 |
