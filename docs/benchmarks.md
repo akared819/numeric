@@ -32,6 +32,41 @@ One run on Apple M3, macOS 26.6.2 arm64, Apple LLVM 21.0.0 in C++14 mode, EPICS 
 
 These are single observations from one machine, not a benchmark target or a comparison of equivalent validation. They show only the specific configuration and methodology above. A useful next step is repeatable sampling on isolated hardware and an IOC-level measurement.
 
+## Per-call latency samples
+
+The benchmarks also take up to 10,000 individually timed calls after the
+aggregate loops. They report p50, p95, p99 and maximum observed wall-clock
+latency, using the sorted sample at `floor((count-1)*percentile/100)`. Sample
+storage is allocated before the timed calls; clock and per-call bookkeeping
+overhead are included. The samples are sequential, the system is not isolated,
+and the maximum is only the largest observed in that run. They do not establish
+a worst-case bound or hard real-time suitability. Allocation calls and CPU
+utilization were not instrumented in these measurements.
+
+On an Apple M3, macOS 27.2, Apple LLVM 21.0.0, EPICS Base R7.0.11 and GSL 2.8,
+the following individual-call samples were observed for DOUBLE mean (nanoseconds):
+
+| Length | Path | Samples | p50 | p95 | p99 | Observed max |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 64 | Direct GSL | 10,000 | 125 | 167 | 209 | 6,209 |
+| 64 | numeric core | 10,000 | 291 | 292 | 292 | 6,667 |
+| 64 | Typed view | 10,000 | 542 | 542 | 667 | 7,666 |
+| 64 | Isolated IOC | 10,000 | 667 | 750 | 791 | 21,917 |
+| 1,024 | Direct GSL | 10,000 | 3,875 | 4,000 | 5,000 | 10,333 |
+| 1,024 | numeric core | 10,000 | 4,292 | 4,375 | 5,542 | 11,334 |
+| 1,024 | Typed view | 10,000 | 8,334 | 9,333 | 10,750 | 18,625 |
+| 1,024 | Isolated IOC | 10,000 | 4,708 | 5,292 | 5,750 | 23,875 |
+| 65,536 | Direct GSL | 1,000 | 258,000 | 281,375 | 299,167 | 405,417 |
+| 65,536 | numeric core | 1,000 | 277,875 | 309,000 | 339,708 | 399,833 |
+| 65,536 | Typed view | 1,000 | 535,750 | 587,583 | 603,084 | 624,250 |
+| 65,536 | Isolated IOC | 1,000 | 280,917 | 303,000 | 328,167 | 369,583 |
+
+The direct path excludes numeric's input validation. The isolated IOC path
+includes local link and record processing but excludes network traffic and
+setup. The paths were measured sequentially rather than under identical
+simultaneous conditions. See the preceding baseline comparison for aggregate
+timings against the previous implementation.
+
 ## Isolated IOC record benchmark
 
 `numericIocBenchmark` measures synchronous writes to the `PROC` field of a `numericScalar` mean record linked to a local DOUBLE waveform. It creates an [isolated test IOC](https://docs.epics-controls.org/projects/base/en/latest/iocInit_h.html) without a Channel Access server. Run it from the repository root after building:

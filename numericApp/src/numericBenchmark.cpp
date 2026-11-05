@@ -2,6 +2,7 @@
 #include "numeric.h"
 #include "numericTypedMean.h"
 #include "numericCompiler.h"
+#include "numericLatency.h"
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_version.h>
 #include <chrono>
@@ -69,6 +70,10 @@ int main(int argc,char** argv) {
         std::printf("hardware=%s\ncompiler=%s\ngsl=%s\nalgorithm=mean\ntype=DOUBLE\narray_length=%zu\niterations=%zu\n",argv[3],NUMERIC_COMPILER_VERSION,gsl_version,length,iterations);
         std::printf("timed_allocations=not_instrumented_workspace_reserved\nepics_ioc_or_network_overhead=no\nvalidation=numeric_only\n");
         std::printf("direct_gsl_ns_per_call=%.1f\nnumeric_core_ns_per_call=%.1f\nnumeric_typed_ns_per_call=%.1f\nchecksum=%.17g\n",gslNs,numericNs,typedNs,static_cast<double>(sink));
+        const std::size_t sampleCount = std::min(iterations, static_cast<std::size_t>(10000));
+        if (!numericSampleLatency("direct_gsl", sampleCount, [&] { sink += gsl_stats_mean(data.data(),1,length); return true; }) ||
+            !numericSampleLatency("numeric_core", sampleCount, [&] { const bool ok = operation->execute(&in,1,&out,1).status == numeric::Status::Ok; sink += value; return ok; }) ||
+            !numericSampleLatency("numeric_typed", sampleCount, [&] { const bool ok = typedMean.execute(typedInput, typedValue).status == numeric::Status::Ok; sink += typedValue; return ok; })) return 1;
         return 0;
     } catch (const std::exception& e) { std::fprintf(stderr,"benchmark failed: %s\n",e.what()); return 1; }
 }
