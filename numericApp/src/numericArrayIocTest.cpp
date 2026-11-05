@@ -84,6 +84,10 @@ MAIN(numericArrayIocTest) {
     testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");
     testOk(matches("arrayMean.VAL", expectedFive, 5), "invalid override preserves the previous result");
+    testdbPutFieldOk("arrayMean.ARGA", DBF_STRING, "5");
+    testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    testOk(matches("arrayMean.VAL", expectedFive, 5), "reusing a valid override after an error recovers");
     testdbPutFieldOk("arrayMean.ARGA", DBF_STRING, "123456789012345678901234567890123456789");
     testdbPutFieldOk("arrayMean.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "INVALID");

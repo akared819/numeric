@@ -15,6 +15,7 @@
 #undef GEN_SIZE_OFFSET
 #include <epicsExport.h>
 #include <cstring>
+#include <array>
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -28,6 +29,9 @@ struct State {
     std::vector<numeric::ArgumentValue> arguments;
     std::vector<double> slots;
     std::vector<const double*> legacyFields;
+    std::array<std::array<char, 40>, 16> parsedText{};
+    std::array<numeric::ArgumentValue, 16> parsedValues{};
+    std::array<bool, 16> parsedValid{};
 };
 void destroyState(void* arg) { delete static_cast<State*>(arg); }
 const double* legacyField(numericArrayRecord* rec, const std::string& name) {
@@ -88,10 +92,16 @@ long process(dbCommon* common) {
                 if (argFields[i][0]) parametersValid = false;
             for (std::size_t i = 0; i < state->arguments.size(); ++i) {
                 if (argFields[i][0]) {
-                    if (numeric::parseArgument(state->metadata.arguments[i].type, argFields[i],
-                                               std::strlen(argFields[i]), state->arguments[i]).status != numeric::Status::Ok)
-                        parametersValid = false;
-                    if (!parametersValid) break;
+                    if (!state->parsedValid[i] || std::strcmp(state->parsedText[i].data(), argFields[i]) != 0) {
+                        const std::size_t length = std::strlen(argFields[i]);
+                        numeric::ArgumentValue parsed{};
+                        if (numeric::parseArgument(state->metadata.arguments[i].type, argFields[i], length, parsed).status != numeric::Status::Ok) {
+                            parametersValid = false; break;
+                        }
+                        std::memcpy(state->parsedText[i].data(), argFields[i], length + 1);
+                        state->parsedValues[i] = parsed; state->parsedValid[i] = true;
+                    }
+                    state->arguments[i] = state->parsedValues[i];
                     continue;
                 }
                 const double value = *state->legacyFields[i];
