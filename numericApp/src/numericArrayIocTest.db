@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(waveform, "mixedSignal") { field(FTVL, "DOUBLE") field(NELM, "6") }
+record(numericArray, "mixedFft") {
+    field(OP, "fft_complex_mixed_forward") field(INP, "mixedSignal NPP NMS") field(NMAX, "6") field(OMAX, "6")
+}
 record(numericArray, "realInverse") {
     field(OP, "fft_real_radix2_inverse") field(INP, "inverseSpectrum NPP NMS") field(NMAX, "8") field(OMAX, "4")
 }

@@ -7,6 +7,7 @@
 | `moving_mean`, `moving_median` | Real array to same-length real array | WIN: odd window length |
 | `gaussian_smooth` | Real array to same-length real array | WIN and ALPH: window length and Gaussian alpha |
 | `fft_complex_radix2_forward`, `fft_complex_radix2_inverse` | Interleaved complex input to equal-length interleaved complex output | None |
+| `fft_complex_mixed_forward`, `fft_complex_mixed_inverse` | Interleaved complex input to equal-length interleaved complex output, arbitrary positive length | None |
 | `fft_real_radix2_forward` | Real input to full interleaved complex spectrum | None |
 | `fft_real_radix2_inverse` | Conjugate-symmetric full interleaved spectrum to real output | None |
 | `histogram_uniform` | Real samples to uniform bin counts | HMIN, HMAX and NBIN: lower/upper range and bin count |

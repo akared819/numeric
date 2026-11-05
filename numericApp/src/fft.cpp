@@ -10,6 +10,44 @@
 
 namespace numeric {
 namespace {
+class MixedComplexFft : public Operation {
+    bool inverse_;
+    std::size_t length_ = 0;
+    std::unique_ptr<gsl_fft_complex_wavetable, decltype(&gsl_fft_complex_wavetable_free)> table_{nullptr, &gsl_fft_complex_wavetable_free};
+    std::unique_ptr<gsl_fft_complex_workspace, decltype(&gsl_fft_complex_workspace_free)> work_{nullptr, &gsl_fft_complex_workspace_free};
+    std::vector<double> scratch_;
+public:
+    explicit MixedComplexFft(bool inverse) : inverse_(inverse) {}
+    void reset() override { table_.reset(); work_.reset(); length_ = 0; std::vector<double>().swap(scratch_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out) for (std::size_t i = 0; i < no; ++i) out[i].count = 0;
+        if (!in || !out || ni != 1 || no != 1) return {Status::InvalidArgument, "FFT requires one input and output"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || x.count < 2 || x.count % 2 ||
+            x.stride != 1 || x.count > x.capacity || y.type != Type::Float64 || y.shape != Shape::Array ||
+            !y.data || y.capacity < x.count || x.count > std::numeric_limits<std::size_t>::max() / sizeof(double))
+            return {Status::InvalidArgument, "invalid FFT buffers or length"};
+        for (std::size_t i = 0; i < x.count; ++i)
+            if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "FFT input must be finite"};
+        const std::size_t n = x.count / 2;
+        if (n != length_) {
+            std::unique_ptr<gsl_fft_complex_wavetable, decltype(&gsl_fft_complex_wavetable_free)> table(gsl_fft_complex_wavetable_alloc(n), &gsl_fft_complex_wavetable_free);
+            if (!table) return {Status::NumericalError, "FFT wavetable allocation failed"};
+            std::unique_ptr<gsl_fft_complex_workspace, decltype(&gsl_fft_complex_workspace_free)> work(gsl_fft_complex_workspace_alloc(n), &gsl_fft_complex_workspace_free);
+            if (!work) return {Status::NumericalError, "FFT workspace allocation failed"};
+            table_ = std::move(table); work_ = std::move(work); length_ = n;
+        }
+        try { scratch_.assign(x.data, x.data + x.count); }
+        catch (...) { return {Status::NumericalError, "FFT scratch allocation failed"}; }
+        const int status = inverse_ ? gsl_fft_complex_inverse(scratch_.data(), 1, n, table_.get(), work_.get())
+                                    : gsl_fft_complex_forward(scratch_.data(), 1, n, table_.get(), work_.get());
+        if (status != GSL_SUCCESS) return {Status::NumericalError, "GSL FFT failed"};
+        for (double value : scratch_) if (!std::isfinite(value)) return {Status::NumericalError, "non-finite FFT result"};
+        for (std::size_t i = 0; i < x.count; ++i) y.data[i] = scratch_[i];
+        y.count = x.count; return {Status::Ok, "ok"};
+    }
+};
 class ComplexFft : public Operation {
     bool inverse_;
 public:
@@ -115,12 +153,20 @@ protected:
     }
 };
 std::unique_ptr<Operation> forward() { return std::unique_ptr<Operation>(new ComplexFft(false)); }
+std::unique_ptr<Operation> mixedForward() { return std::unique_ptr<Operation>(new MixedComplexFft(false)); }
+std::unique_ptr<Operation> mixedInverse() { return std::unique_ptr<Operation>(new MixedComplexFft(true)); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
+    r.addWithoutArguments(Metadata{"fft_complex_mixed_forward", "fft", arrays, arrays,
+                   "interleaved complex DOUBLE; positive length", false,
+                   "per-instance reusable GSL wavetable, workspace and scratch", "invalid buffers or allocation or numerical failure"}, &mixedForward);
+    r.addWithoutArguments(Metadata{"fft_complex_mixed_inverse", "fft", arrays, arrays,
+                   "interleaved complex DOUBLE; positive length; inverse scales by 1/N", false,
+                   "per-instance reusable GSL wavetable, workspace and scratch", "invalid buffers or allocation or numerical failure"}, &mixedInverse);
     r.addWithoutArguments(Metadata{"fft_complex_radix2_forward", "fft", arrays, arrays,
                    "interleaved complex DOUBLE; power-of-two complex length", false,
                    "per-instance object; no workspace", "invalid buffers or non-finite data/result"}, &forward);

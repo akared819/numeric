@@ -56,6 +56,18 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    double mixedInput[] = {1,0,0,0,0,0}, mixedExpected[] = {1,0,1,0,1,0};
+    testdbPutArrFieldOk("mixedSignal", DBF_DOUBLE, 6, mixedInput);
+    testdbPutFieldOk("mixedFft.PROC", DBF_LONG, 1);
+    testOk(matches("mixedFft.VAL", mixedExpected, 6), "mixed-radix FFT handles three complex samples");
+    mixedInput[0] = std::numeric_limits<double>::quiet_NaN();
+    testdbPutArrFieldOk("mixedSignal", DBF_DOUBLE, 6, mixedInput);
+    testdbPutFieldOk("mixedFft.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("mixedFft.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("mixedFft.VAL", mixedExpected, 6), "invalid FFT input preserves output");
+    mixedInput[0] = 1; testdbPutArrFieldOk("mixedSignal", DBF_DOUBLE, 6, mixedInput);
+    testdbPutFieldOk("mixedFft.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("mixedFft.SEVR", DBF_STRING, "NO_ALARM");
     double inverseSpectrum[] = {1,0,1,0,1,0,1,0}, inverseExpected[] = {1,0,0,0};
     testdbPutArrFieldOk("inverseSpectrum", DBF_DOUBLE, 8, inverseSpectrum);
     testdbPutFieldOk("realInverse.PROC", DBF_LONG, 1);

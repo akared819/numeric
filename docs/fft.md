@@ -1,5 +1,16 @@
 # Complex radix-2 FFT core operations
 
+The registry also exposes `fft_complex_mixed_forward` and
+`fft_complex_mixed_inverse`, with the same interleaved complex layout and
+normalization as the radix-2 operations. Unlike radix-2, the complex length
+may be any positive integer. GSL's general-factor algorithm can be slower for
+large prime factors. Each instance owns and reuses a GSL wavetable, workspace
+and scratch buffer; changing length may allocate, while reset and destruction
+release these resources. Input and output may overlap; failures preserve the
+output values and set the output count to zero. Do not use one instance from
+multiple threads without synchronization. Both operations are also available
+through numericArray. See the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html).
+
 The registry exposes `fft_complex_radix2_forward` and `fft_complex_radix2_inverse`. Both take one FLOAT64 array input and one FLOAT64 array output. Each complex number is represented by consecutive doubles `[real, imaginary]`, in natural sample or frequency-bin order. Counts and capacities are numbers of doubles, not complex numbers. Input stride must be 1. The input count must be even and represent a positive power-of-two number of complex values (including one); both buffers must have capacity for the full count. The output count is that same number of doubles on success and zero on failure.
 
 Forward uses the negative exponential, without normalization. Inverse uses the positive exponential and divides by the complex length, so a forward/inverse pair returns the original values within floating-point error. These conventions match the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html). Neither complex operation computes magnitudes, frequencies, or windowing. A separate real-input operation is described below.
