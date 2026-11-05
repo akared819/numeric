@@ -53,6 +53,23 @@ int main() {
     CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
     typedValues[1].integer = 1; typedValues[2].integer = 4;
     CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
+    CHECK(validateArgumentSchema(typed).status == Status::Ok);
+    auto badSchema = typed;
+    badSchema[1].name = badSchema[0].name;
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[0].required = false;
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[0].hasDefault = true; badSchema[0].defaultValue = maxInt;
+    badSchema[0].maximum.integer = 10;
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[2].choices.push_back(3);
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[2].choices.clear();
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = gaussMeta->arguments; badSchema[1].minimum.floating = std::numeric_limits<double>::infinity();
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    Metadata badMeta = *gaussMeta; badMeta.name = "bad-schema"; badMeta.arguments = badSchema;
+    CHECK(!r.add(badMeta, &makeLifetime));
     const Metadata* histMeta = r.find("histogram_uniform");
     CHECK(histMeta && histMeta->arguments.size() == 3);
     ArgumentValue histArgs[] = {{ArgumentType::Floating, -1.0, 0},

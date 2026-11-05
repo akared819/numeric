@@ -36,6 +36,8 @@ struct ArgumentDescriptor {
     std::vector<std::int64_t> choices;
 };
 using ArgumentValidator = Result (*)(const ArgumentValue*, std::size_t);
+// Check descriptor consistency, including bounds, defaults, and unique names.
+NUMERIC_API Result validateArgumentSchema(const std::vector<ArgumentDescriptor>& descriptors);
 // Validate a complete, ordered argument list; defaults are not applied here.
 NUMERIC_API Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
                                      const ArgumentValue* values, std::size_t count,

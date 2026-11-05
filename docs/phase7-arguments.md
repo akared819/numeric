@@ -10,7 +10,9 @@ An argument descriptor names its position in the descriptor list, its type,
 whether it is required, whether it has a default, inclusive bounds, and
 enumeration choices. Integer, Boolean and enumeration values use `int64_t`,
 while floating-point values use `double`. Values carry an explicit type tag;
-Boolean values must be zero or one. `validateArguments` checks supplied values
+Boolean values must be zero or one. `validateArgumentSchema` checks descriptor
+types, unique names and enum choices, ordering, bounds and defaults. The registry
+rejects invalid schemas. `validateArguments` checks supplied values
 and invokes an optional operation-specific validator after type/range checks.
 Missing required arguments fail. Optional trailing arguments can be omitted;
 the function does not apply defaults. The caller owns the argument buffers and
@@ -33,8 +35,8 @@ existing aggregate initializers is retained. No database interface is changed.
 
 - Define complete metadata for every built-in and distinguish an explicitly
   empty argument list from an operation whose schema has not been migrated.
-- Specify default application, argument-to-input mapping, enum names and
-  schema validation, then connect these to a parameterized execution API.
+- Specify default application, argument-to-input mapping and enum names, then
+  connect these to a parameterized execution API.
 - Remove operation-name-specific parameter dispatch from record support only
   after its legacy-field precedence and runtime update behavior are tested.
 - Verify all native and IOC regressions and required Linux, macOS and Windows

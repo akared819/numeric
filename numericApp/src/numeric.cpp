@@ -20,40 +20,74 @@ void initializeGsl() {
     });
 }
 bool isGslInitialized() { return initialized.load(std::memory_order_acquire); }
-Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
-                         const ArgumentValue* values, std::size_t count,
-                         ArgumentValidator validator) {
-    if (count > descriptors.size() || (count && !values))
-        return {Status::InvalidArgument, "invalid argument count or buffer"};
+namespace {
+bool validArgumentValue(const ArgumentDescriptor& d, const ArgumentValue& v) {
+    if (v.type != d.type) return false;
+    if (d.type == ArgumentType::Floating)
+        return std::isfinite(v.floating) && (!d.hasMinimum || v.floating >= d.minimum.floating) &&
+               (!d.hasMaximum || v.floating <= d.maximum.floating);
+    if (d.type == ArgumentType::Boolean && v.integer != 0 && v.integer != 1) return false;
+    if ((d.hasMinimum && v.integer < d.minimum.integer) ||
+        (d.hasMaximum && v.integer > d.maximum.integer)) return false;
+    if (d.type == ArgumentType::Enumeration) {
+        for (const auto choice : d.choices) if (choice == v.integer) return true;
+        return false;
+    }
+    return true;
+}
+}
+Result validateArgumentSchema(const std::vector<ArgumentDescriptor>& descriptors) {
+    bool optionalSeen = false;
     for (std::size_t i = 0; i < descriptors.size(); ++i) {
         const ArgumentDescriptor& d = descriptors[i];
         if (d.name.empty() || (d.type != ArgumentType::Floating && d.type != ArgumentType::Integer &&
             d.type != ArgumentType::Boolean && d.type != ArgumentType::Enumeration))
             return {Status::InvalidArgument, "invalid argument descriptor"};
+        for (std::size_t j = 0; j < i; ++j)
+            if (descriptors[j].name == d.name) return {Status::InvalidArgument, "duplicate argument name"};
+        if (optionalSeen && d.required) return {Status::InvalidArgument, "required argument after optional argument"};
+        if (!d.required) optionalSeen = true;
         if ((d.hasMinimum && d.minimum.type != d.type) || (d.hasMaximum && d.maximum.type != d.type) ||
             (d.hasDefault && d.defaultValue.type != d.type))
             return {Status::InvalidArgument, "argument descriptor type mismatch"};
+        if (d.type == ArgumentType::Floating) {
+            if ((d.hasMinimum && !std::isfinite(d.minimum.floating)) ||
+                (d.hasMaximum && !std::isfinite(d.maximum.floating)) ||
+                (d.hasMinimum && d.hasMaximum && d.minimum.floating > d.maximum.floating))
+                return {Status::InvalidArgument, "invalid floating argument bounds"};
+        } else if (d.hasMinimum && d.hasMaximum && d.minimum.integer > d.maximum.integer) {
+            return {Status::InvalidArgument, "invalid integer argument bounds"};
+        }
+        if (d.type == ArgumentType::Enumeration && d.choices.empty())
+            return {Status::InvalidArgument, "empty enumeration"};
+        if (d.type != ArgumentType::Enumeration && !d.choices.empty())
+            return {Status::InvalidArgument, "choices on non-enumeration"};
+        for (std::size_t j = 0; j < d.choices.size(); ++j) {
+            if ((d.hasMinimum && d.choices[j] < d.minimum.integer) ||
+                (d.hasMaximum && d.choices[j] > d.maximum.integer))
+                return {Status::InvalidArgument, "enumeration choice out of bounds"};
+            for (std::size_t k = 0; k < j; ++k)
+                if (d.choices[j] == d.choices[k]) return {Status::InvalidArgument, "duplicate enumeration choice"};
+        }
+        if (d.hasDefault && !validArgumentValue(d, d.defaultValue))
+            return {Status::InvalidArgument, "invalid argument default"};
+    }
+    return {Status::Ok, "ok"};
+}
+Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
+                         const ArgumentValue* values, std::size_t count,
+                         ArgumentValidator validator) {
+    if (count > descriptors.size() || (count && !values))
+        return {Status::InvalidArgument, "invalid argument count or buffer"};
+    const Result schema = validateArgumentSchema(descriptors);
+    if (schema.status != Status::Ok) return schema;
+    for (std::size_t i = 0; i < descriptors.size(); ++i) {
+        const ArgumentDescriptor& d = descriptors[i];
         if (i >= count) {
             if (d.required) return {Status::InvalidArgument, "required argument missing"};
             continue;
         }
-        const ArgumentValue& v = values[i];
-        if (v.type != d.type) return {Status::InvalidArgument, "argument type mismatch"};
-        if (d.type == ArgumentType::Floating) {
-            if (!std::isfinite(v.floating) || (d.hasMinimum && (!std::isfinite(d.minimum.floating) || v.floating < d.minimum.floating)) ||
-                (d.hasMaximum && (!std::isfinite(d.maximum.floating) || v.floating > d.maximum.floating)))
-                return {Status::InvalidArgument, "floating argument out of range"};
-        } else {
-            if ((d.type == ArgumentType::Boolean && v.integer != 0 && v.integer != 1) ||
-                (d.hasMinimum && v.integer < d.minimum.integer) ||
-                (d.hasMaximum && v.integer > d.maximum.integer))
-                return {Status::InvalidArgument, "integer argument out of range"};
-            if (d.type == ArgumentType::Enumeration) {
-                bool found = false;
-                for (const auto choice : d.choices) if (choice == v.integer) found = true;
-                if (!found) return {Status::InvalidArgument, "unknown enumeration value"};
-            }
-        }
+        if (!validArgumentValue(d, values[i])) return {Status::InvalidArgument, "invalid argument value"};
     }
     return validator ? validator(values, count) : Result{Status::Ok, "ok"};
 }
@@ -68,7 +102,8 @@ Result Operation::execute(const Input* inputs, std::size_t inputCount,
 bool Registry::add(const Metadata& metadata, Factory factory) {
     if (metadata.name.empty() || metadata.category.empty() || metadata.inputs.empty() ||
         metadata.outputs.empty() || metadata.parameters.empty() || metadata.lifecycle.empty() ||
-        metadata.errors.empty() || !factory || find(metadata.name)) return false;
+        metadata.errors.empty() || !factory || find(metadata.name) ||
+        validateArgumentSchema(metadata.arguments).status != Status::Ok) return false;
     for (const auto& d : metadata.inputs)
         if (d.type != Type::Float64 || (d.shape != Shape::Scalar && d.shape != Shape::Array)) return false;
     for (const auto& d : metadata.outputs)
