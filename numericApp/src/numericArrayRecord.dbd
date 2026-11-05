@@ -8,6 +8,22 @@ recordtype(numericArray) {
         extra("void *val")
     }
     field(INP, DBF_INLINK) { prompt("Input array link") promptgroup("40 - Input") }
+    field(INPA, DBF_INLINK) { prompt("Input A link") promptgroup("40 - Input") }
+    field(INPB, DBF_INLINK) { prompt("Input B link") promptgroup("40 - Input") }
+    field(INPC, DBF_INLINK) { prompt("Input C link") promptgroup("40 - Input") }
+    field(INPD, DBF_INLINK) { prompt("Input D link") promptgroup("40 - Input") }
+    field(INPE, DBF_INLINK) { prompt("Input E link") promptgroup("40 - Input") }
+    field(INPF, DBF_INLINK) { prompt("Input F link") promptgroup("40 - Input") }
+    field(INPG, DBF_INLINK) { prompt("Input G link") promptgroup("40 - Input") }
+    field(INPH, DBF_INLINK) { prompt("Input H link") promptgroup("40 - Input") }
+    field(INPI, DBF_INLINK) { prompt("Input I link") promptgroup("40 - Input") }
+    field(INPJ, DBF_INLINK) { prompt("Input J link") promptgroup("40 - Input") }
+    field(INPK, DBF_INLINK) { prompt("Input K link") promptgroup("40 - Input") }
+    field(INPL, DBF_INLINK) { prompt("Input L link") promptgroup("40 - Input") }
+    field(INPM, DBF_INLINK) { prompt("Input M link") promptgroup("40 - Input") }
+    field(INPN, DBF_INLINK) { prompt("Input N link") promptgroup("40 - Input") }
+    field(INPO, DBF_INLINK) { prompt("Input O link") promptgroup("40 - Input") }
+    field(INPP, DBF_INLINK) { prompt("Input P link") promptgroup("40 - Input") }
     field(OP, DBF_STRING) { prompt("Registry operation") size(40) initial("moving_mean") special(SPC_NOMOD) }
     field(ARGA, DBF_STRING) { prompt("Argument A") size(40) }
     field(ARGB, DBF_STRING) { prompt("Argument B") size(40) }

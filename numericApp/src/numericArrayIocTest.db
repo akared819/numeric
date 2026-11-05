@@ -1,4 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "arrayFitX") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(waveform, "arrayFitY") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(numericArray, "arrayFit") {
+    field(OP, "linear_fit") field(INPA, "arrayFitX NPP NMS") field(INPB, "arrayFitY NPP NMS")
+    field(NMAX, "4") field(OMAX, "6")
+}
+record(numericArray, "arrayFitConflict") {
+    field(OP, "moving_mean") field(INP, "arrayFitX NPP NMS") field(INPA, "arrayFitX NPP NMS")
+    field(NMAX, "4") field(OMAX, "6")
+}
 record(waveform, "arrayIntInput") { field(FTVL, "LONG") field(NELM, "8") }
 record(numericArray, "arraySmallInput") {
     field(INP, "arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "4") field(OMAX, "8") field(WIN, "3")

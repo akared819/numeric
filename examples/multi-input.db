@@ -26,3 +26,11 @@ record(numericScalar, "$(P)multiPolynomial") {
     field(INPB, "$(P)multiPoint NPP NMS")
     field(NMAX, "8")
 }
+
+record(numericArray, "$(P)multiFit") {
+    field(OP, "linear_fit")
+    field(INPA, "$(P)multiX NPP NMS")
+    field(INPB, "$(P)multiY NPP NMS")
+    field(NMAX, "8")
+    field(OMAX, "6")
+}

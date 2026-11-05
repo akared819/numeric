@@ -1,13 +1,13 @@
 # Phase 9: multiple input links — design under review
 
-`numericScalar` now supports `INPA` through `INPP` as ordered numerical inputs. They
+`numericScalar` and `numericArray` now support `INPA` through `INPP` as ordered numerical inputs. They
 are separate from configuration arguments: each fills a non-parameter entry
 of the operation's input signature. The existing `INP` remains available for
 single-input databases. A record that configures `INP` together with any new
 input link is invalid. If the new interface is used, its required links must be
 contiguous and links beyond the signature must be blank.
 
-This increment targets `numericScalar`: two-array correlation and
+The scalar increment covers two-array correlation and
 array-plus-scalar polynomial evaluation provide representative tests. For
 each input, allocate a record-owned buffer at initialization and validate the
 source type, shape, valid count and capacity before executing. Waveform inputs
@@ -29,8 +29,11 @@ waveform inputs, mismatched lengths, oversized buffers, invalid types and
 conflicting INP/INPA configuration. An IOC test changes the second link to an
 unconnected CA PV, checks the alarm and retained output, then changes it back
 to a local link and checks recovery. This does not test reconnection of an
-unchanged remote link. Further acceptance requires that case, all applicable
-CI, and the array record's multiple-input design. Phase 9 remains in progress.
+unchanged remote link. The array increment covers two-input linear fitting,
+legacy link conflict, a temporarily unconnected CA link and link restoration,
+using the same input and result preservation rules. Further
+acceptance requires unchanged-link reconnection and all applicable CI. Phase 9
+remains in progress.
 
 Acceptance requires existing INP databases, two waveforms, mixed scalar and
 waveform inputs, mismatched lengths, oversized buffers, invalid types,

@@ -31,14 +31,15 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(15);
+    testPlan(16);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
         "demo:movingMedianOutput", "demo:gaussianSmooth.PROC", "demo:gaussianOutput",
         "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
         "demo:arrayMean.ARGA", "demo:arrayMean.SEVR", "demo:multiX", "demo:multiY",
-        "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL"};
+        "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL",
+        "demo:multiFit.PROC", "demo:multiFit.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -116,6 +117,10 @@ int main() {
         ca_put(DBR_LONG, channels[24], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[25], &value) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL;
     testOk(correlation && std::fabs(value - 1.0) < 1e-12, "numericScalar correlates two waveforms over Channel Access");
+    const double fitExpected[] = {0, 2, 0, 0, 0, 0};
+    const bool fit = correlation && ca_put(DBR_LONG, channels[28], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 6, channels[29], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(fit && matches(result, fitExpected, 6), "numericArray fits two waveforms over Channel Access");
     double coefficients[] = {2, 3, 4};
     const bool polynomial = connected && ca_array_put(DBR_DOUBLE, 3, channels[22], coefficients) == ECA_NORMAL &&
         ca_put(DBR_LONG, channels[26], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[27], &value) == ECA_NORMAL &&

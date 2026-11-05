@@ -22,7 +22,10 @@
 
 namespace {
 struct State {
-    std::vector<double> input, staging, output;
+    std::vector<std::vector<double>> buffers;
+    std::vector<double> staging, output;
+    std::vector<DBLINK*> links;
+    std::vector<std::size_t> dataIndices;
     std::unique_ptr<numeric::Operation> op;
     numeric::Metadata metadata;
     std::vector<numeric::Input> inputs;
@@ -45,27 +48,45 @@ const double* legacyField(numericArrayRecord* rec, const std::string& name) {
 long initRecord(dbCommon* common, int pass) {
     if (pass != 0) return 0;
     numericArrayRecord* rec = reinterpret_cast<numericArrayRecord*>(common);
+    DBLINK* namedLinks[] = {&rec->inpa, &rec->inpb, &rec->inpc, &rec->inpd, &rec->inpe, &rec->inpf, &rec->inpg, &rec->inph,
+                            &rec->inpi, &rec->inpj, &rec->inpk, &rec->inpl, &rec->inpm, &rec->inpn, &rec->inpo, &rec->inpp};
     try {
-        if (rec->nmax < 1 || rec->nmax > 1048576 || rec->omax < 1 || rec->omax > 1048576 ||
-            rec->inp.type == CONSTANT) return S_db_badField;
+        if (rec->nmax < 1 || rec->nmax > 1048576 || rec->omax < 1 || rec->omax > 1048576) return S_db_badField;
         numeric::Registry registry; numeric::registerBuiltins(registry);
         const numeric::Metadata* m = registry.find(rec->op);
-        if (!m || !m->argumentSchemaComplete || m->arguments.size() > 16 || m->stateful || m->inputs.size() != m->arguments.size() + 1 ||
-            m->outputs.size() != 1 || m->inputs[0].type != numeric::Type::Float64 ||
-            m->inputs[0].shape != numeric::Shape::Array || m->outputs[0].type != numeric::Type::Float64 ||
+        if (!m || !m->argumentSchemaComplete || m->arguments.size() > 16 || m->stateful || m->inputs.empty() ||
+            m->outputs.size() != 1 || m->outputs[0].type != numeric::Type::Float64 ||
             m->outputs[0].shape != numeric::Shape::Array) return S_db_badField;
-        for (std::size_t i = 1; i < m->inputs.size(); ++i)
-            if (m->inputs[i].type != numeric::Type::Float64 || m->inputs[i].shape != numeric::Shape::Scalar) return S_db_badField;
         std::unique_ptr<State> state(new State);
         state->metadata = *m;
         state->inputs.resize(m->inputs.size());
         state->arguments.resize(m->arguments.size()); state->slots.resize(m->arguments.size());
         for (const auto& argument : m->arguments) {
             const double* field = legacyField(rec, argument.name);
-            if (!field || argument.inputIndex == 0 || argument.inputIndex >= m->inputs.size()) return S_db_badField;
+            if (!field || argument.inputIndex >= m->inputs.size()) return S_db_badField;
             state->legacyFields.push_back(field);
         }
-        state->input.resize(static_cast<std::size_t>(rec->nmax) + 1);
+        for (std::size_t i = 0; i < m->inputs.size(); ++i) {
+            bool parameter = false;
+            for (const auto& argument : m->arguments) if (argument.inputIndex == i) parameter = true;
+            if (parameter) continue;
+            const numeric::Descriptor& desc = m->inputs[i];
+            if (desc.type != numeric::Type::Float64 || (desc.shape != numeric::Shape::Array && desc.shape != numeric::Shape::Scalar)) return S_db_badField;
+            state->dataIndices.push_back(i);
+        }
+        if (state->dataIndices.empty() || state->dataIndices.size() > 16) return S_db_badField;
+        const bool legacy = rec->inp.type != CONSTANT;
+        if (legacy && state->dataIndices.size() != 1) return S_db_badField;
+        for (std::size_t i = 0; i < 16; ++i) {
+            const bool configured = namedLinks[i]->type != CONSTANT;
+            if ((legacy && configured) || (!legacy && configured != (i < state->dataIndices.size()))) return S_db_badField;
+        }
+        state->buffers.resize(state->dataIndices.size());
+        for (std::size_t i = 0; i < state->dataIndices.size(); ++i) {
+            const numeric::Shape shape = m->inputs[state->dataIndices[i]].shape;
+            state->buffers[i].resize(shape == numeric::Shape::Scalar ? 2 : static_cast<std::size_t>(rec->nmax) + 1);
+            state->links.push_back(legacy ? &rec->inp : namedLinks[i]);
+        }
         state->staging.resize(rec->omax); state->output.resize(rec->omax);
         state->op = registry.create(rec->op);
         if (!state->op || epicsAtExit(destroyState, state.get())) return S_rec_outMem;
@@ -83,10 +104,23 @@ long process(dbCommon* common) {
     const epicsUInt32 oldInput = rec->nin, oldOutput = rec->nord;
     rec->nin = 0;
     try {
-        long count = static_cast<long>(rec->nmax) + 1;
-        if (state && dbGetLinkDBFtype(&rec->inp) == DBF_DOUBLE &&
-            dbGetLink(&rec->inp, DBR_DOUBLE, state->input.data(), nullptr, &count) == 0 &&
-            count > 0 && static_cast<unsigned long>(count) <= rec->nmax) {
+        bool inputsValid = state != nullptr;
+        std::size_t firstCount = 0;
+        if (inputsValid) for (std::size_t i = 0; i < state->dataIndices.size(); ++i) {
+            const std::size_t index = state->dataIndices[i];
+            const numeric::Shape shape = state->metadata.inputs[index].shape;
+            long count = static_cast<long>(state->buffers[i].size());
+            if (dbGetLinkDBFtype(state->links[i]) != DBF_DOUBLE ||
+                dbGetLink(state->links[i], DBR_DOUBLE, state->buffers[i].data(), nullptr, &count) != 0 ||
+                count <= 0 || static_cast<unsigned long>(count) > rec->nmax ||
+                (shape == numeric::Shape::Scalar && count != 1)) {
+                inputsValid = false; break;
+            }
+            if (i == 0) firstCount = static_cast<std::size_t>(count);
+            state->inputs[index] = {state->buffers[i].data(), static_cast<std::size_t>(count), state->buffers[i].size(), 1,
+                                    numeric::Type::Float64, shape};
+        }
+        if (inputsValid) {
             bool parametersValid = true;
             for (std::size_t i = state->arguments.size(); i < 16; ++i)
                 if (argFields[i][0]) parametersValid = false;
@@ -112,13 +146,12 @@ long process(dbCommon* common) {
                     state->arguments[i] = {type, 0.0, static_cast<std::int64_t>(value)};
                 else { parametersValid = false; break; }
             }
-            state->inputs[0] = {state->input.data(), static_cast<std::size_t>(count), state->input.size(), 1, numeric::Type::Float64, numeric::Shape::Array};
             numeric::Output output{state->staging.data(), state->staging.size(), 0, numeric::Type::Float64, numeric::Shape::Array};
             if (parametersValid && numeric::setLegacyArguments(state->metadata, state->arguments.data(), state->arguments.size(),
                     state->inputs.data(), state->inputs.size(), state->slots.data(), state->slots.size()).status == numeric::Status::Ok &&
                 state->op->execute(state->inputs.data(), state->inputs.size(), &output, 1).status == numeric::Status::Ok) {
                 for (std::size_t i = 0; i < output.count; ++i) state->output[i] = state->staging[i];
-                rec->nin = static_cast<epicsUInt32>(count); rec->nord = static_cast<epicsUInt32>(output.count);
+                rec->nin = static_cast<epicsUInt32>(firstCount); rec->nord = static_cast<epicsUInt32>(output.count);
                 rec->udf = FALSE; ok = true;
             }
         }
