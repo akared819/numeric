@@ -10,7 +10,7 @@ alternate: /ja/reference/
 
 # Operation reference
 
-Each entry names the EPICS interface, ordered inputs, result and operation-specific conditions. Select an operation name to jump to it. The [full API and native interface index](#other-interfaces) below distinguishes features that do not use record fields. See the [NumPy reference](https://numpy.org/doc/stable/reference/generated/numpy.arange.html) for the documentation style that inspired this guide; numeric does not require Python.
+Each entry names the EPICS interface, ordered inputs, result and operation-specific conditions. Select an operation name to jump to it. The [full API and native interface index](#other-interfaces) below distinguishes features that do not use record fields.
 
 ## Reading record fields
 
