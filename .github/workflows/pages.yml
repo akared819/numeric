@@ -33,6 +33,12 @@ jobs:
           grep -q 'ARGA' _site/ja/index.html
           grep -q 'href="/numeric/assets/style.css"' _site/ja/index.html
           grep -q 'href="/numeric/ja/"' _site/index.html
+          grep -q 'href="/numeric/" hreflang="en" aria-current="page"' _site/index.html
+          grep -q 'href="/numeric/ja/" hreflang="ja" aria-current="page"' _site/ja/index.html
+          if grep -q '日本語' _site/index.html; then
+            echo 'The English page must not contain Japanese text.' >&2
+            exit 1
+          fi
       - name: Upload pull request preview
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

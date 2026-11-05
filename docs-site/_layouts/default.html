@@ -15,8 +15,13 @@
       <nav aria-label="Main navigation">
         <a href="{{ '/' | relative_url }}#quick-start">Quick start</a>
         <a href="{{ '/' | relative_url }}#examples">Examples</a>
-        <a href="{{ '/ja/' | relative_url }}">日本語ガイド</a>
         <a href="https://github.com/akared819/numeric">GitHub ↗</a>
+        <span class="language-switch" role="group" aria-label="{% if page.lang == 'ja' %}言語{% else %}Language{% endif %}">
+          <span class="language-label">Lang:</span>
+          <a href="{{ '/' | relative_url }}" hreflang="en"{% unless page.lang == 'ja' %} aria-current="page"{% endunless %} aria-label="English">EN</a>
+          <span class="language-divider" aria-hidden="true">/</span>
+          <a href="{{ '/ja/' | relative_url }}" hreflang="ja"{% if page.lang == 'ja' %} aria-current="page"{% endif %} aria-label="Japanese">JA</a>
+        </span>
       </nav>
     </div>
   </header>
