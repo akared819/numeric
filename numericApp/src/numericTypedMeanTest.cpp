@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numericTypedMean.h"
 #include <cmath>
+#include <atomic>
 #include <cstdio>
 #include <limits>
+#include <thread>
 using namespace numeric;
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #x); return 1; } } while (0)
 int main() {
@@ -39,5 +41,18 @@ int main() {
     mean.reset(); CHECK(mean.execute(views[0], result).status == Status::Ok && std::fabs(result - 2.5) < 1e-12);
     ArrayView scalar{d, sizeof(double), ElementType::Float64, 0, nullptr, nullptr};
     CHECK(mean.execute(scalar, result).status == Status::Ok && result == 1);
+    const std::size_t big = static_cast<std::size_t>(1) << (std::numeric_limits<std::size_t>::digits / 2);
+    const std::size_t hugeShape[] = {big, big}, tinyStrides[] = {1, 1};
+    ArrayView huge{d, std::numeric_limits<std::size_t>::max(), ElementType::Float64, 2, hugeShape, tinyStrides};
+    result = 77; CHECK(mean.execute(huge, result).status == Status::InvalidArgument && result == 77);
+    std::atomic<bool> concurrentOk(true);
+    auto independent = [&] {
+        TypedMean local(4); double current = 0;
+        for (int n = 0; n < 1000; ++n)
+            if (local.execute(views[0], current).status != Status::Ok || std::fabs(current - 2.5) >= 1e-12)
+                concurrentOk.store(false);
+    };
+    std::thread first(independent), second(independent); first.join(); second.join();
+    CHECK(concurrentOk.load());
     std::puts("numericTypedMeanTest: all checks passed"); return 0;
 }

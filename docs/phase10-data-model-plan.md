@@ -49,7 +49,8 @@ The native `numericDataTest` covers all six types, complex layout and unaligned
 access, large Int64 values, empty views, invalid indices, capacity, overflow,
 overlapping writes and preservation on failure. `numericTypedMeanTest` checks
 GSL calculations across all six types, a strided matrix, exact-conversion
-failures, initialization, capacity and reset. Acceptance also requires
+failures, initialization, capacity, element-count overflow, reset and independent
+concurrent instances. Acceptance also requires
 additional numerical operations, EPICS integration, all platform CI, and
 performance comparisons. The model must
 not claim NumPy compatibility or support arbitrary multidimensional layouts
