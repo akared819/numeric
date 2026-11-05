@@ -4,12 +4,53 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_eigen.h>
+#include <algorithm>
 #include <climits>
 #include <cmath>
 #include <limits>
 
 namespace numeric {
 namespace {
+class SymmetricEigenvalues : public Operation {
+    std::vector<double> matrix_, values_;
+    std::unique_ptr<gsl_eigen_symm_workspace, decltype(&gsl_eigen_symm_free)> workspace_{nullptr, &gsl_eigen_symm_free};
+    std::size_t dimension_ = 0;
+public:
+    void reset() override { workspace_.reset(); dimension_ = 0; std::vector<double>().swap(matrix_); std::vector<double>().swap(values_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "eigenvalues require matrix and dimension"};
+        const Input& x = in[0]; const Input& d = in[1]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || x.stride != 1 || x.count > x.capacity ||
+            d.type != Type::Float64 || d.shape != Shape::Scalar || !d.data || d.count != 1 || !d.capacity || !d.stride ||
+            y.type != Type::Float64 || y.shape != Shape::Array || !y.data)
+            return {Status::InvalidArgument, "invalid eigenvalue buffers"};
+        const double dim = d.data[0];
+        if (!std::isfinite(dim) || dim < 1 || dim > 1024 || std::floor(dim) != dim) return {Status::InvalidArgument, "invalid matrix dimension"};
+        const std::size_t n = static_cast<std::size_t>(dim);
+        if (x.count != n*n || y.capacity < n) return {Status::InvalidArgument, "invalid matrix or output size"};
+        for (std::size_t i = 0; i < x.count; ++i) if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "matrix must be finite"};
+        for (std::size_t i = 0; i < n; ++i) for (std::size_t j = 0; j < i; ++j)
+            if (x.data[i*n+j] != x.data[j*n+i]) return {Status::InvalidArgument, "matrix must be symmetric"};
+        if (dimension_ != n) {
+            std::unique_ptr<gsl_eigen_symm_workspace, decltype(&gsl_eigen_symm_free)> fresh(gsl_eigen_symm_alloc(n), &gsl_eigen_symm_free);
+            if (!fresh) return {Status::NumericalError, "eigenvalue workspace allocation failed"};
+            workspace_ = std::move(fresh); dimension_ = n;
+        }
+        try { matrix_.assign(x.data, x.data + x.count); values_.resize(n); }
+        catch (...) { return {Status::NumericalError, "eigenvalue buffer allocation failed"}; }
+        gsl_matrix_view matrix = gsl_matrix_view_array(matrix_.data(), n, n);
+        gsl_vector_view values = gsl_vector_view_array(values_.data(), n);
+        if (gsl_eigen_symm(&matrix.matrix, &values.vector, workspace_.get()) != GSL_SUCCESS)
+            return {Status::NumericalError, "GSL eigenvalue calculation failed"};
+        for (double value : values_) if (!std::isfinite(value)) return {Status::NumericalError, "non-finite eigenvalue"};
+        std::sort(values_.begin(), values_.end());
+        for (std::size_t i = 0; i < n; ++i) y.data[i] = values_[i];
+        y.count = n; return {Status::Ok, "ok"};
+    }
+};
 class MatrixDeterminant : public Operation {
     std::vector<double> scratch_;
     std::unique_ptr<gsl_permutation, decltype(&gsl_permutation_free)> permutation_{nullptr, &gsl_permutation_free};
@@ -75,8 +116,12 @@ protected:
 };
 std::unique_ptr<Operation> makeVectorNorm() { return std::unique_ptr<Operation>(new VectorNorm); }
 std::unique_ptr<Operation> makeMatrixDeterminant() { return std::unique_ptr<Operation>(new MatrixDeterminant); }
+std::unique_ptr<Operation> makeSymmetricEigenvalues() { return std::unique_ptr<Operation>(new SymmetricEigenvalues); }
 }
 void registerLinearAlgebra(Registry& r) {
+    r.addWithoutArguments(Metadata{"matrix_eigenvalues_symmetric", "linear algebra", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
+                   {{Type::Float64, Shape::Array}}, "row-major symmetric matrix and dimension 1..1024; sorted real eigenvalues", false,
+                   "per-instance reusable matrix and GSL workspace; reset frees them", "invalid matrix, allocation or numerical error"}, &makeSymmetricEigenvalues);
     r.addWithoutArguments(Metadata{"matrix_determinant", "linear algebra", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Scalar}}, "row-major square matrix and dimension 1..1024", false,
                    "per-instance reusable matrix and permutation; reset frees them", "invalid matrix, allocation or numerical error"}, &makeMatrixDeterminant);

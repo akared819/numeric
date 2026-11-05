@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(waveform, "eigenMatrix") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(ao, "eigenDimension") { field(VAL, "2") }
+record(numericArray, "eigenValues") {
+    field(OP, "matrix_eigenvalues_symmetric") field(INPA, "eigenMatrix NPP NMS") field(INPB, "eigenDimension NPP NMS") field(NMAX, "4") field(OMAX, "2")
+}
 record(waveform, "welchSamples") { field(FTVL, "DOUBLE") field(NELM, "8") }
 record(ao, "stftHop") { field(VAL, "4") }
 record(numericArray, "stft") {

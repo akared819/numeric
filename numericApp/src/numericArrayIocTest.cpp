@@ -56,6 +56,17 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    double eigenMatrix[] = {2,1,1,2}, eigenExpected[] = {1,3};
+    testdbPutArrFieldOk("eigenMatrix", DBF_DOUBLE, 4, eigenMatrix);
+    testdbPutFieldOk("eigenValues.PROC", DBF_LONG, 1);
+    testOk(matches("eigenValues.VAL", eigenExpected, 2), "symmetric matrix eigenvalues are sorted");
+    eigenMatrix[1] = 2; testdbPutArrFieldOk("eigenMatrix", DBF_DOUBLE, 4, eigenMatrix);
+    testdbPutFieldOk("eigenValues.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("eigenValues.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("eigenValues.VAL", eigenExpected, 2), "non-symmetric input preserves eigenvalues");
+    eigenMatrix[1] = 1; testdbPutArrFieldOk("eigenMatrix", DBF_DOUBLE, 4, eigenMatrix);
+    testdbPutFieldOk("eigenValues.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("eigenValues.SEVR", DBF_STRING, "NO_ALARM");
     double welchSamples[] = {1,1,1,1,1,1,1,1}, welchExpected[] = {2,2,0};
     testdbPutArrFieldOk("welchSamples", DBF_DOUBLE, 8, welchSamples);
     double stftExpected[] = {1.5,0,-.75,-.75,0,0,-.75,.75,1.5,0,-.75,-.75,0,0,-.75,.75};

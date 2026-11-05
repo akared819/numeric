@@ -193,6 +193,15 @@ int main() {
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::NotInitialized && derivative == 7 && derivativeError == 8);
     CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto eigen = r.create("matrix_eigenvalues_symmetric"); CHECK(eigen);
+    double symmetric[] = {2,1,1,2}, eigenDimension = 2, eigenValues[] = {9,9};
+    Input eigenInputs[] = {{symmetric,4,4,1,Type::Float64,Shape::Array}, {&eigenDimension,1,1,1,Type::Float64,Shape::Scalar}};
+    Output eigenOutput{eigenValues,2,0,Type::Float64,Shape::Array};
+    CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::Ok && eigenOutput.count == 2 && std::fabs(eigenValues[0]-1) < 1e-12 && std::fabs(eigenValues[1]-3) < 1e-12);
+    symmetric[1] = 2; CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::InvalidArgument && std::fabs(eigenValues[0]-1) < 1e-12);
+    symmetric[1] = 1; eigenOutput.capacity = 1; CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::InvalidArgument);
+    eigenOutput.capacity = 2; eigenInputs[0].count = 1; eigenDimension = 1; eigen->reset();
+    CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::Ok && eigenOutput.count == 1 && eigenValues[0] == 2);
     auto determinant = r.create("matrix_determinant"); CHECK(determinant);
     double matrixData[] = {1,2,3,4}, matrixDimension = 2, matrixResult = 42;
     Input matrixInputs[] = {{matrixData,4,4,1,Type::Float64,Shape::Array}, {&matrixDimension,1,1,1,Type::Float64,Shape::Scalar}};
