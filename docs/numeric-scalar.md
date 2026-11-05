@@ -19,6 +19,13 @@ record(numericScalar, "SIGNAL:WEIGHTED_MEAN") {
 }
 ```
 
+`quantile_sorted` takes an ascending finite waveform in INPA and a finite
+fraction between 0 and 1 in scalar INPB. GSL linearly interpolates between
+adjacent samples; 0 and 1 select the minimum and maximum. Inputs are validated
+without sorting or changing the waveform. At most INT_MAX samples are accepted
+because of the GSL 2.8 quantile implementation's index conversion. For
+example, data `[1, 2, 3, 4]` and fraction `0.75` give `3.25`.
+
 For one numerical input, configure either the existing INP or the new INPA link. For multiple numerical inputs configure contiguous INPA, INPB and subsequent links, in registry input order excluding configuration arguments. A record that specifies INP and any INPA–INPP link, omits a required link, or specifies a surplus link fails initialization. Input links must be nonconstant. For example:
 
 ```db

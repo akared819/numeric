@@ -2,6 +2,7 @@
 #include "numeric.h"
 #include <gsl/gsl_statistics_double.h>
 #include <cmath>
+#include <climits>
 #include <limits>
 namespace numeric {
 namespace {
@@ -58,6 +59,37 @@ protected:
         gsl_stats_minmax(&minimum, &maximum, x.data, x.stride, x.count);
         *out[0].data = minimum; *out[1].data = maximum;
         out[0].count = out[1].count = 1;
+        return {Status::Ok, "ok"};
+    }
+};
+class SortedQuantile : public Operation {
+public:
+    void reset() override {}
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "quantile requires data and fraction"};
+        if (out[0].type != Type::Float64 || out[0].shape != Shape::Scalar || !out[0].data || !out[0].capacity)
+            return {Status::InvalidArgument, "invalid output"};
+        const Input& x = in[0]; const Input& fraction = in[1];
+        // GSL 2.8 converts the quantile index through int internally.
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.count > INT_MAX || !x.stride ||
+            (x.count - 1) > (std::numeric_limits<std::size_t>::max() - 1) / x.stride ||
+            (x.count - 1) * x.stride >= x.capacity || fraction.type != Type::Float64 ||
+            fraction.shape != Shape::Scalar || !fraction.data || fraction.count != 1 || !fraction.capacity || !fraction.stride)
+            return {Status::InvalidArgument, "invalid data or fraction buffer"};
+        const double f = fraction.data[0];
+        if (!std::isfinite(f) || f < 0 || f > 1) return {Status::InvalidArgument, "fraction must be between zero and one"};
+        double previous = x.data[0];
+        if (!std::isfinite(previous)) return {Status::InvalidArgument, "data must be finite and sorted"};
+        for (std::size_t i = 1; i < x.count; ++i) {
+            const double current = x.data[i * x.stride];
+            if (!std::isfinite(current) || current < previous) return {Status::InvalidArgument, "data must be finite and sorted"};
+            previous = current;
+        }
+        const double result = gsl_stats_quantile_from_sorted_data(x.data, x.stride, x.count, f);
+        if (!std::isfinite(result)) return {Status::NumericalError, "non-finite quantile"};
+        *out[0].data = result; out[0].count = 1;
         return {Status::Ok, "ok"};
     }
 };
@@ -144,6 +176,7 @@ protected:
 std::unique_ptr<Operation> makeCovariance() { return std::unique_ptr<Operation>(new BatchCovariance(false)); }
 std::unique_ptr<Operation> makeCorrelation() { return std::unique_ptr<Operation>(new BatchCovariance(true)); }
 std::unique_ptr<Operation> makeWeightedMean() { return std::unique_ptr<Operation>(new WeightedMean()); }
+std::unique_ptr<Operation> makeSortedQuantile() { return std::unique_ptr<Operation>(new SortedQuantile()); }
 std::unique_ptr<Operation> makeMinmax() { return std::unique_ptr<Operation>(new BatchMinmax()); }
 std::unique_ptr<Operation> makeMean() { return std::unique_ptr<Operation>(new BatchStatistic(0)); }
 std::unique_ptr<Operation> makeVariance() { return std::unique_ptr<Operation>(new BatchStatistic(1)); }
@@ -166,6 +199,9 @@ void registerFitting(Registry&);
 void registerIntegration(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
+    r.addWithoutArguments(Metadata{"quantile_sorted", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
+                   {{Type::Float64, Shape::Scalar}}, "ascending data and fraction in [0, 1]", false,
+                   "per-instance object; no workspace", "invalid input or non-finite result"}, &makeSortedQuantile);
     r.addWithoutArguments(Metadata{"weighted_mean", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "data and nonnegative weights; at least one positive weight", false,
                    "per-instance object; no workspace", "invalid input or non-finite result"}, &makeWeightedMean);

@@ -340,6 +340,26 @@ int main() {
     data[2] = std::numeric_limits<double>::infinity();
     CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
     data[2] = 3; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::Ok && extrema[0] == 1 && extrema[1] == 5);
+    auto quantile = r.create("quantile_sorted");
+    double sortedData[] = {1, 2, 3, 4}, fraction = .75, quantileResult = 99;
+    Input quantileInputs[] = {{sortedData, 4, 4, 1, Type::Float64, Shape::Array},
+                              {&fraction, 1, 1, 1, Type::Float64, Shape::Scalar}};
+    Output quantileOutput{&quantileResult, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(quantile && quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 3.25);
+    fraction = 0; CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 1);
+    fraction = 1; CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 4);
+    fraction = 2; CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument && quantileResult == 4);
+    fraction = .5; sortedData[2] = 0;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument && quantileResult == 4);
+    sortedData[2] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument);
+    sortedData[2] = 3; quantileInputs[0].count = 1;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 1);
+    quantileInputs[0].count = 0;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument);
+    quantileInputs[0].count = static_cast<std::size_t>(std::numeric_limits<int>::max()) + 1;
+    quantileInputs[0].capacity = quantileInputs[0].count;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument);
     auto weightedMean = r.create("weighted_mean");
     CHECK(weightedMean && r.find("weighted_mean") && r.find("weighted_mean")->inputs.size() == 2);
     double weightedData[] = {1, 2, 3}, weights[] = {1, 2, 1}, weightedResult = 99;

@@ -104,6 +104,16 @@ MAIN(numericScalarIocTest) {
     double multiX[] = {1, 2, 3, 4, 5}, multiY[] = {2, 4, 6, 8, 10};
     testdbPutArrFieldOk("multiX", DBF_DOUBLE, 4, multiX);
     testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, multiY);
+    testdbPutFieldOk("sortedQuantile.PROC", DBF_LONG, 1);
+    testOk(valueNear("sortedQuantile.VAL", 3.25), "quantile accepts waveform and scalar inputs");
+    testdbPutFieldOk("quantileFraction.VAL", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("sortedQuantile.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("sortedQuantile.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("sortedQuantile.VAL", 3.25), "invalid fraction preserves the result");
+    testdbPutFieldOk("quantileFraction.VAL", DBF_DOUBLE, 0.5);
+    testdbPutFieldOk("sortedQuantile.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("sortedQuantile.SEVR", DBF_STRING, "NO_ALARM");
+    testOk(valueNear("sortedQuantile.VAL", 2.5), "quantile recovers with a valid fraction");
     testdbPutFieldOk("weightedMean.PROC", DBF_LONG, 1);
     testOk(valueNear("weightedMean.VAL", 3.0), "weighted mean uses two input waveforms");
     double invalidWeights[] = {0, -1, 0, 0};

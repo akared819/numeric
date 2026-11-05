@@ -21,6 +21,10 @@ record(numericScalar, "multiCorrelation") {
 record(numericScalar, "weightedMean") {
     field(OP, "weighted_mean") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(NMAX, "4")
 }
+record(ao, "quantileFraction") { field(VAL, "0.75") }
+record(numericScalar, "sortedQuantile") {
+    field(OP, "quantile_sorted") field(INPA, "multiX NPP NMS") field(INPB, "quantileFraction NPP NMS") field(NMAX, "4")
+}
 record(numericScalar, "multiPolynomial") {
     field(OP, "polynomial_eval") field(INPA, "multiX NPP NMS") field(INPB, "multiPoint NPP NMS") field(NMAX, "4")
 }
