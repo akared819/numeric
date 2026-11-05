@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <cadef.h>
+#include <alarm.h>
 #include <epicsUnitTest.h>
 #include <epicsEvent.h>
 #include <dbEvent.h>
@@ -30,13 +31,13 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(12);
+    testPlan(13);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
         "demo:movingMedianOutput", "demo:gaussianSmooth.PROC", "demo:gaussianOutput",
         "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
-        "demo:arrayMean.ARGA"};
+        "demo:arrayMean.ARGA", "demo:arrayMean.SEVR"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -85,7 +86,17 @@ int main() {
         ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
     testOk(recalculated && matches(result, meansFive, 5), "ARGA changes the next array calculation over Channel Access");
     windowArg[0] = '\0';
-    const bool restored = recalculated && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+    bool restored = recalculated && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL && matches(result, means, 5);
+    std::strcpy(windowArg, "4"); dbr_short_t severity = 0;
+    const bool invalid = restored && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_get(DBR_SHORT, channels[21], &severity) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(invalid && severity == INVALID_ALARM && matches(result, means, 5), "invalid ARGA raises an alarm and preserves output over Channel Access");
+    windowArg[0] = '\0';
+    restored = invalid && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
         ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
         ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL && matches(result, means, 5);
     double overwrite[] = {9,9,9,9,9};
