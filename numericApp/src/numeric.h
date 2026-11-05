@@ -113,6 +113,11 @@ NUMERIC_API Result solveOdeRkf45(OdeCallback callback, void* context, double sta
                                   const double* initial, std::size_t dimension, double initialStep,
                                   double absoluteTolerance, double relativeTolerance, std::size_t maxSteps,
                                   double* output, std::size_t outputCapacity);
+using ResidualCallback = bool (*)(const double* parameters, std::size_t parameterCount,
+                                   double* residuals, std::size_t residualCount, void* context);
+NUMERIC_API Result fitNonlinear(ResidualCallback callback, void* context, const double* initial, std::size_t parameterCount,
+                                 std::size_t residualCount, std::size_t maxIterations, double tolerance,
+                                 double* parameters, std::size_t outputCapacity, double& sumSquaredResiduals);
 // Independent deterministic GSL MT19937 stream; instances are not thread-safe.
 class NUMERIC_API UniformRandomStream {
 public:

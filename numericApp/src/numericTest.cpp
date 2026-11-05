@@ -25,6 +25,13 @@ bool odeExp(double, const double* state, double* derivative, std::size_t n, void
 }
 bool odeBad(double, const double*, double*, std::size_t, void*) { return true; }
 bool odeThrow(double, const double*, double*, std::size_t, void*) { throw 1; }
+bool fitResidual(const double* p, std::size_t np, double* r, std::size_t nr, void*) {
+    if (np != 2 || nr != 3) return false;
+    const double y[] = {2,4,8};
+    for (std::size_t i = 0; i < nr; ++i) r[i] = p[0]*std::exp(p[1]*static_cast<double>(i))-y[i];
+    return true;
+}
+bool fitBad(const double*, std::size_t, double*, std::size_t, void*) { return true; }
 int destroyed = 0;
 class Lifetime : public Operation {
 public:
@@ -207,6 +214,8 @@ int main() {
     CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::NotInitialized);
     CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NotInitialized);
     double odeInitial[] = {1,1}, odeOutput[] = {7,8};
+    double fitInitial[] = {1.8,.5}, fitResult[] = {7,8}, fitError = 9;
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NotInitialized);
     CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     auto gamma = r.create("gamma"); CHECK(gamma);
@@ -279,6 +288,11 @@ int main() {
     CHECK(solveOdeRkf45(&odeBad, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
     CHECK(solveOdeRkf45(&odeThrow, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
     CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-14, 1e-14, 1, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::Ok && std::fabs(fitResult[0]-2) < 1e-6 && std::fabs(fitResult[1]-std::log(2.0)) < 1e-6 && fitError < 1e-10);
+    fitResult[0] = 7; fitResult[1] = 8; fitError = 9;
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 1, 100, 1e-8, fitResult, 2, fitError).status == Status::InvalidArgument);
+    CHECK(fitNonlinear(&fitBad, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 1, 1e-14, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
     auto spline = r.create("interp_cspline"); CHECK(spline);
     double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
     Input splineInputs[] = {{sx,3,3,1,Type::Float64,Shape::Array}, {sy,3,3,1,Type::Float64,Shape::Array}, {&sq,1,1,1,Type::Float64,Shape::Scalar}};
