@@ -91,6 +91,41 @@ Result validateArguments(const std::vector<ArgumentDescriptor>& descriptors,
     }
     return validator ? validator(values, count) : Result{Status::Ok, "ok"};
 }
+namespace {
+bool exactlyRepresentable(std::int64_t value) {
+    std::uint64_t magnitude = value < 0 ? static_cast<std::uint64_t>(-(value + 1)) + 1 :
+                                          static_cast<std::uint64_t>(value);
+    while (magnitude > UINT64_C(9007199254740992)) {
+        if (magnitude & 1u) return false;
+        magnitude >>= 1;
+    }
+    return true;
+}
+}
+Result setLegacyArguments(const Metadata& metadata, const ArgumentValue* values,
+                          std::size_t count, Input* inputs, std::size_t inputCount,
+                          double* slots, std::size_t slotCount) {
+    if (count != metadata.arguments.size() || slotCount < count ||
+        (count && (!inputs || !slots)))
+        return {Status::InvalidArgument, "invalid argument buffers or count"};
+    const Result validated = validateArguments(metadata.arguments, values, count, metadata.argumentValidator);
+    if (validated.status != Status::Ok) return validated;
+    for (std::size_t i = 0; i < count; ++i) {
+        const std::size_t index = metadata.arguments[i].inputIndex;
+        if (index >= inputCount || index >= metadata.inputs.size() ||
+            metadata.inputs[index].type != Type::Float64 || metadata.inputs[index].shape != Shape::Scalar ||
+            (values[i].type != ArgumentType::Floating && !exactlyRepresentable(values[i].integer)))
+            return {Status::InvalidArgument, "invalid mapping or inexact integer conversion"};
+        for (std::size_t j = 0; j < i; ++j)
+            if (metadata.arguments[j].inputIndex == index)
+                return {Status::InvalidArgument, "duplicate argument mapping"};
+    }
+    for (std::size_t i = 0; i < count; ++i) {
+        slots[i] = values[i].type == ArgumentType::Floating ? values[i].floating : static_cast<double>(values[i].integer);
+        inputs[metadata.arguments[i].inputIndex] = {&slots[i], 1, 1, 1, Type::Float64, Shape::Scalar};
+    }
+    return {Status::Ok, "ok"};
+}
 Result Operation::execute(const Input* inputs, std::size_t inputCount,
                           Output* outputs, std::size_t outputCount) {
     if (!isGslInitialized()) {

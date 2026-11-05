@@ -53,6 +53,11 @@ struct Metadata {
     std::vector<ArgumentDescriptor> arguments;
     ArgumentValidator argumentValidator = nullptr;
 };
+// Build mapped scalar inputs using caller-owned slots. Reject integers that
+// cannot be represented exactly by the legacy double-based interface.
+NUMERIC_API Result setLegacyArguments(const Metadata& metadata, const ArgumentValue* values,
+                                      std::size_t count, Input* inputs, std::size_t inputCount,
+                                      double* slots, std::size_t slotCount);
 class NUMERIC_API Operation {
 public:
     virtual ~Operation() {}

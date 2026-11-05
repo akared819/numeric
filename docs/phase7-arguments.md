@@ -22,6 +22,11 @@ Each descriptor can map to an index in the legacy scalar input list. Registered
 mappings must identify distinct Float64 scalar inputs. This describes where an
 adapter must place arguments; it does not itself convert integers to double or
 guarantee exact representation. Adapters must reject unrepresentable integers.
+`setLegacyArguments` provides such an adapter: it validates a complete argument
+list, rejects integers that a double cannot represent exactly, and maps scalar
+views into caller-owned `slots`. The views remain valid only while those slots
+remain alive and unchanged. It does not allocate or apply defaults. The caller
+must provide separate, non-overlapping value, slot and input buffers.
 
 The window descriptors cover window and alpha bounds, and their operation
 validator rejects even window sizes. The existing operation execution also
@@ -40,7 +45,7 @@ existing aggregate initializers is retained. No database interface is changed.
 
 - Define complete metadata for every built-in and distinguish an explicitly
   empty argument list from an operation whose schema has not been migrated.
-- Specify default application, enum names and a precision-safe adapter, then
+- Specify default application and enum names, then
   connect these to a parameterized execution API.
 - Remove operation-name-specific parameter dispatch from record support only
   after its legacy-field precedence and runtime update behavior are tested.
