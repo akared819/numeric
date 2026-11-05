@@ -28,6 +28,14 @@ until reset or destruction. Invalid inputs leave output values unchanged.
 No amplitude or power compensation is applied. It is available through
 numericArray.
 
+`spectrum_power` converts a full interleaved complex spectrum to one real
+value per bin, `real² + imaginary²`. The result is raw squared magnitude: no
+FFT-length, window, sampling-rate, or one-sided correction is applied, so it
+is not a power spectral density. Its scratch buffer is reused and released on
+reset or destruction. It is a high-level arithmetic operation, exposed through
+the native registry and numericArray; invalid input or overflow preserves the
+output.
+
 The registry exposes `fft_complex_radix2_forward` and `fft_complex_radix2_inverse`. Both take one FLOAT64 array input and one FLOAT64 array output. Each complex number is represented by consecutive doubles `[real, imaginary]`, in natural sample or frequency-bin order. Counts and capacities are numbers of doubles, not complex numbers. Input stride must be 1. The input count must be even and represent a positive power-of-two number of complex values (including one); both buffers must have capacity for the full count. The output count is that same number of doubles on success and zero on failure.
 
 Forward uses the negative exponential, without normalization. Inverse uses the positive exponential and divides by the complex length, so a forward/inverse pair returns the original values within floating-point error. These conventions match the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html). Neither complex operation computes magnitudes, frequencies, or windowing. A separate real-input operation is described below.

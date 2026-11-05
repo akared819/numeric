@@ -18,6 +18,17 @@ int main() {
     CHECK(f->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     CHECK(real->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     initializeGsl();
+    auto power = r.create("spectrum_power"); CHECK(power);
+    double spectrumPowerData[] = {3,4, 0,-2}, powers[2] = {};
+    Input powerInput{spectrumPowerData,4,4,1,Type::Float64,Shape::Array};
+    Output powerOutput{powers,2,0,Type::Float64,Shape::Array};
+    CHECK(power->execute(&powerInput, 1, &powerOutput, 1).status == Status::Ok && powerOutput.count == 2 && powers[0] == 25 && powers[1] == 4);
+    spectrumPowerData[0] = std::numeric_limits<double>::max();
+    CHECK(power->execute(&powerInput, 1, &powerOutput, 1).status == Status::NumericalError && powerOutput.count == 0 && powers[0] == 25);
+    spectrumPowerData[0] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(power->execute(&powerInput, 1, &powerOutput, 1).status == Status::InvalidArgument && powers[0] == 25);
+    spectrumPowerData[0] = 3; power->reset();
+    CHECK(power->execute(&powerInput, 1, &powerOutput, 1).status == Status::Ok);
     auto hann = r.create("window_hann"); CHECK(hann);
     double hannData[] = {1,1,1,1,1}, hannResult[5] = {};
     Input hannInput{hannData,5,5,1,Type::Float64,Shape::Array};

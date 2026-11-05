@@ -92,6 +92,17 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("mixedFft.SEVR", DBF_STRING, "NO_ALARM");
     double inverseSpectrum[] = {1,0,1,0,1,0,1,0}, inverseExpected[] = {1,0,0,0};
     testdbPutArrFieldOk("inverseSpectrum", DBF_DOUBLE, 8, inverseSpectrum);
+    double expectedPower[] = {1,1,1,1};
+    testdbPutFieldOk("spectrumPower.PROC", DBF_LONG, 1);
+    testOk(matches("spectrumPower.VAL", expectedPower, 4), "power spectrum returns squared magnitudes");
+    inverseSpectrum[0] = std::numeric_limits<double>::quiet_NaN();
+    testdbPutArrFieldOk("inverseSpectrum", DBF_DOUBLE, 8, inverseSpectrum);
+    testdbPutFieldOk("spectrumPower.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("spectrumPower.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("spectrumPower.VAL", expectedPower, 4), "invalid spectrum preserves power output");
+    inverseSpectrum[0] = 1; testdbPutArrFieldOk("inverseSpectrum", DBF_DOUBLE, 8, inverseSpectrum);
+    testdbPutFieldOk("spectrumPower.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("spectrumPower.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("realInverse.PROC", DBF_LONG, 1);
     testOk(matches("realInverse.VAL", inverseExpected, 4), "real inverse FFT reconstructs waveform");
     inverseSpectrum[1] = 1;

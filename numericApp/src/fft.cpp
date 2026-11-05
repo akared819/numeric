@@ -10,6 +10,30 @@
 
 namespace numeric {
 namespace {
+class PowerSpectrum : public Operation {
+    std::vector<double> scratch_;
+public:
+    void reset() override { std::vector<double>().swap(scratch_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 1 || no != 1) return {Status::InvalidArgument, "power spectrum requires one input and output"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || x.count < 2 || x.count % 2 ||
+            x.stride != 1 || x.count > x.capacity || y.type != Type::Float64 || y.shape != Shape::Array || !y.data || y.capacity < x.count / 2)
+            return {Status::InvalidArgument, "invalid spectrum buffers"};
+        for (std::size_t i = 0; i < x.count; ++i) if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "spectrum input must be finite"};
+        try { scratch_.resize(x.count / 2); }
+        catch (...) { return {Status::NumericalError, "power spectrum scratch allocation failed"}; }
+        for (std::size_t i = 0; i < scratch_.size(); ++i) {
+            const double magnitude = std::hypot(x.data[2*i], x.data[2*i+1]);
+            scratch_[i] = magnitude * magnitude;
+            if (!std::isfinite(scratch_[i])) return {Status::NumericalError, "power spectrum overflow"};
+        }
+        for (std::size_t i = 0; i < scratch_.size(); ++i) y.data[i] = scratch_[i];
+        y.count = scratch_.size(); return {Status::Ok, "ok"};
+    }
+};
 class HannWindow : public Operation {
     std::vector<double> scratch_;
 public:
@@ -211,12 +235,16 @@ std::unique_ptr<Operation> mixedForward() { return std::unique_ptr<Operation>(ne
 std::unique_ptr<Operation> mixedInverse() { return std::unique_ptr<Operation>(new MixedComplexFft(true)); }
 std::unique_ptr<Operation> frequencyAxis() { return std::unique_ptr<Operation>(new FrequencyAxis); }
 std::unique_ptr<Operation> hannWindow() { return std::unique_ptr<Operation>(new HannWindow); }
+std::unique_ptr<Operation> powerSpectrum() { return std::unique_ptr<Operation>(new PowerSpectrum); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
+    r.addWithoutArguments(Metadata{"spectrum_power", "signal processing", arrays, arrays,
+                   "squared magnitude of full interleaved complex spectrum; no normalization", false,
+                   "per-instance reusable scratch; reset frees it", "invalid buffers or numerical failure"}, &powerSpectrum);
     r.addWithoutArguments(Metadata{"window_hann", "signal processing", arrays, arrays,
                    "symmetric Hann window, single sample unchanged", false,
                    "per-instance reusable scratch; reset frees it", "invalid buffers or numerical failure"}, &hannWindow);

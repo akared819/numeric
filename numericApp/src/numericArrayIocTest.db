@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(numericArray, "spectrumPower") { field(OP, "spectrum_power") field(INP, "inverseSpectrum NPP NMS") field(NMAX, "8") field(OMAX, "4") }
 record(waveform, "hannInput") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(numericArray, "hannWindow") { field(OP, "window_hann") field(INP, "hannInput NPP NMS") field(NMAX, "5") field(OMAX, "5") }
 record(ao, "axisLength") { field(VAL, "4") }
