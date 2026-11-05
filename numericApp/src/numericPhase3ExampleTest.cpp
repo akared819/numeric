@@ -31,7 +31,7 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(16);
+    testPlan(17);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
@@ -39,7 +39,7 @@ int main() {
         "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
         "demo:arrayMean.ARGA", "demo:arrayMean.SEVR", "demo:multiX", "demo:multiY",
         "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL",
-        "demo:multiFit.PROC", "demo:multiFit.VAL"};
+        "demo:multiFit.PROC", "demo:multiFit.VAL", "demo:multiPower.ARGA", "demo:multiPower.PROC", "demo:multiPower.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -126,6 +126,11 @@ int main() {
         ca_put(DBR_LONG, channels[26], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[27], &value) == ECA_NORMAL &&
         ca_pend_io(10.0) == ECA_NORMAL;
     testOk(polynomial && std::fabs(value - 24.0) < 1e-12, "numericScalar accepts waveform and scalar inputs over Channel Access");
+    dbr_string_t exponent = "3";
+    const bool power = connected && ca_put(DBR_STRING, channels[30], exponent) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[31], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[32], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(power && std::fabs(value - 8.0) < 1e-12, "numericScalar accepts a runtime exponent over Channel Access");
     if (subscription) ca_clear_subscription(subscription);
     for (chid channel : channels) if (channel) ca_clear_channel(channel);
     if (ca_current_context()) ca_context_destroy();

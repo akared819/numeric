@@ -13,6 +13,12 @@ record(ao, "$(P)multiPoint") {
     field(VAL, "2")
 }
 
+record(numericScalar, "$(P)multiPower") {
+    field(OP, "pow_int")
+    field(INP, "$(P)multiPoint NPP NMS")
+    field(NMAX, "1")
+}
+
 record(numericScalar, "$(P)multiCorrelation") {
     field(OP, "correlation")
     field(INPA, "$(P)multiX NPP NMS")

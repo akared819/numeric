@@ -134,7 +134,7 @@ int main() {
         "population_variance", "population_stddev", "running_mean", "running_stats", "moving_mean", "moving_median",
         "gaussian_smooth", "histogram_uniform", "fft_complex_radix2_forward", "fft_complex_radix2_inverse",
         "fft_real_radix2_forward", "vector_norm", "erf", "log1p", "normal_cdf", "linear_fit",
-        "polynomial_eval", "interp_linear", "polynomial_integral", "polynomial_root"};
+        "polynomial_eval", "interp_linear", "polynomial_integral", "polynomial_root", "pow_int"};
     for (const char* name : completeNames) CHECK(r.find(name) && r.find(name)->argumentSchemaComplete);
     Metadata noArguments = *gaussMeta; noArguments.name = "wrong-no-arguments";
     CHECK(!r.addWithoutArguments(noArguments, &makeLifetime));
@@ -186,6 +186,23 @@ int main() {
     Output interpolationOut{&iv, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::NotInitialized && iv == 42);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto power = r.create("pow_int"); CHECK(power && r.find("pow_int"));
+    double powerBase = 2, powerExponent = 3, powerValue = 42;
+    Input powerIn[] = {{&powerBase, 1, 1, 1, Type::Float64, Shape::Scalar},
+                       {&powerExponent, 1, 1, 1, Type::Float64, Shape::Scalar}};
+    Output powerOut{&powerValue, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue == 8);
+    powerExponent = -2; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue == 0.25);
+    powerExponent = 2.5; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::InvalidArgument && powerValue == 0.25);
+    powerExponent = -1; powerBase = 0; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::InvalidArgument);
+    powerExponent = 0; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue == 1.0);
+    powerValue = 0.25;
+    powerBase = std::numeric_limits<double>::max(); powerExponent = 2;
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::NumericalError && powerValue == 0.25);
+    powerBase = 0.5; powerExponent = 1024;
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue > 0);
+    powerBase = 0.25;
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::NumericalError && powerValue > 0);
     double constantWave[] = {2, 2, 2, 2, 2, 2, 2}, filtered[7] = {};
     mapped[0] = {constantWave, 7, 7, 1, Type::Float64, Shape::Array};
     args[0] = {ArgumentType::Integer, 0.0, 7}; args[1] = {ArgumentType::Floating, 1.5, 0};

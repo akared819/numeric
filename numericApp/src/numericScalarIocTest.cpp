@@ -53,12 +53,28 @@ MAIN(numericScalarIocTest) {
         testdbGetFieldEqual("logOnePlus.SEVR", DBF_STRING, "INVALID");
         testdbPutFieldOk("vectorNorm.PROC", DBF_LONG, 1);
         testdbGetFieldEqual("vectorNorm.SEVR", DBF_STRING, "INVALID");
+        testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
+        testdbGetFieldEqual("scalarPower.SEVR", DBF_STRING, "INVALID");
         testMonitorDestroy(valueMonitor);
         return finish();
     }
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("scalarPower.VAL", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("scalarPower.ARGA", DBF_STRING, "3");
+    testdbGetFieldEqual("scalarPower.VAL", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("scalarPower.VAL", DBF_DOUBLE, 8.0);
+    testdbPutFieldOk("scalarPower.ARGA", DBF_STRING, "1025");
+    testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("scalarPower.SEVR", DBF_STRING, "INVALID");
+    testdbGetFieldEqual("scalarPower.VAL", DBF_DOUBLE, 8.0);
+    testdbPutFieldOk("scalarPower.ARGA", DBF_STRING, "");
+    testdbPutFieldOk("scalarPower.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("scalarPower.SEVR", DBF_STRING, "NO_ALARM");
+    testdbGetFieldEqual("scalarPower.VAL", DBF_DOUBLE, 4.0);
     double multiX[] = {1, 2, 3, 4, 5}, multiY[] = {2, 4, 6, 8, 10};
     testdbPutArrFieldOk("multiX", DBF_DOUBLE, 4, multiX);
     testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, multiY);

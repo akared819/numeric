@@ -2,6 +2,9 @@
 record(waveform, "multiX") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(waveform, "multiY") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(ao, "multiPoint") { field(VAL, "2") }
+record(numericScalar, "scalarPower") {
+    field(OP, "pow_int") field(INP, "multiPoint NPP NMS") field(NMAX, "1")
+}
 record(waveform, "multiInt") { field(FTVL, "LONG") field(NELM, "4") }
 record(numericScalar, "multiCorrelation") {
     field(OP, "correlation") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(NMAX, "4")

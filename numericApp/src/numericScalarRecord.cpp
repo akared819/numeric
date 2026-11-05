@@ -13,6 +13,8 @@
 #include "numericScalarRecord.h"
 #undef GEN_SIZE_OFFSET
 #include <epicsExport.h>
+#include <array>
+#include <cstring>
 #include <memory>
 #include <vector>
 
@@ -22,6 +24,13 @@ struct State {
     std::vector<numeric::Input> inputs;
     std::vector<DBLINK*> links;
     std::vector<numeric::Shape> shapes;
+    std::vector<std::size_t> dataIndices;
+    numeric::Metadata metadata;
+    std::vector<numeric::ArgumentValue> arguments;
+    std::vector<double> slots;
+    std::array<std::array<char, 40>, 16> parsedText{};
+    std::array<numeric::ArgumentValue, 16> parsedValues{};
+    std::array<bool, 16> parsedValid{};
     std::unique_ptr<numeric::Operation> op;
 };
 void destroyState(void* arg) { delete static_cast<State*>(arg); }
@@ -34,18 +43,27 @@ long initRecord(dbCommon* common, int pass) {
         if (rec->nmax < 1 || rec->nmax > 1048576) return S_db_badField;
         numeric::Registry registry; numeric::registerBuiltins(registry);
         const numeric::Metadata* m = registry.find(rec->op);
-        if (!m || !m->argumentSchemaComplete || !m->arguments.empty() || m->stateful || m->inputs.empty() || m->inputs.size() > 16 || m->outputs.size() != 1 ||
+        if (!m || !m->argumentSchemaComplete || m->arguments.size() > 16 || m->stateful || m->inputs.empty() || m->outputs.size() != 1 ||
             m->outputs[0].type != numeric::Type::Float64 || m->outputs[0].shape != numeric::Shape::Scalar) return S_db_badField;
+        std::unique_ptr<State> state(new State);
+        state->metadata = *m; state->inputs.resize(m->inputs.size());
+        state->arguments.resize(m->arguments.size()); state->slots.resize(m->arguments.size());
+        for (const auto& arg : m->arguments) if (arg.inputIndex >= m->inputs.size()) return S_db_badField;
+        for (std::size_t i = 0; i < m->inputs.size(); ++i) {
+            bool parameter = false;
+            for (const auto& arg : m->arguments) if (arg.inputIndex == i) parameter = true;
+            if (!parameter) state->dataIndices.push_back(i);
+        }
+        if (state->dataIndices.empty() || state->dataIndices.size() > 16) return S_db_badField;
         const bool legacy = rec->inp.type != CONSTANT;
-        if (legacy && m->inputs.size() != 1) return S_db_badField;
+        if (legacy && state->dataIndices.size() != 1) return S_db_badField;
         for (std::size_t i = 0; i < 16; ++i) {
             const bool configured = namedLinks[i]->type != CONSTANT;
-            if ((legacy && configured) || (!legacy && configured != (i < m->inputs.size()))) return S_db_badField;
+            if ((legacy && configured) || (!legacy && configured != (i < state->dataIndices.size()))) return S_db_badField;
         }
-        std::unique_ptr<State> state(new State);
-        state->buffers.resize(m->inputs.size()); state->inputs.resize(m->inputs.size());
-        for (std::size_t i = 0; i < m->inputs.size(); ++i) {
-            const numeric::Descriptor& desc = m->inputs[i];
+        state->buffers.resize(state->dataIndices.size());
+        for (std::size_t i = 0; i < state->dataIndices.size(); ++i) {
+            const numeric::Descriptor& desc = m->inputs[state->dataIndices[i]];
             if (desc.type != numeric::Type::Float64 || (desc.shape != numeric::Shape::Array && desc.shape != numeric::Shape::Scalar)) return S_db_badField;
             state->buffers[i].resize(desc.shape == numeric::Shape::Scalar ? 2 : static_cast<std::size_t>(rec->nmax) + 1);
             state->links.push_back(legacy ? &rec->inp : namedLinks[i]);
@@ -63,15 +81,13 @@ long process(dbCommon* common) {
     State* state = static_cast<State*>(rec->rpvt);
     const char* argFields[] = {rec->arga, rec->argb, rec->argc, rec->argd, rec->arge, rec->argf, rec->argg, rec->argh,
                                rec->argi, rec->argj, rec->argk, rec->argl, rec->argm, rec->argn, rec->argo, rec->argp};
-    bool argumentsEmpty = true;
-    for (const char* field : argFields) if (field[0]) argumentsEmpty = false;
     bool ok = false;
     epicsUInt32 oldCount = rec->nord;
     rec->nord = 0;
     try {
-        bool inputsValid = state && argumentsEmpty;
+        bool inputsValid = state != nullptr;
         std::size_t firstCount = 0;
-        if (inputsValid) for (std::size_t i = 0; i < state->inputs.size(); ++i) {
+        if (inputsValid) for (std::size_t i = 0; i < state->buffers.size(); ++i) {
             long count = static_cast<long>(state->buffers[i].size());
             if (dbGetLinkDBFtype(state->links[i]) != DBF_DOUBLE ||
                 dbGetLink(state->links[i], DBR_DOUBLE, state->buffers[i].data(), nullptr, &count) != 0 ||
@@ -80,8 +96,31 @@ long process(dbCommon* common) {
                 inputsValid = false; break;
             }
             if (i == 0) firstCount = static_cast<std::size_t>(count);
-            state->inputs[i] = {state->buffers[i].data(), static_cast<std::size_t>(count), state->buffers[i].size(), 1,
-                                numeric::Type::Float64, state->shapes[i]};
+            state->inputs[state->dataIndices[i]] = {state->buffers[i].data(), static_cast<std::size_t>(count), state->buffers[i].size(), 1,
+                                                   numeric::Type::Float64, state->shapes[i]};
+        }
+        if (inputsValid) {
+            for (std::size_t i = state->arguments.size(); i < 16; ++i) if (argFields[i][0]) inputsValid = false;
+            for (std::size_t i = 0; inputsValid && i < state->arguments.size(); ++i) {
+                if (!argFields[i][0]) {
+                    if (state->metadata.arguments[i].required || !state->metadata.arguments[i].hasDefault) inputsValid = false;
+                    else state->arguments[i] = state->metadata.arguments[i].defaultValue;
+                    continue;
+                }
+                if (!state->parsedValid[i] || std::strcmp(state->parsedText[i].data(), argFields[i]) != 0) {
+                    const std::size_t length = std::strlen(argFields[i]);
+                    numeric::ArgumentValue parsed{};
+                    if (numeric::parseArgument(state->metadata.arguments[i].type, argFields[i], length, parsed).status != numeric::Status::Ok) {
+                        inputsValid = false; break;
+                    }
+                    std::memcpy(state->parsedText[i].data(), argFields[i], length + 1);
+                    state->parsedValues[i] = parsed; state->parsedValid[i] = true;
+                }
+                state->arguments[i] = state->parsedValues[i];
+            }
+            if (inputsValid && numeric::setLegacyArguments(state->metadata, state->arguments.data(), state->arguments.size(),
+                    state->inputs.data(), state->inputs.size(), state->slots.data(), state->slots.size()).status != numeric::Status::Ok)
+                inputsValid = false;
         }
         if (inputsValid) {
             double value = 0;

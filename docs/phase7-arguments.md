@@ -1,7 +1,7 @@
 # Phase 7: typed argument metadata (in progress)
 
 The registry exposes optional `Metadata::arguments` descriptors for
-`moving_mean`, `moving_median`, `gaussian_smooth`, and `histogram_uniform`. The original `inputs`
+`moving_mean`, `moving_median`, `gaussian_smooth`, `histogram_uniform`, and `pow_int`. The original `inputs`
 and `parameters` fields and execution interface remain unchanged. The
 `argumentSchemaComplete` flag distinguishes a complete, possibly empty schema
 from one that has not been migrated. Statistics, running statistics, radix-2
@@ -11,6 +11,9 @@ registered without configuration arguments. Their numerical inputs and
 constraints are unchanged: evaluation points, integration bounds and root
 brackets remain numerical inputs, while integration order and solver tolerances
 remain fixed by their documented implementations.
+
+`pow_int` defines an optional integer exponent mapped to its second legacy
+input, with a default of 2. The scalar record accepts it through ARGA.
 
 An argument descriptor names its position in the descriptor list, its type,
 whether it is required, whether it has a default, inclusive bounds, and
