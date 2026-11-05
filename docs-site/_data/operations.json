@@ -130,9 +130,11 @@
     "interface": "scalar",
     "inputs_en": "A: base value",
     "inputs_ja": "A: 底の値",
-    "result_en": "Integer power. ARGA: exponent −1024 to 1024, default 2.",
-    "result_ja": "整数乗。ARGAは指数（−1024〜1024）、既定値2。",
-    "doc": "elementary.md"
+    "result_en": "Integer power; zero with a negative exponent is invalid.",
+    "result_ja": "整数乗。底が0で指数が負の場合は無効。",
+    "doc": "elementary.md",
+    "args_en": "ARGA: integer exponent from −1024 to 1024; blank defaults to 2.",
+    "args_ja": "ARGA：整数指数（−1024〜1024）。空欄は2。"
   },
   {
     "name": "polynomial_eval",
@@ -193,45 +195,55 @@
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Scaled waveform. ARGA: finite factor, default 1.",
-    "result_ja": "倍率を掛けた波形。ARGAは有限の倍率、既定値1。",
-    "doc": "linear-algebra.md"
+    "result_en": "Scaled waveform.",
+    "result_ja": "倍率を掛けた波形。",
+    "doc": "linear-algebra.md",
+    "args_en": "ARGA: finite factor; blank defaults to 1.",
+    "args_ja": "ARGA：有限の倍率。空欄は1。"
   },
   {
     "name": "moving_mean",
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Same-length centered moving mean. ARGA: odd window width 3–4095; blank uses WIN.",
-    "result_ja": "入力と同じ長さの中心移動平均。ARGAは3〜4095の奇数窓幅。空欄はWIN。",
-    "doc": "window-statistics.md"
+    "result_en": "Same-length centered moving mean.",
+    "result_ja": "入力と同じ長さの中心移動平均。",
+    "doc": "window-statistics.md",
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN.",
+    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN。"
   },
   {
     "name": "moving_median",
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Same-length centered moving median. ARGA: odd window width 3–4095; blank uses WIN.",
-    "result_ja": "入力と同じ長さの中心移動中央値。ARGAは3〜4095の奇数窓幅。空欄はWIN。",
-    "doc": "window-statistics.md"
+    "result_en": "Same-length centered moving median.",
+    "result_ja": "入力と同じ長さの中心移動中央値。",
+    "doc": "window-statistics.md",
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN.",
+    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN。"
   },
   {
     "name": "gaussian_smooth",
     "interface": "array",
     "inputs_en": "A: waveform",
     "inputs_ja": "A: 波形",
-    "result_en": "Smoothed waveform. ARGA: odd window width 3–4095; ARGB: alpha 0.01–10; blanks use WIN and ALPH.",
-    "result_ja": "平滑化波形。ARGAは3〜4095の奇数窓幅、ARGBはalpha 0.01〜10。空欄はWINとALPH。",
-    "doc": "window-statistics.md"
+    "result_en": "Smoothed waveform.",
+    "result_ja": "平滑化波形。",
+    "doc": "window-statistics.md",
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; ARGB: alpha 0.01–10. Blanks use WIN and ALPH.",
+    "args_ja": "ARGA：3〜4095の奇数窓幅（入力要素数以下）。ARGB：alpha 0.01〜10。空欄はWIN、ALPH。"
   },
   {
     "name": "histogram_uniform",
     "interface": "array",
     "inputs_en": "A: sample waveform",
     "inputs_ja": "A: サンプル波形",
-    "result_en": "Bin counts. ARGA: lower, ARGB: upper, ARGC: bin count 1–65536; blanks use HMIN, HMAX, NBIN. Range includes lower and excludes upper.",
-    "result_ja": "ビンごとの個数。ARGAは下限、ARGBは上限、ARGCはビン数1〜65536。空欄はHMIN、HMAX、NBIN。下限を含み上限を含まない。",
-    "doc": "histograms.md"
+    "result_en": "Bin counts; lower bound is included and upper bound is excluded.",
+    "result_ja": "ビンごとの個数。下限を含み上限を含みません。",
+    "doc": "histograms.md",
+    "args_en": "ARGA: lower bound; ARGB: upper bound; ARGC: bin count 1–65536. Blanks use HMIN, HMAX and NBIN.",
+    "args_ja": "ARGA：下限、ARGB：上限、ARGC：ビン数1〜65536。空欄はHMIN、HMAX、NBIN。"
   },
   {
     "name": "linear_fit",
@@ -362,19 +374,19 @@
   {
     "name": "running_mean",
     "interface": "asub",
-    "inputs_en": "A: sample; reset through streaming interface",
-    "inputs_ja": "A: サンプル、リセットはストリーミング側で指定",
-    "result_en": "Stateful running mean; state belongs to an instance.",
-    "result_ja": "状態を保持する逐次平均。状態はインスタンス単位。",
+    "inputs_en": "aSub: A sample, B sequence number, C reset token; native registry: one scalar sample",
+    "inputs_ja": "aSubはAがサンプル、Bが連番、Cがリセットトークン。ネイティブはスカラーサンプル1個",
+    "result_en": "Stateful mean and accepted sample count; state belongs to an instance.",
+    "result_ja": "逐次平均と受け付けたサンプル数。状態はインスタンス単位。",
     "doc": "streaming.md"
   },
   {
     "name": "running_stats",
     "interface": "asub",
-    "inputs_en": "A: sample; reset through streaming interface",
-    "inputs_ja": "A: サンプル、リセットはストリーミング側で指定",
-    "result_en": "Stateful mean, sample variance, standard deviation, RMS, minimum, maximum and count.",
-    "result_ja": "逐次平均、標本分散、標準偏差、RMS、最小・最大、個数。",
+    "inputs_en": "aSub: A sample, B sequence number, C reset token; native registry: one scalar sample",
+    "inputs_ja": "aSubはAがサンプル、Bが連番、Cがリセットトークン。ネイティブはスカラーサンプル1個",
+    "result_en": "Mean, sample variance, sample standard deviation, RMS, minimum, maximum and count; variance and standard deviation are NaN after the first sample.",
+    "result_ja": "平均、標本分散、標本標準偏差、RMS、最小、最大、個数。最初のサンプルでは分散と標準偏差はNaN。",
     "doc": "streaming.md"
   }
 ]

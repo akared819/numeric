@@ -55,7 +55,7 @@ record(numericScalar, "SIGNAL:CORR") {
 
 **結果と条件：** {{ op.result_ja }}
 
-{% unless op.name == 'pow_int' or op.name == 'array_scale' or op.name == 'moving_mean' or op.name == 'moving_median' or op.name == 'gaussian_smooth' or op.name == 'histogram_uniform' %}**設定引数：** なし。{% endunless %}
+{% if op.args_ja %}**設定引数：** {{ op.args_ja }}{% else %}**設定引数：** なし。{% endif %}
 
 **詳しい仕様と例：** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }})（英語）。
 {% endfor %}
