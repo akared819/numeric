@@ -277,12 +277,12 @@
   {
     "name": "AcknowledgedStream::submit",
     "signature": "Result AcknowledgedStream::submit(const Event& event, Acknowledgment& acknowledgment)",
-    "parameters_en": "Event has nonzero session, sequence, Sample/Reset kind and finite value; caller serializes instance access.",
-    "parameters_ja": "Eventは0以外のsession、sequence、Sample/Reset、有限のvalueを持つ。同一インスタンスは直列化。",
+    "parameters_en": "Event: session in [1, 2^53], sequence from 0 to 2^53, Sample or Reset kind and finite value (reset requires zero). First sequence is 0; subsequent new events increase by exactly one. Serialize instance access.",
+    "parameters_ja": "Event：sessionは1〜2^53、sequenceは0〜2^53、種別はSampleまたはReset、値は有限（Resetでは0）。最初の連番は0で、以後の新しいイベントは1ずつ増加。同一インスタンスへのアクセスは直列化。",
     "returns_en": "Result and acknowledgment including seven statistics and replayed flag.",
     "returns_ja": "Resultと7つの統計値、replayedフラグを持つ確認応答。",
-    "errors_en": "Invalid session/sequence, conflicting replay, invalid event or allocation/numerical failure; obey single-producer protocol.",
-    "errors_ja": "無効なセッション・連番・イベント、矛盾する再送、確保・数値エラー。単一プロデューサー規約に従う。",
+    "errors_en": "Invalid session/sequence, conflicting replay, invalid event or allocation/numerical failure; failure leaves acknowledgment unchanged. Follow the single-producer protocol.",
+    "errors_ja": "無効なセッション・連番・イベント、矛盾する再送、確保・数値エラー。失敗時はacknowledgmentを変更しません。単一プロデューサー規約に従ってください。",
     "example": "Event event{1, 0, EventKind::Sample, 2}; Acknowledgment ack{}; stream->submit(event, ack);"
   }
 ]

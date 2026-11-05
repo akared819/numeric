@@ -173,6 +173,10 @@ These C++ APIs are not dedicated-record fields. The signature, parameters, retur
 | `ArrayView` / `MutableArrayView` | Caller-owned storage, capacity in bytes, `ElementType`, rank, extents and byte strides. Keep data, shape and stride arrays alive throughout use. |
 | `ElementValue` | `ElementType` and integer or real/imaginary components. Complex components are real then imaginary. |
 | `Event` / `Acknowledgment` | An event contains session, sequence, kind and value. An acknowledgment contains the event, seven statistics and a `replayed` flag. |
+| `ScalarCallback` | `double (*)(double x, void* context)`. A synchronous function returning a finite value. |
+| `OdeCallback` | `bool (*)(double time, const double* state, double* derivative, std::size_t dimension, void* context)`. Fill every derivative and return true. |
+| `ResidualCallback` | `bool (*)(const double* parameters, std::size_t parameterCount, double* residuals, std::size_t residualCount, void* context)`. Fill every residual and return true. |
+| `Factory` / `ArgumentValidator` | Respectively `std::unique_ptr<Operation> (*)()` and `Result (*)(const ArgumentValue*, std::size_t)`. |
 
 {% for api in site.data.native_core_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 

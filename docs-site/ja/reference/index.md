@@ -174,6 +174,10 @@ auto result = {{ api.example }};
 | `ArrayView` / `MutableArrayView` | 呼び出し側所有の領域、容量（バイト）、`ElementType`、rank、各次元の要素数とバイトストライド。配列データ、形状、ストライドは使用中有効にしてください。 |
 | `ElementValue` | `ElementType`と整数または実部・虚部を保持。複素数は実部・虚部の順です。 |
 | `Event` / `Acknowledgment` | `Event`はsession、sequence、種別、値。確認応答はイベント、7個の統計、再送を示す`replayed`を保持。 |
+| `ScalarCallback` | `double (*)(double x, void* context)`。有限の関数値を返す同期関数。 |
+| `OdeCallback` | `bool (*)(double time, const double* state, double* derivative, std::size_t dimension, void* context)`。全導関数を書いてtrueを返す。 |
+| `ResidualCallback` | `bool (*)(const double* parameters, std::size_t parameterCount, double* residuals, std::size_t residualCount, void* context)`。全残差を書いてtrueを返す。 |
+| `Factory` / `ArgumentValidator` | それぞれ`std::unique_ptr<Operation> (*)()`、`Result (*)(const ArgumentValue*, std::size_t)`。 |
 
 {% for api in site.data.native_core_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
