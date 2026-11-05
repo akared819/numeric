@@ -6,6 +6,10 @@
 
 > **Release candidate:** `0.1.0-rc.2` includes native Windows support and local Linux validation. See the [candidate notes](docs/release-candidate.md) for validation and limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for publication status.
 
+The `develop` branch also contains the in-progress 0.2.0 interfaces and
+[draft notes](docs/release-0.2.0-draft.md). Their presence does not mean a
+0.2.0 release has been published.
+
 ## What it provides
 
 | Capability | Examples | Guide |
@@ -14,6 +18,7 @@
 | Waveform calculations | Radix-2 FFT, moving mean and median, Gaussian smoothing, histogram | [FFT](docs/fft.md), [windows](docs/window-statistics.md), [histograms](docs/histograms.md) |
 | Numerical functions | Interpolation, fitting, polynomial evaluation and integration, root finding, `erf`, `log1p`, normal CDF, vector norm | [GSL coverage](docs/gsl-coverage.md) |
 | EPICS interfaces | aSub functions, scalar and array records, acknowledged single-producer streaming | [Scalar record](docs/numeric-scalar.md), [array record](docs/numeric-array.md), [streaming protocol](docs/streaming-transport.md) |
+| 0.2.0 development | Multiple input links, runtime arguments, typed views, Welch PSD, STFT, matrix operations and native callback solvers | [Draft notes](docs/release-0.2.0-draft.md), [FFT and spectral analysis](docs/fft.md), [native callbacks](docs/numerical-differentiation.md), [fitting](docs/nonlinear-fitting.md), [sampling](docs/random-sampling.md) |
 
 Coverage is a tested subset of GSL, not its complete API. See the [coverage inventory](docs/gsl-coverage.md) for exact operations and limits.
 

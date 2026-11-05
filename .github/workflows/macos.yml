@@ -24,7 +24,7 @@ jobs:
           arch=$(./base-7.0.10/startup/EpicsHostArch)
           ./bin/$arch/numericIocBenchmark 64 100 macos-ci
           ./bin/$arch/numericBenchmark 64 100 macos-ci
-          for test in numericTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
+          for test in numericTest numericDataTest numericTypedMeanTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
             ./bin/$arch/$test
           done
           for test in numericFftIocTest numericWindowIocTest numericArrayIocTest numericInterpolationIocTest numericFitIocTest numericIntegrationIocTest numericRootsIocTest numericPolynomialIocTest numericScalarIocTest numericIocTest; do
@@ -32,5 +32,6 @@ jobs:
             NUMERIC_TEST_NO_INIT=1 ./bin/$arch/$test
           done
           ./tests/example-ioc.sh "$arch"
+          ./tests/multi-reconnect.sh "$arch"
           ./tests/network-ack.sh "$arch"
           ./tests/network-interruption.sh "$arch"

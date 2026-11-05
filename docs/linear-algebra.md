@@ -7,3 +7,16 @@ Both count and stride must fit in `int`. For more than one sample, count multipl
 The adapter uses a stack-only GSL vector view; it owns no workspace and allocates nothing during execution. Initialize the non-terminating GSL error policy before use, as described in [architecture](architecture.md#gsl-setup-for-an-ioc). This operation does not require a numerical library beyond the existing GSL and its CBLAS dependency.
 
 The [numericScalar record](numeric-scalar.md) exposes OP `vector_norm` for a DOUBLE waveform. [scalar.db](../examples/scalar.db) supplies `demo:vectorNorm` linked to `demo:scalarInput`. After writing the waveform, explicitly process the record and inspect VAL and SEVR. Input updates do not automatically trigger processing, and invalid input preserves the previous VAL while setting CALC/INVALID and clearing NORD.
+
+## Symmetric matrix eigenvalues
+
+`matrix_eigenvalues_symmetric` accepts a row-major square matrix waveform and
+an integer dimension from 1 to 1024. It requires exactly dimension squared
+finite elements, exact symmetry and output capacity for dimension values. GSL
+computes the real eigenvalues; numeric returns them in ascending order. Input
+and output may overlap. Failure preserves the output values and clears its
+count. Each operation owns reusable matrix and GSL workspace storage, released
+on reset or destruction. The numericArray interface reads matrix and dimension
+through INPA and INPB; separate links are not an atomic snapshot. Eigenvectors
+and nonsymmetric matrices are not supported by this operation. See [GSL
+eigensystems](https://www.gnu.org/software/gsl/doc/html/eigen.html).

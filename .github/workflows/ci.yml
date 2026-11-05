@@ -57,6 +57,8 @@ jobs:
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBenchmark 64 100 ci-runner
           if ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBenchmark 0 100 ci-runner; then exit 1; fi
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericTest
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericDataTest
+          ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericTypedMeanTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFftTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericWindowTest
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericFitTest
@@ -84,6 +86,7 @@ jobs:
           ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           NUMERIC_TEST_NO_INIT=1 ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericIocTest
           ./tests/example-ioc.sh $(./base-7.0.10/startup/EpicsHostArch)
+          ./tests/multi-reconnect.sh $(./base-7.0.10/startup/EpicsHostArch)
           if ldd ./bin/$(./base-7.0.10/startup/EpicsHostArch)/numericBaseNotifyTest | grep -Eq 'libnumeric|libgsl'; then
             echo 'Base-only notification control unexpectedly links numeric or GSL' >&2
             exit 1

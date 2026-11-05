@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <cadef.h>
+#include <alarm.h>
 #include <epicsUnitTest.h>
 #include <epicsEvent.h>
 #include <dbEvent.h>
@@ -30,12 +31,17 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(10);
+    testPlan(20);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
         "demo:movingMedianOutput", "demo:gaussianSmooth.PROC", "demo:gaussianOutput",
-        "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL"};
+        "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
+        "demo:arrayMean.ARGA", "demo:arrayMean.SEVR", "demo:multiX", "demo:multiY",
+        "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL",
+        "demo:multiFit.PROC", "demo:multiFit.VAL", "demo:multiPower.ARGA", "demo:multiPower.PROC", "demo:multiPower.VAL",
+        "demo:typedFloatInput", "demo:typedFloatMean.PROC", "demo:typedFloatMean.VAL",
+        "demo:SPECTRAL:INPUT", "demo:SPECTRAL:PSD.PROC", "demo:SPECTRAL:PSD.VAL", "demo:SPECTRAL:STFT.PROC", "demo:SPECTRAL:STFT.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -75,9 +81,31 @@ int main() {
     testOk(arrayComputed, "dedicated array record publishes moving mean over Channel Access");
     testOk(arrayComputed && epicsEventWaitWithTimeout(arrayMonitorEvent, 10.0) == epicsEventWaitOK,
            "dedicated array record posts a Channel Access monitor");
+    dbr_string_t windowArg = "5";
+    const bool changed = arrayComputed && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(changed && matches(result, means, 5), "ARGA write alone does not process the array record");
+    const double meansFive[] = {1.6, 2.2, 3, 3.8, 4.4};
+    const bool recalculated = changed && ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(recalculated && matches(result, meansFive, 5), "ARGA changes the next array calculation over Channel Access");
+    windowArg[0] = '\0';
+    bool restored = recalculated && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL && matches(result, means, 5);
+    std::strcpy(windowArg, "4"); dbr_short_t severity = 0;
+    const bool invalid = restored && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_get(DBR_SHORT, channels[21], &severity) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(invalid && severity == INVALID_ALARM && matches(result, means, 5), "invalid ARGA raises an alarm and preserves output over Channel Access");
+    windowArg[0] = '\0';
+    restored = invalid && ca_put(DBR_STRING, channels[20], windowArg) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[16], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL && matches(result, means, 5);
     double overwrite[] = {9,9,9,9,9};
-    const int putStatus = arrayComputed ? ca_array_put(DBR_DOUBLE, 5, channels[17], overwrite) : ECA_INTERNAL;
-    const bool rejected = arrayComputed && (putStatus == ECA_NORMAL || putStatus == ECA_NOWTACCESS) &&
+    const int putStatus = restored ? ca_array_put(DBR_DOUBLE, 5, channels[17], overwrite) : ECA_INTERNAL;
+    const bool rejected = restored && (putStatus == ECA_NORMAL || putStatus == ECA_NOWTACCESS) &&
         ca_array_get(DBR_DOUBLE, 5, channels[17], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL &&
         matches(result, means, 5);
     if (!rejected) testDiag("put status %s, observed first element %.17g", ca_message(putStatus), result[0]);
@@ -85,6 +113,38 @@ int main() {
     double histogramInput[] = {0,0.25,0.5,0.75,0.999}, histogramExpected[] = {1,1,1,2};
     testOk(connected && calculate(channels[15], channels[18], channels[19], histogramInput, 5, result, 4) &&
            matches(result, histogramExpected, 4), "dedicated array record computes a histogram over Channel Access");
+    double x[] = {1, 2, 3, 4}, y[] = {2, 4, 6, 8}, value = 0;
+    const bool correlation = connected && ca_array_put(DBR_DOUBLE, 4, channels[22], x) == ECA_NORMAL &&
+        ca_array_put(DBR_DOUBLE, 4, channels[23], y) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[24], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[25], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(correlation && std::fabs(value - 1.0) < 1e-12, "numericScalar correlates two waveforms over Channel Access");
+    const double fitExpected[] = {0, 2, 0, 0, 0, 0};
+    const bool fit = correlation && ca_put(DBR_LONG, channels[28], &trigger) == ECA_NORMAL &&
+        ca_array_get(DBR_DOUBLE, 6, channels[29], result) == ECA_NORMAL && ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(fit && matches(result, fitExpected, 6), "numericArray fits two waveforms over Channel Access");
+    double coefficients[] = {2, 3, 4};
+    const bool polynomial = connected && ca_array_put(DBR_DOUBLE, 3, channels[22], coefficients) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[26], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[27], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(polynomial && std::fabs(value - 24.0) < 1e-12, "numericScalar accepts waveform and scalar inputs over Channel Access");
+    dbr_string_t exponent = "3";
+    const bool power = connected && ca_put(DBR_STRING, channels[30], exponent) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[31], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[32], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(power && std::fabs(value - 8.0) < 1e-12, "numericScalar accepts a runtime exponent over Channel Access");
+    float typed[] = {1, 2, 3, 4};
+    const bool typedMean = connected && ca_array_put(DBR_FLOAT, 4, channels[33], typed) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[34], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[35], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(typedMean && std::fabs(value - 2.5) < 1e-12, "numericScalar accepts a FLOAT waveform over Channel Access");
+    double spectralSamples[16], spectralResult[48] = {};
+    for (double& sample : spectralSamples) sample = 1;
+    testOk(connected && calculate(channels[36], channels[37], channels[38], spectralSamples, 16, spectralResult, 5) &&
+           std::fabs(spectralResult[0] - 7.0/150.0) < 1e-10, "example Welch PSD is accessible over Channel Access");
+    testOk(connected && calculate(channels[36], channels[39], channels[40], spectralSamples, 16, spectralResult, 48) &&
+           std::fabs(spectralResult[0] - 3.5) < 1e-10 && std::fabs(spectralResult[16] - 3.5) < 1e-10 &&
+           std::fabs(spectralResult[32] - 3.5) < 1e-10, "example STFT publishes three frames over Channel Access");
     if (subscription) ca_clear_subscription(subscription);
     for (chid channel : channels) if (channel) ca_clear_channel(channel);
     if (ca_current_context()) ca_context_destroy();

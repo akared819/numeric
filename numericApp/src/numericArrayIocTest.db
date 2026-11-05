@@ -1,5 +1,58 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-record(waveform, "arrayIntInput") { field(FTVL, "LONG") field(NELM, "8") }
+record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(numericArray, "arrayScale") {
+    field(OP, "array_scale") field(INP, "arrayInput NPP NMS") field(NMAX, "5") field(OMAX, "5")
+}
+record(waveform, "eigenMatrix") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(ao, "eigenDimension") { field(VAL, "2") }
+record(numericArray, "eigenValues") {
+    field(OP, "matrix_eigenvalues_symmetric") field(INPA, "eigenMatrix NPP NMS") field(INPB, "eigenDimension NPP NMS") field(NMAX, "4") field(OMAX, "2")
+}
+record(waveform, "welchSamples") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(ao, "stftHop") { field(VAL, "4") }
+record(numericArray, "stft") {
+    field(OP, "stft_hann") field(INPA, "welchSamples NPP NMS") field(INPB, "welchLength NPP NMS")
+    field(INPC, "stftHop NPP NMS") field(NMAX, "8") field(OMAX, "16")
+}
+record(ao, "welchLength") { field(VAL, "4") }
+record(ao, "welchOverlap") { field(VAL, "2") }
+record(ao, "welchInterval") { field(VAL, "1") }
+record(numericArray, "welchPsd") {
+    field(OP, "welch_psd") field(INPA, "welchSamples NPP NMS") field(INPB, "welchLength NPP NMS")
+    field(INPC, "welchOverlap NPP NMS") field(INPD, "welchInterval NPP NMS") field(NMAX, "8") field(OMAX, "3")
+}
+record(numericArray, "spectrumPower") { field(OP, "spectrum_power") field(INP, "inverseSpectrum NPP NMS") field(NMAX, "8") field(OMAX, "4") }
+record(waveform, "hannInput") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(numericArray, "hannWindow") { field(OP, "window_hann") field(INP, "hannInput NPP NMS") field(NMAX, "5") field(OMAX, "5") }
+record(ao, "axisLength") { field(VAL, "4") }
+record(ao, "axisInterval") { field(VAL, "0.5") }
+record(numericArray, "frequencyAxis") {
+    field(OP, "fft_frequency_axis") field(INPA, "axisLength NPP NMS") field(INPB, "axisInterval NPP NMS") field(NMAX, "4") field(OMAX, "4")
+}
+record(waveform, "mixedSignal") { field(FTVL, "DOUBLE") field(NELM, "6") }
+record(numericArray, "mixedFft") {
+    field(OP, "fft_complex_mixed_forward") field(INP, "mixedSignal NPP NMS") field(NMAX, "6") field(OMAX, "6")
+}
+record(numericArray, "realInverse") {
+    field(OP, "fft_real_radix2_inverse") field(INP, "inverseSpectrum NPP NMS") field(NMAX, "8") field(OMAX, "4")
+}
+record(waveform, "arrayFitX") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(waveform, "arrayFitY") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(numericArray, "arrayFit") {
+    field(OP, "linear_fit") field(INPA, "arrayFitX NPP NMS") field(INPB, "arrayFitY NPP NMS")
+    field(NMAX, "4") field(OMAX, "6")
+}
+record(numericArray, "arrayFitConflict") {
+    field(OP, "moving_mean") field(INP, "arrayFitX NPP NMS") field(INPA, "arrayFitX NPP NMS")
+    field(NMAX, "4") field(OMAX, "6")
+}
+record(waveform, "arrayIntInput") { field(FTVL, "STRING") field(NELM, "8") }
+record(waveform, "arrayFloatInput") { field(FTVL, "FLOAT") field(NELM, "5") }
+record(waveform, "arrayLongInput") { field(FTVL, "LONG") field(NELM, "5") }
+record(waveform, "arrayInt64Input") { field(FTVL, "INT64") field(NELM, "5") }
+record(numericArray, "arrayFloatMean") { field(OP, "moving_mean") field(INP, "arrayFloatInput NPP NMS") field(NMAX, "5") field(OMAX, "5") }
+record(numericArray, "arrayLongMean") { field(OP, "moving_mean") field(INP, "arrayLongInput NPP NMS") field(NMAX, "5") field(OMAX, "5") }
+record(numericArray, "arrayInt64Mean") { field(OP, "moving_mean") field(INP, "arrayInt64Input NPP NMS") field(NMAX, "5") field(OMAX, "5") }
 record(numericArray, "arraySmallInput") {
     field(INP, "arrayInput NPP NMS") field(OP, "moving_mean") field(NMAX, "4") field(OMAX, "8") field(WIN, "3")
 }

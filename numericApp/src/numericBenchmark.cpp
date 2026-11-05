@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numeric.h"
+#include "numericTypedMean.h"
 #include "numericCompiler.h"
+#include "numericLatency.h"
+#include "numericAllocationProbe.h"
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_version.h>
 #include <chrono>
@@ -37,9 +40,14 @@ int main(int argc,char** argv) {
         auto operation=registry.create("mean"); if (!operation) return 1;
         double value=0; numeric::Input in{data.data(),length,length,1,numeric::Type::Float64,numeric::Shape::Array};
         numeric::Output out{&value,1,0,numeric::Type::Float64,numeric::Shape::Scalar};
+        const std::size_t extents[] = {length}, strides[] = {sizeof(double)};
+        numeric::ArrayView typedInput{data.data(), length * sizeof(double), numeric::ElementType::Float64, 1, extents, strides};
+        numeric::TypedMean typedMean(length); double typedValue = 0;
+        if (typedMean.reserve().status != numeric::Status::Ok) return 1;
         const double reference=gsl_stats_mean(data.data(),1,length);
         for (int i=0;i<10;++i) {
             if (operation->execute(&in,1,&out,1).status!=numeric::Status::Ok || out.count!=1 || value!=reference) return 1;
+            if (typedMean.execute(typedInput, typedValue).status != numeric::Status::Ok || typedValue != reference) return 1;
         }
         volatile double sink=0;
         using Clock=std::chrono::steady_clock;
@@ -50,13 +58,27 @@ int main(int argc,char** argv) {
             if (operation->execute(&in,1,&out,1).status!=numeric::Status::Ok) return 1;
             sink+=value;
         }
+        auto typedStart=Clock::now();
+        for (std::size_t i=0;i<iterations;++i) {
+            if (typedMean.execute(typedInput, typedValue).status!=numeric::Status::Ok) return 1;
+            sink+=typedValue;
+        }
         auto end=Clock::now();
-        if (!std::isfinite(sink) || value!=reference || out.count!=1) return 1;
+        if (!std::isfinite(sink) || value!=reference || typedValue!=reference || out.count!=1) return 1;
         const double gslNs=std::chrono::duration<double,std::nano>(middle-start).count()/iterations;
-        const double numericNs=std::chrono::duration<double,std::nano>(end-middle).count()/iterations;
+        const double numericNs=std::chrono::duration<double,std::nano>(typedStart-middle).count()/iterations;
+        const double typedNs=std::chrono::duration<double,std::nano>(end-typedStart).count()/iterations;
         std::printf("hardware=%s\ncompiler=%s\ngsl=%s\nalgorithm=mean\ntype=DOUBLE\narray_length=%zu\niterations=%zu\n",argv[3],NUMERIC_COMPILER_VERSION,gsl_version,length,iterations);
-        std::printf("timed_allocations=none\nepics_ioc_or_network_overhead=no\nvalidation=numeric_only\n");
-        std::printf("direct_gsl_ns_per_call=%.1f\nnumeric_core_ns_per_call=%.1f\nchecksum=%.17g\n",gslNs,numericNs,static_cast<double>(sink));
+        std::printf("timed_allocations=not_instrumented_workspace_reserved\nepics_ioc_or_network_overhead=no\nvalidation=numeric_only\n");
+        std::printf("direct_gsl_ns_per_call=%.1f\nnumeric_core_ns_per_call=%.1f\nnumeric_typed_ns_per_call=%.1f\nchecksum=%.17g\n",gslNs,numericNs,typedNs,static_cast<double>(sink));
+        const std::size_t sampleCount = std::min(iterations, static_cast<std::size_t>(10000));
+        if (!numericSampleLatency("direct_gsl", sampleCount, [&] { sink += gsl_stats_mean(data.data(),1,length); return true; }) ||
+            !numericSampleLatency("numeric_core", sampleCount, [&] { const bool ok = operation->execute(&in,1,&out,1).status == numeric::Status::Ok; sink += value; return ok; }) ||
+            !numericSampleLatency("numeric_typed", sampleCount, [&] { const bool ok = typedMean.execute(typedInput, typedValue).status == numeric::Status::Ok; sink += typedValue; return ok; })) return 1;
+        const std::size_t allocationSamples = std::min(iterations, static_cast<std::size_t>(1000));
+        if (!numericCountAllocations("direct_gsl", allocationSamples, [&] { sink += gsl_stats_mean(data.data(),1,length); return true; }) ||
+            !numericCountAllocations("numeric_core", allocationSamples, [&] { return operation->execute(&in,1,&out,1).status == numeric::Status::Ok; }) ||
+            !numericCountAllocations("numeric_typed", allocationSamples, [&] { return typedMean.execute(typedInput,typedValue).status == numeric::Status::Ok; })) return 1;
         return 0;
     } catch (const std::exception& e) { std::fprintf(stderr,"benchmark failed: %s\n",e.what()); return 1; }
 }

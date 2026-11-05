@@ -2,6 +2,7 @@
 #include "numeric.h"
 #include <gsl/gsl_statistics_double.h>
 #include <cmath>
+#include <climits>
 #include <limits>
 namespace numeric {
 namespace {
@@ -61,6 +62,70 @@ protected:
         return {Status::Ok, "ok"};
     }
 };
+class SortedQuantile : public Operation {
+public:
+    void reset() override {}
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "quantile requires data and fraction"};
+        if (out[0].type != Type::Float64 || out[0].shape != Shape::Scalar || !out[0].data || !out[0].capacity)
+            return {Status::InvalidArgument, "invalid output"};
+        const Input& x = in[0]; const Input& fraction = in[1];
+        // GSL 2.8 converts the quantile index through int internally.
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.count > INT_MAX || !x.stride ||
+            (x.count - 1) > (std::numeric_limits<std::size_t>::max() - 1) / x.stride ||
+            (x.count - 1) * x.stride >= x.capacity || fraction.type != Type::Float64 ||
+            fraction.shape != Shape::Scalar || !fraction.data || fraction.count != 1 || !fraction.capacity || !fraction.stride)
+            return {Status::InvalidArgument, "invalid data or fraction buffer"};
+        const double f = fraction.data[0];
+        if (!std::isfinite(f) || f < 0 || f > 1) return {Status::InvalidArgument, "fraction must be between zero and one"};
+        double previous = x.data[0];
+        if (!std::isfinite(previous)) return {Status::InvalidArgument, "data must be finite and sorted"};
+        for (std::size_t i = 1; i < x.count; ++i) {
+            const double current = x.data[i * x.stride];
+            if (!std::isfinite(current) || current < previous) return {Status::InvalidArgument, "data must be finite and sorted"};
+            previous = current;
+        }
+        const double result = gsl_stats_quantile_from_sorted_data(x.data, x.stride, x.count, f);
+        if (!std::isfinite(result)) return {Status::NumericalError, "non-finite quantile"};
+        *out[0].data = result; out[0].count = 1;
+        return {Status::Ok, "ok"};
+    }
+};
+class WeightedMean : public Operation {
+public:
+    void reset() override {}
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "weighted mean requires data and weights"};
+        if (out[0].type != Type::Float64 || out[0].shape != Shape::Scalar || !out[0].data || !out[0].capacity)
+            return {Status::InvalidArgument, "invalid output"};
+        if (!in[0].count || in[0].count != in[1].count) return {Status::InvalidArgument, "data and weights must have equal nonzero length"};
+        for (std::size_t j = 0; j < 2; ++j) {
+            const Input& x = in[j];
+            if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.stride ||
+                (x.count - 1) > (std::numeric_limits<std::size_t>::max() - 1) / x.stride ||
+                (x.count - 1) * x.stride >= x.capacity)
+                return {Status::InvalidArgument, "invalid input buffer, stride or capacity"};
+        }
+        double weightSum = 0;
+        for (std::size_t i = 0; i < in[0].count; ++i) {
+            const double value = in[0].data[i * in[0].stride], weight = in[1].data[i * in[1].stride];
+            if (!std::isfinite(value) || !std::isfinite(weight) || weight < 0)
+                return {Status::InvalidArgument, "data and nonnegative weights must be finite"};
+            if (weight > std::numeric_limits<double>::max() - weightSum)
+                return {Status::NumericalError, "weight sum exceeds floating-point range"};
+            weightSum += weight;
+        }
+        if (!(weightSum > 0)) return {Status::InvalidArgument, "at least one weight must be positive"};
+        const double result = gsl_stats_wmean(in[1].data, in[1].stride, in[0].data, in[0].stride, in[0].count);
+        if (!std::isfinite(result)) return {Status::NumericalError, "non-finite weighted mean"};
+        *out[0].data = result; out[0].count = 1;
+        return {Status::Ok, "ok"};
+    }
+};
 class BatchCovariance : public Operation {
     bool correlation_;
 public:
@@ -110,6 +175,8 @@ protected:
 };
 std::unique_ptr<Operation> makeCovariance() { return std::unique_ptr<Operation>(new BatchCovariance(false)); }
 std::unique_ptr<Operation> makeCorrelation() { return std::unique_ptr<Operation>(new BatchCovariance(true)); }
+std::unique_ptr<Operation> makeWeightedMean() { return std::unique_ptr<Operation>(new WeightedMean()); }
+std::unique_ptr<Operation> makeSortedQuantile() { return std::unique_ptr<Operation>(new SortedQuantile()); }
 std::unique_ptr<Operation> makeMinmax() { return std::unique_ptr<Operation>(new BatchMinmax()); }
 std::unique_ptr<Operation> makeMean() { return std::unique_ptr<Operation>(new BatchStatistic(0)); }
 std::unique_ptr<Operation> makeVariance() { return std::unique_ptr<Operation>(new BatchStatistic(1)); }
@@ -132,29 +199,35 @@ void registerFitting(Registry&);
 void registerIntegration(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
-    r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"quantile_sorted", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
+                   {{Type::Float64, Shape::Scalar}}, "ascending data and fraction in [0, 1]", false,
+                   "per-instance object; no workspace", "invalid input or non-finite result"}, &makeSortedQuantile);
+    r.addWithoutArguments(Metadata{"weighted_mean", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+                   {{Type::Float64, Shape::Scalar}}, "data and nonnegative weights; at least one positive weight", false,
+                   "per-instance object; no workspace", "invalid input or non-finite result"}, &makeWeightedMean);
+    r.addWithoutArguments(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "Pearson correlation; at least two paired non-constant samples", false,
                    "per-instance object; no workspace", "invalid or constant input; unsupported numeric range or non-finite result"}, &makeCorrelation);
-    r.add(Metadata{"covariance", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"covariance", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample covariance (N-1); at least two paired samples", false,
                    "per-instance object; no workspace", "invalid input or non-finite result"}, &makeCovariance);
-    r.add(Metadata{"minmax", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"minmax", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}},
                    "minimum and maximum; at least one finite sample", false,
                    "per-instance object; no workspace", "invalid input or output"}, &makeMinmax);
-    r.add(Metadata{"mean", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"mean", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "none", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeMean);
-    r.add(Metadata{"variance", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"variance", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample variance (N-1); at least two samples", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeVariance);
-    r.add(Metadata{"stddev", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"stddev", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample standard deviation (N-1); at least two samples", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeStddev);
-    r.add(Metadata{"population_variance", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"population_variance", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "population variance (N); at least one sample", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makePopulationVariance);
-    r.add(Metadata{"population_stddev", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"population_stddev", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "population standard deviation (N); at least one sample", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makePopulationStddev);
     registerRunningStatistics(r);

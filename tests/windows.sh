@@ -12,7 +12,7 @@ esac
 # EPICS makefiles use drive paths, but Bash PATH needs POSIX paths (no C:).
 export PATH="$(pwd)/bin/$arch:$(cygpath -u "$EPICS_BASE")/bin/$arch:$(cygpath -u "$GSL_DIR")/bin:$PATH"
 sh tests/gsl-version-check.sh "$GSL_DIR"
-for test in numericTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
+for test in numericTest numericDataTest numericTypedMeanTest numericFftTest numericWindowTest numericFitTest numericIntegrationTest numericRootsTest numericHistogramTest; do
     echo "Running $test"
     "./bin/$arch/$test"
 done
@@ -28,5 +28,6 @@ if "./bin/$arch/numericBenchmark" 0 100 windows-validation; then
     exit 1
 fi
 sh tests/example-ioc.sh "$arch"
+sh tests/multi-reconnect.sh "$arch"
 sh tests/network-ack.sh "$arch"
 sh tests/network-interruption.sh "$arch"

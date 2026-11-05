@@ -1,6 +1,53 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "multiX") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(waveform, "matrixData") { field(FTVL, "DOUBLE") field(NELM, "4") }
+record(ao, "matrixDimension") { field(VAL, "2") }
+record(numericScalar, "matrixDeterminant") {
+    field(OP, "matrix_determinant") field(INPA, "matrixData NPP NMS") field(INPB, "matrixDimension NPP NMS") field(NMAX, "4")
+}
+record(waveform, "multiY") { field(FTVL, "DOUBLE") field(NELM, "5") }
+record(ao, "multiPoint") { field(VAL, "2") }
+record(numericScalar, "gammaValue") { field(OP, "gamma") field(INP, "multiPoint NPP NMS") field(NMAX, "1") }
+record(numericScalar, "scalarPower") {
+    field(OP, "pow_int") field(INP, "multiPoint NPP NMS") field(NMAX, "1")
+}
+record(waveform, "multiInt") { field(FTVL, "STRING") field(NELM, "4") }
+record(waveform, "typedFloatInput") { field(FTVL, "FLOAT") field(NELM, "4") }
+record(waveform, "typedLongInput") { field(FTVL, "LONG") field(NELM, "4") }
+record(waveform, "typedInt64Input") { field(FTVL, "INT64") field(NELM, "4") }
+record(numericScalar, "typedFloatScalar") { field(OP, "mean") field(INP, "typedFloatInput NPP NMS") field(NMAX, "4") }
+record(numericScalar, "typedLongScalar") { field(OP, "mean") field(INP, "typedLongInput NPP NMS") field(NMAX, "4") }
+record(numericScalar, "typedInt64Scalar") { field(OP, "mean") field(INP, "typedInt64Input NPP NMS") field(NMAX, "4") }
+record(numericScalar, "typedMixedCorrelation") {
+    field(OP, "correlation") field(INPA, "multiX NPP NMS") field(INPB, "typedLongInput NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "multiCorrelation") {
+    field(OP, "correlation") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "cubicSpline") {
+    field(OP, "interp_cspline") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(INPC, "multiPoint NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "weightedMean") {
+    field(OP, "weighted_mean") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(NMAX, "4")
+}
+record(ao, "quantileFraction") { field(VAL, "0.75") }
+record(numericScalar, "sortedQuantile") {
+    field(OP, "quantile_sorted") field(INPA, "multiX NPP NMS") field(INPB, "quantileFraction NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "multiPolynomial") {
+    field(OP, "polynomial_eval") field(INPA, "multiX NPP NMS") field(INPB, "multiPoint NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "multiConflict") {
+    field(OP, "mean") field(INP, "multiX NPP NMS") field(INPA, "multiX NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "multiWrongType") {
+    field(OP, "correlation") field(INPA, "multiX NPP NMS") field(INPB, "multiInt NPP NMS") field(NMAX, "4")
+}
+record(numericScalar, "multiMissing") {
+    field(OP, "correlation") field(INPA, "multiX NPP NMS") field(NMAX, "4")
+}
 record(waveform, "scalarOversizedInput") { field(FTVL, "DOUBLE") field(NELM, "5") }
-record(waveform, "scalarIntInput") { field(FTVL, "LONG") field(NELM, "4") }
+record(waveform, "scalarIntInput") { field(FTVL, "STRING") field(NELM, "4") }
 record(calc, "scalarProcessed") { field(INPA, "scalarProcessed.VAL NPP NMS") field(CALC, "A+1") }
 record(numericScalar, "scalarForward") {
     field(INP, "scalarOversizedInput NPP NMS") field(OP, "mean") field(NMAX, "4")

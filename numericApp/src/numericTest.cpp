@@ -2,6 +2,7 @@
 #include "numeric.h"
 #include "numericAck.h"
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_rng.h>
 #include <atomic>
 #include <climits>
 #include <cmath>
@@ -12,6 +13,26 @@
 using namespace numeric;
 #define CHECK(x) do { if (!(x)) { std::fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #x); return 1; } } while (0)
 namespace {
+double squareCallback(double x, void* context) { return x*x * *static_cast<double*>(context); }
+double badCallback(double, void*) { return std::numeric_limits<double>::quiet_NaN(); }
+double throwingCallback(double, void*) { throw 1; }
+double sqrtCallback(double x, void*) { return std::sqrt(x); }
+double rootCallback(double x, void*) { return x*x-2; }
+double minimumCallback(double x, void*) { return (x-2)*(x-2); }
+bool odeExp(double, const double* state, double* derivative, std::size_t n, void*) {
+    if (n != 2) return false;
+    derivative[0] = state[0]; derivative[1] = -state[1]; return true;
+}
+bool odeBad(double, const double*, double*, std::size_t, void*) { return true; }
+bool odeThrow(double, const double*, double*, std::size_t, void*) { throw 1; }
+bool fitResidual(const double* p, std::size_t np, double* r, std::size_t nr, void*) {
+    if (np != 2 || nr != 3) return false;
+    const double y[] = {2,4,8};
+    for (std::size_t i = 0; i < nr; ++i) r[i] = p[0]*std::exp(p[1]*static_cast<double>(i))-y[i];
+    return true;
+}
+bool fitBad(const double*, std::size_t, double*, std::size_t, void*) { return true; }
+bool fitThrow(const double*, std::size_t, double*, std::size_t, void*) { throw 1; }
 int destroyed = 0;
 class Lifetime : public Operation {
 public:
@@ -24,6 +45,128 @@ std::unique_ptr<Operation> makeLifetime() { return std::unique_ptr<Operation>(ne
 }
 int main() {
     Registry r; registerBuiltins(r);
+    const Metadata* gaussMeta = r.find("gaussian_smooth");
+    CHECK(gaussMeta && gaussMeta->argumentSchemaComplete && gaussMeta->arguments.size() == 2 && gaussMeta->arguments[0].name == "window");
+    CHECK(gaussMeta->arguments[0].inputIndex == 1 && gaussMeta->arguments[1].inputIndex == 2);
+    ArgumentValue args[] = {{ArgumentType::Integer, 0.0, 7}, {ArgumentType::Floating, 1.5, 0}};
+    CHECK(validateArguments(gaussMeta->arguments, args, 2, gaussMeta->argumentValidator).status == Status::Ok);
+    args[0].integer = 8;
+    CHECK(validateArguments(gaussMeta->arguments, args, 2, gaussMeta->argumentValidator).status == Status::InvalidArgument);
+    args[0].integer = 4097;
+    CHECK(validateArguments(gaussMeta->arguments, args, 2).status == Status::InvalidArgument);
+    args[0].integer = 7; args[1].floating = std::numeric_limits<double>::quiet_NaN();
+    CHECK(validateArguments(gaussMeta->arguments, args, 2).status == Status::InvalidArgument);
+    args[1].floating = 1.5; args[0].type = ArgumentType::Floating;
+    CHECK(validateArguments(gaussMeta->arguments, args, 2).status == Status::InvalidArgument);
+    CHECK(validateArguments(gaussMeta->arguments, args, 1).status == Status::InvalidArgument);
+    CHECK(validateArguments(gaussMeta->arguments, nullptr, 2).status == Status::InvalidArgument);
+    ArgumentValue parsed{ArgumentType::Floating, 42, 0};
+    CHECK(parseArgument(ArgumentType::Integer, "9007199254740993", 16, parsed).status == Status::Ok && parsed.integer == INT64_C(9007199254740993));
+    CHECK(parseArgument(ArgumentType::Integer, "-9223372036854775808", 20, parsed).status == Status::Ok && parsed.integer == std::numeric_limits<std::int64_t>::min());
+    CHECK(parseArgument(ArgumentType::Integer, "9223372036854775808", 19, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Integer, "12x", 3, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Floating, "1.5e-2", 6, parsed).status == Status::Ok && parsed.floating == 0.015);
+    CHECK(parseArgument(ArgumentType::Floating, "nan", 3, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Floating, "1.2 ", 4, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Floating, "1e999", 5, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Floating, "1e-999", 6, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Floating, "-0.0", 4, parsed).status == Status::Ok && parsed.floating == 0.0);
+    CHECK(parseArgument(ArgumentType::Boolean, "true", 4, parsed).status == Status::Ok && parsed.integer == 1);
+    CHECK(parseArgument(ArgumentType::Boolean, "2", 1, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Enumeration, "7", 1, parsed).status == Status::Ok && parsed.integer == 7);
+    CHECK(parseArgument(ArgumentType::Integer, "123456789012345678901234567890123456789", 39, parsed).status == Status::InvalidArgument);
+    auto withDefaults = gaussMeta->arguments;
+    withDefaults[0].required = false; withDefaults[0].hasDefault = true;
+    withDefaults[0].defaultValue = {ArgumentType::Integer, 0.0, 7};
+    withDefaults[1].required = false; withDefaults[1].hasDefault = true;
+    withDefaults[1].defaultValue = {ArgumentType::Floating, 1.5, 0};
+    ArgumentValue resolved[2] = {};
+    CHECK(resolveArguments(withDefaults, nullptr, 0, resolved, 2, gaussMeta->argumentValidator).status == Status::Ok);
+    CHECK(resolved[0].integer == 7 && resolved[1].floating == 1.5);
+    ArgumentValue supplied[] = {{ArgumentType::Integer, 0.0, 9}};
+    CHECK(resolveArguments(withDefaults, supplied, 1, resolved, 2, gaussMeta->argumentValidator).status == Status::Ok);
+    CHECK(resolved[0].integer == 9 && resolved[1].floating == 1.5);
+    supplied[0].integer = 8;
+    CHECK(resolveArguments(withDefaults, supplied, 1, resolved, 2, gaussMeta->argumentValidator).status == Status::InvalidArgument);
+    CHECK(resolveArguments(withDefaults, nullptr, 0, resolved, 1).status == Status::InvalidArgument);
+    withDefaults[1].hasDefault = false;
+    CHECK(resolveArguments(withDefaults, nullptr, 0, resolved, 2).status == Status::InvalidArgument);
+    args[0] = {ArgumentType::Integer, 0.0, 7};
+    Input mapped[3] = {}; double slots[2] = {};
+    CHECK(setLegacyArguments(*gaussMeta, args, 2, mapped, 3, slots, 2).status == Status::Ok);
+    CHECK(mapped[1].data == &slots[0] && *mapped[1].data == 7 && *mapped[2].data == 1.5);
+    CHECK(setLegacyArguments(*gaussMeta, args, 2, mapped, 3, slots, 1).status == Status::InvalidArgument);
+    Metadata wide = *gaussMeta; wide.arguments.resize(1); wide.argumentValidator = nullptr;
+    Metadata incomplete = wide; incomplete.argumentSchemaComplete = false;
+    CHECK(setLegacyArguments(incomplete, args, 1, mapped, 3, slots, 2).status == Status::InvalidArgument);
+    wide.arguments[0].maximum.integer = std::numeric_limits<std::int64_t>::max();
+    args[0].integer = INT64_C(9007199254740993); slots[0] = 17;
+    CHECK(setLegacyArguments(wide, args, 1, mapped, 3, slots, 2).status == Status::InvalidArgument && slots[0] == 17);
+    args[0].integer = INT64_C(9007199254740994);
+    CHECK(setLegacyArguments(wide, args, 1, mapped, 3, slots, 2).status == Status::Ok && slots[0] == 9007199254740994.0);
+    wide.arguments[0].minimum.integer = std::numeric_limits<std::int64_t>::min();
+    args[0].integer = std::numeric_limits<std::int64_t>::min();
+    CHECK(setLegacyArguments(wide, args, 1, mapped, 3, slots, 2).status == Status::Ok);
+    args[0].integer = std::numeric_limits<std::int64_t>::max();
+    CHECK(setLegacyArguments(wide, args, 1, mapped, 3, slots, 2).status == Status::InvalidArgument);
+    const ArgumentValue zeroInt{ArgumentType::Integer, 0.0, 0};
+    const ArgumentValue maxInt{ArgumentType::Integer, 0.0, std::numeric_limits<std::int64_t>::max()};
+    const ArgumentValue zeroBool{ArgumentType::Boolean, 0.0, 0};
+    const ArgumentValue zeroEnum{ArgumentType::Enumeration, 0.0, 0};
+    std::vector<ArgumentDescriptor> typed{
+        {"large", ArgumentType::Integer, true, false, zeroInt, true, true, zeroInt, maxInt, {}},
+        {"enabled", ArgumentType::Boolean, true, false, zeroBool, false, false, zeroBool, zeroBool, {}},
+        {"mode", ArgumentType::Enumeration, true, false, zeroEnum, false, false, zeroEnum, zeroEnum, {3, 7}}};
+    ArgumentValue typedValues[] = {{ArgumentType::Integer, 0.0, INT64_C(9007199254740993)},
+                                   {ArgumentType::Boolean, 0.0, 1}, {ArgumentType::Enumeration, 0.0, 7}};
+    CHECK(validateArguments(typed, typedValues, 3).status == Status::Ok);
+    typedValues[1].integer = 2;
+    CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
+    typedValues[1].integer = 1; typedValues[2].integer = 4;
+    CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
+    CHECK(validateArgumentSchema(typed).status == Status::Ok);
+    auto badSchema = typed;
+    badSchema[1].name = badSchema[0].name;
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[0].required = false;
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[0].hasDefault = true; badSchema[0].defaultValue = maxInt;
+    badSchema[0].maximum.integer = 10;
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[2].choices.push_back(3);
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = typed; badSchema[2].choices.clear();
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    badSchema = gaussMeta->arguments; badSchema[1].minimum.floating = std::numeric_limits<double>::infinity();
+    CHECK(validateArgumentSchema(badSchema).status == Status::InvalidArgument);
+    Metadata badMeta = *gaussMeta; badMeta.name = "bad-schema"; badMeta.arguments = badSchema;
+    CHECK(!r.add(badMeta, &makeLifetime));
+    badMeta = *gaussMeta; badMeta.name = "bad-mapping"; badMeta.arguments[0].inputIndex = 0;
+    CHECK(!r.add(badMeta, &makeLifetime));
+    badMeta.arguments[0].inputIndex = 99; CHECK(!r.add(badMeta, &makeLifetime));
+    badMeta.arguments[0].inputIndex = 2; CHECK(!r.add(badMeta, &makeLifetime));
+    const Metadata* histMeta = r.find("histogram_uniform");
+    CHECK(histMeta && histMeta->argumentSchemaComplete && histMeta->arguments.size() == 3);
+    CHECK(r.find("mean") && r.find("mean")->argumentSchemaComplete && r.find("mean")->arguments.empty());
+    CHECK(r.find("correlation") && r.find("correlation")->argumentSchemaComplete);
+    CHECK(r.find("fft_real_radix2_forward") && r.find("fft_real_radix2_forward")->argumentSchemaComplete);
+    CHECK(r.find("running_mean") && r.find("running_mean")->argumentSchemaComplete);
+    const char* completeNames[] = {"mean", "minmax", "covariance", "correlation", "variance", "stddev",
+        "population_variance", "population_stddev", "running_mean", "running_stats", "moving_mean", "moving_median",
+        "gaussian_smooth", "histogram_uniform", "fft_complex_radix2_forward", "fft_complex_radix2_inverse",
+        "fft_real_radix2_forward", "vector_norm", "erf", "log1p", "normal_cdf", "linear_fit",
+        "polynomial_eval", "interp_linear", "polynomial_integral", "polynomial_root", "pow_int"};
+    for (const char* name : completeNames) CHECK(r.find(name) && r.find(name)->argumentSchemaComplete);
+    Metadata noArguments = *gaussMeta; noArguments.name = "wrong-no-arguments";
+    CHECK(!r.addWithoutArguments(noArguments, &makeLifetime));
+    CHECK(histMeta->arguments[0].inputIndex == 1 && histMeta->arguments[2].inputIndex == 3);
+    ArgumentValue histArgs[] = {{ArgumentType::Floating, -1.0, 0},
+                                {ArgumentType::Floating, 1.0, 0}, {ArgumentType::Integer, 0.0, 10}};
+    CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::Ok);
+    histArgs[1].floating = -1.0;
+    CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::InvalidArgument);
+    histArgs[1].floating = 1.0; histArgs[2].integer = 65537;
+    CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::InvalidArgument);
     auto op = r.create("mean"); CHECK(op && r.find("mean") && !r.find("missing") && !r.create("missing"));
     double data[] = {1, 99, 3, 99, 5}; double result = -1;
     Input in{data, 3, 5, 2, Type::Float64, Shape::Array};
@@ -63,7 +206,138 @@ int main() {
         {iy, 3, 3, 1, Type::Float64, Shape::Array}, {&iq, 1, 1, 1, Type::Float64, Shape::Scalar}};
     Output interpolationOut{&iv, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::NotInitialized && iv == 42);
+    double derivative = 7, derivativeError = 8, multiplier = 3;
+    UniformRandomStream random;
+    double samples[4] = {};
+    CHECK(random.initialize(123).status == Status::NotInitialized && random.fill(samples,4,4).status == Status::NotInitialized);
+    CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::NotInitialized && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
+    CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::NotInitialized);
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NotInitialized);
+    double odeInitial[] = {1,1}, odeOutput[] = {7,8};
+    double fitInitial[] = {1.8,.5}, fitResult[] = {7,8}, fitError = 9;
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NotInitialized);
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto scale = r.create("array_scale"); CHECK(scale && r.find("array_scale") && r.find("array_scale")->arguments.size() == 1);
+    double scaleData[] = {1,-2,3}, scaleFactor = 2, scaleResult[] = {9,9,9};
+    Input scaleInputs[] = {{scaleData,3,3,1,Type::Float64,Shape::Array}, {&scaleFactor,1,1,1,Type::Float64,Shape::Scalar}};
+    Output scaleOutput{scaleResult,3,0,Type::Float64,Shape::Array};
+    CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::Ok && scaleResult[0] == 2 && scaleResult[1] == -4 && scaleResult[2] == 6);
+    scaleFactor = std::numeric_limits<double>::quiet_NaN(); CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::InvalidArgument && scaleResult[0] == 2);
+    scaleFactor = std::numeric_limits<double>::max(); CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::NumericalError && scaleResult[0] == 2);
+    scaleFactor = 1; scale->reset(); CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::Ok && scaleResult[1] == -2);
+    auto gamma = r.create("gamma"); CHECK(gamma);
+    double gammaInput = 5, gammaValue = 99;
+    Input gammaIn{&gammaInput,1,1,1,Type::Float64,Shape::Scalar}; Output gammaOut{&gammaValue,1,0,Type::Float64,Shape::Scalar};
+    CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::Ok && std::fabs(gammaValue-24) < 1e-12);
+    gammaInput = .5; CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::Ok && std::fabs(gammaValue-std::sqrt(std::acos(-1.0))) < 1e-12);
+    gammaInput = -1; CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::InvalidArgument && std::fabs(gammaValue-std::sqrt(std::acos(-1.0))) < 1e-12);
+    gammaInput = std::numeric_limits<double>::infinity(); CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::InvalidArgument);
+    gammaInput = 172; CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::NumericalError);
+    CHECK(random.initialize(123).status == Status::Ok && random.fill(samples,4,4).status == Status::Ok);
+    gsl_rng* referenceRng = gsl_rng_alloc(gsl_rng_mt19937); CHECK(referenceRng); gsl_rng_set(referenceRng, 123);
+    for (double sample : samples) CHECK(sample == gsl_rng_uniform(referenceRng) && sample >= 0 && sample < 1);
+    gsl_rng_free(referenceRng);
+    double savedSamples[4]; for (int i = 0; i < 4; ++i) savedSamples[i] = samples[i];
+    CHECK(random.reset().status == Status::Ok);
+    CHECK(random.fill(samples,4,3).status == Status::InvalidArgument && samples[0] == savedSamples[0]);
+    CHECK(random.fill(samples,4,4).status == Status::Ok);
+    for (int i = 0; i < 4; ++i) CHECK(samples[i] == savedSamples[i]);
+    UniformRandomStream secondRandom;
+    CHECK(secondRandom.initialize(123).status == Status::Ok && secondRandom.fill(samples,4,4).status == Status::Ok);
+    for (int i = 0; i < 4; ++i) CHECK(samples[i] == savedSamples[i]);
+    auto eigen = r.create("matrix_eigenvalues_symmetric"); CHECK(eigen);
+    double symmetric[] = {2,1,1,2}, eigenDimension = 2, eigenValues[] = {9,9};
+    Input eigenInputs[] = {{symmetric,4,4,1,Type::Float64,Shape::Array}, {&eigenDimension,1,1,1,Type::Float64,Shape::Scalar}};
+    Output eigenOutput{eigenValues,2,0,Type::Float64,Shape::Array};
+    CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::Ok && eigenOutput.count == 2 && std::fabs(eigenValues[0]-1) < 1e-12 && std::fabs(eigenValues[1]-3) < 1e-12);
+    symmetric[1] = 2; CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::InvalidArgument && std::fabs(eigenValues[0]-1) < 1e-12);
+    symmetric[1] = 1; eigenOutput.capacity = 1; CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::InvalidArgument);
+    eigenOutput.capacity = 2; eigenInputs[0].count = 1; eigenDimension = 1; eigen->reset();
+    CHECK(eigen->execute(eigenInputs, 2, &eigenOutput, 1).status == Status::Ok && eigenOutput.count == 1 && eigenValues[0] == 2);
+    auto determinant = r.create("matrix_determinant"); CHECK(determinant);
+    double matrixData[] = {1,2,3,4}, matrixDimension = 2, matrixResult = 42;
+    Input matrixInputs[] = {{matrixData,4,4,1,Type::Float64,Shape::Array}, {&matrixDimension,1,1,1,Type::Float64,Shape::Scalar}};
+    Output matrixOutput{&matrixResult,1,0,Type::Float64,Shape::Scalar};
+    CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::Ok && std::fabs(matrixResult + 2) < 1e-12);
+    matrixData[2] = 2; CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::Ok && matrixResult == 0);
+    matrixData[2] = 3; matrixDimension = 1.5; CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::InvalidArgument && matrixResult == 0);
+    matrixDimension = 2; matrixInputs[0].count = 3; CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::InvalidArgument);
+    matrixInputs[0].count = 4; matrixData[0] = std::numeric_limits<double>::quiet_NaN(); CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::InvalidArgument);
+    matrixData[0] = 1; determinant->reset(); CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::Ok && std::fabs(matrixResult + 2) < 1e-12);
+    CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::Ok && std::fabs(derivative - 12) < 1e-8 && derivativeError >= 0);
+    derivative = 7; derivativeError = 8;
+    CHECK(differentiateCentral(nullptr, nullptr, 2, .01, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(differentiateCentral(&squareCallback, &multiplier, 2, 0, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivative).status == Status::InvalidArgument);
+    CHECK(differentiateCentral(&badCallback, nullptr, 2, .01, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(differentiateCentral(&throwingCallback, nullptr, 2, .01, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::Ok && std::fabs(derivative - 8) < 1e-10 && derivativeError >= 0);
+    derivative = 7; derivativeError = 8;
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 2, 0, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 0, 0, 100, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 0, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(integrateAdaptive(&badCallback, nullptr, 0, 2, 1e-9, 1e-9, 10, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&throwingCallback, nullptr, 0, 2, 1e-9, 1e-9, 10, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&sqrtCallback, nullptr, 0, 1, 1e-14, 1e-14, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::Ok && std::fabs(derivative-std::sqrt(2.0)) < 1e-10 && derivativeError >= 0);
+    derivative = 7; derivativeError = 8;
+    CHECK(findRootBrent(&rootCallback, nullptr, 2, 3, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::InvalidArgument && derivative == 7 && derivativeError == 8);
+    CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-15, 1e-15, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(findRootBrent(&throwingCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::Ok && std::fabs(derivative-2) < 1e-5 && derivativeError >= 0);
+    derivative = 7; derivativeError = 8;
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, .5, 1, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::InvalidArgument && derivative == 7 && derivativeError == 8);
+    CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-15, 1e-15, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(minimizeBrent(&throwingCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::Ok && std::fabs(odeOutput[0]-std::exp(1.0)) < 1e-7 && std::fabs(odeOutput[1]-std::exp(-1.0)) < 1e-7);
+    odeOutput[0] = 7; odeOutput[1] = 8;
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 1).status == Status::InvalidArgument && odeOutput[0] == 7);
+    CHECK(solveOdeRkf45(&odeBad, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
+    CHECK(solveOdeRkf45(&odeThrow, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-14, 1e-14, 1, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::Ok && std::fabs(fitResult[0]-2) < 1e-6 && std::fabs(fitResult[1]-std::log(2.0)) < 1e-6 && fitError < 1e-10);
+    fitResult[0] = 7; fitResult[1] = 8; fitError = 9;
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 1, 100, 1e-8, fitResult, 2, fitError).status == Status::InvalidArgument);
+    CHECK(fitNonlinear(&fitBad, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
+    CHECK(fitNonlinear(&fitThrow, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitResult[0]).status == Status::InvalidArgument && fitResult[0] == 7);
+    CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 1, 1e-14, fitResult, 2, fitError).status == Status::NumericalError && fitResult[0] == 7 && fitError == 9);
+    auto spline = r.create("interp_cspline"); CHECK(spline);
+    double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
+    Input splineInputs[] = {{sx,3,3,1,Type::Float64,Shape::Array}, {sy,3,3,1,Type::Float64,Shape::Array}, {&sq,1,1,1,Type::Float64,Shape::Scalar}};
+    Output splineOutput{&sv,1,0,Type::Float64,Shape::Scalar};
+    CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::Ok && std::fabs(sv-.6875) < 1e-12);
+    sq = 3; CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::InvalidArgument && std::fabs(sv-.6875) < 1e-12);
+    sq = .5; sx[1] = 0; CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::InvalidArgument);
+    sx[1] = 1; splineInputs[0].count = splineInputs[1].count = 2; CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::InvalidArgument);
+    splineInputs[0].count = splineInputs[1].count = 3; spline->reset(); CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::Ok);
+    auto power = r.create("pow_int"); CHECK(power && r.find("pow_int"));
+    double powerBase = 2, powerExponent = 3, powerValue = 42;
+    Input powerIn[] = {{&powerBase, 1, 1, 1, Type::Float64, Shape::Scalar},
+                       {&powerExponent, 1, 1, 1, Type::Float64, Shape::Scalar}};
+    Output powerOut{&powerValue, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue == 8);
+    powerExponent = -2; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue == 0.25);
+    powerExponent = 2.5; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::InvalidArgument && powerValue == 0.25);
+    powerExponent = -1; powerBase = 0; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::InvalidArgument);
+    powerExponent = 0; CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue == 1.0);
+    powerValue = 0.25;
+    powerBase = std::numeric_limits<double>::max(); powerExponent = 2;
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::NumericalError && powerValue == 0.25);
+    powerBase = 0.5; powerExponent = 1024;
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::Ok && powerValue > 0);
+    powerBase = 0.25;
+    CHECK(power->execute(powerIn, 2, &powerOut, 1).status == Status::NumericalError && powerValue > 0);
+    double constantWave[] = {2, 2, 2, 2, 2, 2, 2}, filtered[7] = {};
+    mapped[0] = {constantWave, 7, 7, 1, Type::Float64, Shape::Array};
+    args[0] = {ArgumentType::Integer, 0.0, 7}; args[1] = {ArgumentType::Floating, 1.5, 0};
+    CHECK(setLegacyArguments(*gaussMeta, args, 2, mapped, 3, slots, 2).status == Status::Ok);
+    Output mappedOut{filtered, 7, 0, Type::Float64, Shape::Array};
+    auto mappedGaussian = r.create("gaussian_smooth");
+    CHECK(mappedGaussian && mappedGaussian->execute(mapped, 3, &mappedOut, 1).status == Status::Ok && mappedOut.count == 7);
+    for (double sample : filtered) CHECK(std::fabs(sample - 2.0) < 1e-12);
     CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 4 && interpolationOut.count == 1);
     iq = 0; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 0);
     iq = 3; CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::Ok && iv == 6);
@@ -193,6 +467,56 @@ int main() {
     data[2] = std::numeric_limits<double>::infinity();
     CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
     data[2] = 3; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::Ok && extrema[0] == 1 && extrema[1] == 5);
+    auto quantile = r.create("quantile_sorted");
+    double sortedData[] = {1, 2, 3, 4}, fraction = .75, quantileResult = 99;
+    Input quantileInputs[] = {{sortedData, 4, 4, 1, Type::Float64, Shape::Array},
+                              {&fraction, 1, 1, 1, Type::Float64, Shape::Scalar}};
+    Output quantileOutput{&quantileResult, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(quantile && quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 3.25);
+    fraction = 0; CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 1);
+    fraction = 1; CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 4);
+    fraction = 2; CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument && quantileResult == 4);
+    fraction = .5; sortedData[2] = 0;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument && quantileResult == 4);
+    sortedData[2] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument);
+    sortedData[2] = 3; quantileInputs[0].count = 1;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::Ok && quantileResult == 1);
+    quantileInputs[0].count = 0;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument);
+    quantileInputs[0].count = static_cast<std::size_t>(std::numeric_limits<int>::max()) + 1;
+    quantileInputs[0].capacity = quantileInputs[0].count;
+    CHECK(quantile->execute(quantileInputs, 2, &quantileOutput, 1).status == Status::InvalidArgument);
+    auto weightedMean = r.create("weighted_mean");
+    CHECK(weightedMean && r.find("weighted_mean") && r.find("weighted_mean")->inputs.size() == 2);
+    double weightedData[] = {1, 2, 3}, weights[] = {1, 2, 1}, weightedResult = 99;
+    Input weightedInputs[] = {{weightedData, 3, 3, 1, Type::Float64, Shape::Array},
+                              {weights, 3, 3, 1, Type::Float64, Shape::Array}};
+    Output weightedOutput{&weightedResult, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 2);
+    weights[0] = 0; weights[1] = 0; weights[2] = 0;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument && weightedResult == 2 && weightedOutput.count == 0);
+    weights[0] = -1; weights[1] = 1;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument && weightedResult == 2);
+    weights[0] = std::numeric_limits<double>::infinity();
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument);
+    weights[0] = std::numeric_limits<double>::max(); weights[1] = weights[0];
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::NumericalError);
+    weights[0] = 1; weights[1] = 2; weights[2] = 1;
+    weightedInputs[1].count = 2;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument);
+    weightedInputs[1].count = 3; weightedData[1] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument);
+    weightedData[1] = 2;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 2);
+    double weightedPacked[] = {1, 1, 2, 2, 3, 1};
+    Input weightedStrided[] = {{weightedPacked, 3, 6, 2, Type::Float64, Shape::Array},
+                               {weightedPacked + 1, 3, 5, 2, Type::Float64, Shape::Array}};
+    CHECK(weightedMean->execute(weightedStrided, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 2);
+    weightedStrided[0].count = weightedStrided[1].count = 1;
+    CHECK(weightedMean->execute(weightedStrided, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 1);
+    weightedStrided[0].count = weightedStrided[1].count = 0;
+    CHECK(weightedMean->execute(weightedStrided, 2, &weightedOutput, 1).status == Status::InvalidArgument && weightedResult == 1);
     auto covariance = r.create("covariance");
     CHECK(covariance && r.find("covariance") && r.find("covariance")->inputs.size() == 2);
     double ydata[] = {2, 4, 6};

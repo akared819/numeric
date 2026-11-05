@@ -32,7 +32,7 @@ protected:
 std::unique_ptr<Operation> makePolynomial() { return std::unique_ptr<Operation>(new Polynomial); }
 }
 void registerPolynomial(Registry& r) {
-    r.add(Metadata{"polynomial_eval", "polynomials", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
+    r.addWithoutArguments(Metadata{"polynomial_eval", "polynomials", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Scalar}}, "coefficients in ascending power order and a finite evaluation point", false,
                    "per-instance object; no workspace", "invalid input or non-finite result"}, &makePolynomial);
 }

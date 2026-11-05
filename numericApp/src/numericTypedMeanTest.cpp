@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#include "numericTypedMean.h"
+#include <cmath>
+#include <atomic>
+#include <cstdio>
+#include <limits>
+#include <thread>
+using namespace numeric;
+#define CHECK(x) do { if (!(x)) { std::fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #x); return 1; } } while (0)
+int main() {
+    const std::size_t shape[] = {4}, fStride[] = {sizeof(float)}, dStride[] = {sizeof(double)},
+                      iStride[] = {sizeof(std::int32_t)}, lStride[] = {sizeof(std::int64_t)},
+                      c64Stride[] = {2 * sizeof(float)}, c128Stride[] = {2 * sizeof(double)};
+    float f[] = {1, 2, 3, 4}; double d[] = {1, 2, 3, 4};
+    std::int32_t i[] = {1, 2, 3, 4}; std::int64_t l[] = {1, 2, 3, 4};
+    float c64[] = {1, 0, 2, 0, 3, 0, 4, 0}; double c128[] = {1, 0, 2, 0, 3, 0, 4, 0};
+    ArrayView views[] = {{f, sizeof(f), ElementType::Float32, 1, shape, fStride},
+                         {d, sizeof(d), ElementType::Float64, 1, shape, dStride},
+                         {i, sizeof(i), ElementType::Int32, 1, shape, iStride},
+                         {l, sizeof(l), ElementType::Int64, 1, shape, lStride},
+                         {c64, sizeof(c64), ElementType::Complex64, 1, shape, c64Stride},
+                         {c128, sizeof(c128), ElementType::Complex128, 1, shape, c128Stride}};
+    TypedMean mean(8); double result = 77;
+    TypedComplexMean complexMean(4); ElementValue complexResult{ElementType::Complex128, 0, 77, 88};
+    CHECK(complexMean.execute(views[4], complexResult).status == Status::NotInitialized && complexResult.real == 77);
+    CHECK(mean.execute(views[0], result).status == Status::NotInitialized && result == 77);
+    initializeGsl(); CHECK(mean.reserve().status == Status::Ok);
+    for (const auto& view : views) CHECK(mean.execute(view, result).status == Status::Ok && std::fabs(result - 2.5) < 1e-12);
+    CHECK(complexMean.reserve().status == Status::Ok);
+    c64[1] = 2; c64[3] = 4; c64[5] = 6; c64[7] = 8;
+    CHECK(complexMean.execute(views[4], complexResult).status == Status::Ok && complexResult.real == 2.5 && complexResult.imaginary == 5);
+    c128[1] = -2; c128[3] = -4; c128[5] = -6; c128[7] = -8;
+    CHECK(complexMean.execute(views[5], complexResult).status == Status::Ok && complexResult.real == 2.5 && complexResult.imaginary == -5);
+    c128[1] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(complexMean.execute(views[5], complexResult).status == Status::InvalidArgument && complexResult.imaginary == -5);
+    c128[1] = c128[3] = c128[5] = c128[7] = 0;
+    complexMean.reset(); CHECK(complexMean.execute(views[5], complexResult).status == Status::Ok && complexResult.imaginary == 0);
+    double padded[] = {1, 2, 999, 3, 4, 999};
+    const std::size_t matrixShape[] = {2, 2}, matrixStrides[] = {3 * sizeof(double), sizeof(double)};
+    ArrayView matrix{padded, sizeof(padded), ElementType::Float64, 2, matrixShape, matrixStrides};
+    CHECK(mean.execute(matrix, result).status == Status::Ok && std::fabs(result - 2.5) < 1e-12);
+    double complexPadded[] = {1, 2, 3, 4, 999, 999, 5, 6, 7, 8, 999, 999};
+    const std::size_t complexMatrixStrides[] = {6 * sizeof(double), 2 * sizeof(double)};
+    ArrayView complexMatrix{complexPadded, sizeof(complexPadded), ElementType::Complex128, 2, matrixShape, complexMatrixStrides};
+    CHECK(complexMean.execute(complexMatrix, complexResult).status == Status::Ok && complexResult.real == 4 && complexResult.imaginary == 5);
+    CHECK(complexMean.execute(views[1], complexResult).status == Status::Ok && complexResult.real == 2.5 && complexResult.imaginary == 0);
+    c128[1] = 1; result = 77;
+    CHECK(mean.execute(views[5], result).status == Status::InvalidArgument && result == 77); c128[1] = 0;
+    l[0] = INT64_C(9007199254740993);
+    CHECK(mean.execute(views[3], result).status == Status::InvalidArgument && result == 77); l[0] = 1;
+    d[0] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(mean.execute(views[1], result).status == Status::InvalidArgument && result == 77); d[0] = 1;
+    const std::size_t emptyShape[] = {0}; ArrayView empty{nullptr, 0, ElementType::Float64, 1, emptyShape, dStride};
+    CHECK(mean.execute(empty, result).status == Status::InvalidArgument && result == 77);
+    CHECK(complexMean.execute(empty, complexResult).status == Status::InvalidArgument && complexResult.real == 2.5);
+    TypedMean limited(3); CHECK(limited.execute(views[0], result).status == Status::InvalidArgument && result == 77);
+    TypedMean zero(0); CHECK(zero.reserve().status == Status::InvalidArgument);
+    TypedMean impossible(std::numeric_limits<std::size_t>::max());
+    CHECK(impossible.reserve().status == Status::InvalidArgument);
+    TypedComplexMean complexImpossible(std::numeric_limits<std::size_t>::max());
+    CHECK(complexImpossible.reserve().status == Status::InvalidArgument);
+    mean.reset(); CHECK(mean.execute(views[0], result).status == Status::Ok && std::fabs(result - 2.5) < 1e-12);
+    ArrayView scalar{d, sizeof(double), ElementType::Float64, 0, nullptr, nullptr};
+    CHECK(mean.execute(scalar, result).status == Status::Ok && result == 1);
+    const std::size_t big = static_cast<std::size_t>(1) << (std::numeric_limits<std::size_t>::digits / 2);
+    const std::size_t hugeShape[] = {big, big}, tinyStrides[] = {1, 1};
+    ArrayView huge{d, std::numeric_limits<std::size_t>::max(), ElementType::Float64, 2, hugeShape, tinyStrides};
+    result = 77; CHECK(mean.execute(huge, result).status == Status::InvalidArgument && result == 77);
+    std::atomic<bool> concurrentOk(true);
+    auto independent = [&] {
+        TypedMean local(4); double current = 0;
+        for (int n = 0; n < 1000; ++n)
+            if (local.execute(views[0], current).status != Status::Ok || std::fabs(current - 2.5) >= 1e-12)
+                concurrentOk.store(false);
+    };
+    std::thread first(independent), second(independent); first.join(); second.join();
+    CHECK(concurrentOk.load());
+    std::puts("numericTypedMeanTest: all checks passed"); return 0;
+}

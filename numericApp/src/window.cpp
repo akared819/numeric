@@ -82,17 +82,30 @@ protected:
 std::unique_ptr<Operation> moving() { return std::unique_ptr<Operation>(new WindowOperation(false, false)); }
 std::unique_ptr<Operation> median() { return std::unique_ptr<Operation>(new WindowOperation(false, true)); }
 std::unique_ptr<Operation> gaussian() { return std::unique_ptr<Operation>(new WindowOperation(true, false)); }
+Result validateWindowArguments(const ArgumentValue* values, std::size_t count) {
+    if (!values || !count || values[0].integer % 2 == 0)
+        return {Status::InvalidArgument, "window must be odd"};
+    return {Status::Ok, "ok"};
+}
 }
 void registerWindowOperations(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
-    r.add(Metadata{"moving_mean", "moving statistics", {array, scalarDesc}, {array},
+    const ArgumentValue imin{ArgumentType::Integer, 0.0, 3}, imax{ArgumentType::Integer, 0.0, 4095};
+    const ArgumentValue fmin{ArgumentType::Floating, 0.01, 0}, fmax{ArgumentType::Floating, 10.0, 0};
+    ArgumentDescriptor window{"window", ArgumentType::Integer, true, false, imin, true, true, imin, imax, {}};
+    ArgumentDescriptor alpha{"alpha", ArgumentType::Floating, true, false, fmin, true, true, fmin, fmax, {}};
+    window.inputIndex = 1; alpha.inputIndex = 2;
+    Metadata mean{"moving_mean", "moving statistics", {array, scalarDesc}, {array},
                    "odd centered window 3..4095; endpoint value padding", false,
-                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"}, &moving);
-    r.add(Metadata{"moving_median", "moving statistics", {array, scalarDesc}, {array},
+                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};
+    mean.arguments = {window}; mean.argumentValidator = &validateWindowArguments; mean.argumentSchemaComplete = true; r.add(mean, &moving);
+    Metadata med{"moving_median", "moving statistics", {array, scalarDesc}, {array},
                    "odd centered window 3..4095; endpoint value padding", false,
-                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"}, &median);
-    r.add(Metadata{"gaussian_smooth", "filter", {array, scalarDesc, scalarDesc}, {array},
+                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};
+    med.arguments = {window}; med.argumentValidator = &validateWindowArguments; med.argumentSchemaComplete = true; r.add(med, &median);
+    Metadata gauss{"gaussian_smooth", "filter", {array, scalarDesc, scalarDesc}, {array},
                    "odd window 3..4095; alpha 0.01..10; endpoint value padding", false,
-                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"}, &gaussian);
+                   "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};
+    gauss.arguments = {window, alpha}; gauss.argumentValidator = &validateWindowArguments; gauss.argumentSchemaComplete = true; r.add(gauss, &gaussian);
 }
 }

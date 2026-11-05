@@ -10,12 +10,44 @@ recordtype(numericScalar) {
         prompt("Input array link")
         promptgroup("40 - Input")
     }
+    field(INPA, DBF_INLINK) { prompt("Input A link") promptgroup("40 - Input") }
+    field(INPB, DBF_INLINK) { prompt("Input B link") promptgroup("40 - Input") }
+    field(INPC, DBF_INLINK) { prompt("Input C link") promptgroup("40 - Input") }
+    field(INPD, DBF_INLINK) { prompt("Input D link") promptgroup("40 - Input") }
+    field(INPE, DBF_INLINK) { prompt("Input E link") promptgroup("40 - Input") }
+    field(INPF, DBF_INLINK) { prompt("Input F link") promptgroup("40 - Input") }
+    field(INPG, DBF_INLINK) { prompt("Input G link") promptgroup("40 - Input") }
+    field(INPH, DBF_INLINK) { prompt("Input H link") promptgroup("40 - Input") }
+    field(INPI, DBF_INLINK) { prompt("Input I link") promptgroup("40 - Input") }
+    field(INPJ, DBF_INLINK) { prompt("Input J link") promptgroup("40 - Input") }
+    field(INPK, DBF_INLINK) { prompt("Input K link") promptgroup("40 - Input") }
+    field(INPL, DBF_INLINK) { prompt("Input L link") promptgroup("40 - Input") }
+    field(INPM, DBF_INLINK) { prompt("Input M link") promptgroup("40 - Input") }
+    field(INPN, DBF_INLINK) { prompt("Input N link") promptgroup("40 - Input") }
+    field(INPO, DBF_INLINK) { prompt("Input O link") promptgroup("40 - Input") }
+    field(INPP, DBF_INLINK) { prompt("Input P link") promptgroup("40 - Input") }
     field(OP, DBF_STRING) {
         prompt("Registry operation")
         size(40)
         initial("mean")
         special(SPC_NOMOD)
     }
+    field(ARGA, DBF_STRING) { prompt("Argument A") size(40) }
+    field(ARGB, DBF_STRING) { prompt("Argument B") size(40) }
+    field(ARGC, DBF_STRING) { prompt("Argument C") size(40) }
+    field(ARGD, DBF_STRING) { prompt("Argument D") size(40) }
+    field(ARGE, DBF_STRING) { prompt("Argument E") size(40) }
+    field(ARGF, DBF_STRING) { prompt("Argument F") size(40) }
+    field(ARGG, DBF_STRING) { prompt("Argument G") size(40) }
+    field(ARGH, DBF_STRING) { prompt("Argument H") size(40) }
+    field(ARGI, DBF_STRING) { prompt("Argument I") size(40) }
+    field(ARGJ, DBF_STRING) { prompt("Argument J") size(40) }
+    field(ARGK, DBF_STRING) { prompt("Argument K") size(40) }
+    field(ARGL, DBF_STRING) { prompt("Argument L") size(40) }
+    field(ARGM, DBF_STRING) { prompt("Argument M") size(40) }
+    field(ARGN, DBF_STRING) { prompt("Argument N") size(40) }
+    field(ARGO, DBF_STRING) { prompt("Argument O") size(40) }
+    field(ARGP, DBF_STRING) { prompt("Argument P") size(40) }
     field(NMAX, DBF_ULONG) {
         prompt("Maximum input elements")
         initial("1024")

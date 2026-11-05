@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)SPECTRAL:INPUT") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "16")
+}
+
+record(ao, "$(P)SPECTRAL:LENGTH") {
+    field(VAL, "8")
+}
+
+record(ao, "$(P)SPECTRAL:OVERLAP") {
+    field(VAL, "4")
+}
+
+record(ao, "$(P)SPECTRAL:HOP") {
+    field(VAL, "4")
+}
+
+record(ao, "$(P)SPECTRAL:INTERVAL") {
+    field(VAL, "0.01")
+}
+
+record(numericArray, "$(P)SPECTRAL:PSD") {
+    field(OP,   "welch_psd")
+    field(INPA, "$(P)SPECTRAL:INPUT NPP NMS")
+    field(INPB, "$(P)SPECTRAL:LENGTH NPP NMS")
+    field(INPC, "$(P)SPECTRAL:OVERLAP NPP NMS")
+    field(INPD, "$(P)SPECTRAL:INTERVAL NPP NMS")
+    field(NMAX, "16")
+    field(OMAX, "5")
+}
+
+record(numericArray, "$(P)SPECTRAL:STFT") {
+    field(OP,   "stft_hann")
+    field(INPA, "$(P)SPECTRAL:INPUT NPP NMS")
+    field(INPB, "$(P)SPECTRAL:LENGTH NPP NMS")
+    field(INPC, "$(P)SPECTRAL:HOP NPP NMS")
+    field(NMAX, "16")
+    field(OMAX, "48")
+}
