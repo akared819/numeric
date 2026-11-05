@@ -16,7 +16,7 @@ permalink: /ja/
 このガイドは0.2.0向けです。0.1系とは利用できる操作やフィールドが異なります。[インストール手順](https://github.com/akared819/numeric#build-and-test)に従って対象のソースをビルドしてください。numericの実行にPythonは不要です。
 </div>
 
-[フィールドの役割](#fields) · [入力リンク](#inputs) · [計算の引数](#arguments) · [実際に試す](#recipes) · [操作一覧](#operations) · [困ったとき](#troubleshooting)
+[操作リファレンス]({{ "/ja/reference/" | relative_url }}) · [フィールドの役割](#fields) · [入力リンク](#inputs) · [計算の引数](#arguments) · [実際に試す](#recipes) · [操作一覧](#operations) · [困ったとき](#troubleshooting)
 
 <h2 id="first-steps">まずは平均を計算する</h2>
 

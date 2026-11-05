@@ -1,0 +1,95 @@
+---
+layout: default
+lang: ja
+title: 操作リファレンス
+permalink: /ja/reference/
+section: reference
+alternate: /reference/
+---
+
+<p class="eyebrow">numeric 0.2.0 reference</p>
+
+# 操作リファレンス
+
+各操作の利用方法、入力の順番、結果、条件を確認できます。操作名を選ぶと該当箇所へ移動します。[その他のインターフェース](#other-interfaces)には専用レコードで使用できない機能もまとめています。構成の参考にした[NumPyリファレンス](https://numpy.org/doc/stable/reference/generated/numpy.arange.html)とは異なり、numericの実行にPythonは不要です。
+
+<h2 id="reading-fields">フィールドの読み方</h2>
+
+| フィールド | 役割 |
+| --- | --- |
+| `OP` | 実行する操作名。データベース読み込み時に設定。 |
+| `INP` | 入力が一つの操作で使う入力PVリンク。 |
+| `INPA`〜`INPP` | 順番付きの入力PVリンク。以下のA、B、C、Dはこのリンクを表します。 |
+| `ARGA`〜`ARGP` | 入力PVとは別の、文字列形式の**設定引数**。引数がない操作では空欄にします。 |
+| `NMAX`、`OMAX` | 入力・出力の最大要素数。`OMAX`は`numericArray`用。 |
+| `VAL`、`NORD`、`NIN` | 結果と要素数。`numericScalar.NORD`は最初の入力数、`numericArray.NORD`は出力数、`NIN`は最初の入力数。 |
+| `PROC`、`STAT`、`SEVR` | 処理の実行、警報の種類と重大度。 |
+
+一入力では`INP`か`INPA`のどちらかを使い、併用しません。複数リンクはAから連続して設定します。リンクは順番に読み取られ、同時刻のスナップショットにはなりません。定数リンクは使えません。入力や引数を変更しただけでは処理されないため、必要なタイミングで処理してください。ARGは空白なし・38文字以内で指定します。空でないARGは対応する従来フィールドを優先し、空欄に戻すと従来値か既定値に戻ります。未使用ARGに値を設定するとINVALIDになります。[レコードの詳細](https://github.com/akared819/numeric/blob/main/docs/numeric-array.md)。
+
+失敗時は古い`VAL`が残ることがあるため、値を使う前に`SEVR`を確認します。配列の容量と有効要素数は異なります。入力型はDOUBLE、FLOAT、LONG、正確に変換できるローカルINT64です。[変換の詳細](https://github.com/akared819/numeric/blob/main/docs/numeric-scalar.md)。
+
+### 例：相関係数
+
+```db
+record(numericScalar, "SIGNAL:CORR") {
+    field(OP,   "correlation")
+    field(INPA, "SIGNAL:X NPP NMS")
+    field(INPB, "SIGNAL:Y NPP NMS")
+    field(NMAX, "4096")
+}
+```
+
+両方の波形を更新してから`SIGNAL:CORR.PROC`を処理し、`VAL`と`SEVR`を確認します。PV名は実際の名前に置き換えてください。実際に動く例は[multi-input.db](https://github.com/akared819/numeric/blob/main/examples/multi-input.db)です。
+
+<h2 id="operations">操作一覧</h2>
+
+{% for op in site.data.operations %}[`{{ op.name }}`](#{{ op.name }}){% unless forloop.last %} · {% endunless %}{% endfor %}
+
+{% for op in site.data.operations %}
+### `{{ op.name }}`
+
+**利用方法：** {% if op.interface == 'scalar' %}`numericScalar`{% elsif op.interface == 'array' %}`numericArray`{% else %}aSub／ネイティブレジストリ。専用レコードでは使用不可{% endif %}。
+
+**入力：** {{ op.inputs_ja }}。
+
+**結果と条件：** {{ op.result_ja }}
+
+{% unless op.name == 'pow_int' or op.name == 'array_scale' or op.name == 'moving_mean' or op.name == 'moving_median' or op.name == 'gaussian_smooth' or op.name == 'histogram_uniform' %}**設定引数：** なし。{% endunless %}
+
+**詳しい仕様と例：** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }})（英語）。
+{% endfor %}
+
+<h2 id="other-interfaces">その他のインターフェース</h2>
+
+- **aSub：** [バッチ処理と複数出力](https://github.com/akared819/numeric/blob/main/docs/asub-mean.md)、[FFT](https://github.com/akared819/numeric/blob/main/docs/fft.md)、[フィッティング](https://github.com/akared819/numeric/blob/main/docs/fitting.md)、[確認応答付きストリーミング](https://github.com/akared819/numeric/blob/main/docs/streaming-transport.md)。aSubのフィールドと初期化は専用レコードと異なります。
+- **ネイティブコールバック：** [`differentiateCentral`、`integrateAdaptive`、`findRootBrent`、`minimizeBrent`、`solveOdeRkf45`](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md)、[`fitNonlinear`](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md)。C++関数でありレコード操作ではありません。コールバックとコンテキストは同期呼び出しが終わるまで有効にしてください。
+- **乱数：** [`UniformRandomStream`](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md)はインスタンスごとにシードを持つネイティブAPIです。レコード操作ではありません。
+- **ネイティブレジストリと配列ビュー：** [構成と所有権](https://github.com/akared819/numeric/blob/main/docs/architecture.md)、[型付きデータモデル](https://github.com/akared819/numeric/blob/main/docs/phase10-data-model-plan.md)、公開ヘッダー[`numeric.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numeric.h)、[`numericData.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numericData.h)、[`numericTypedMean.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numericTypedMean.h)、[`numericAck.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numericAck.h)。
+
+利用可能な機能はGSLの一部です。[対応状況一覧](https://github.com/akared819/numeric/blob/main/docs/gsl-coverage.md)を参照してください。
+
+## ネイティブC++ API早見表
+
+以下は同期呼び出しです。特に指定がなければ、入力と出力の所有者は呼び出し側です。`Result`の`Status`とメッセージを確認してから出力を使います。GSLのプロセス全体の設定は、単一スレッドの起動時に`initializeGsl()`で初期化します。`isGslInitialized()`はnumeric側の初期化状態を返します。IOCコマンドは`numericInitialize`です。
+
+| API | 入力と結果 |
+| --- | --- |
+| `Registry::add`、`addWithoutArguments` | メタデータと生成関数を登録し、成功したかを返します。 |
+| `Registry::find`、`create`、`registerBuiltins` | 名前からメタデータを検索、独立した操作を生成、または組み込み操作を登録します。検索・生成のnullを確認してください。 |
+| `Operation::execute`、`reset` | 入出力配列とそれぞれの個数を指定して実行、または状態と資源をリセットします。バッファーの所有者は呼び出し側です。 |
+| `validateArgumentSchema`、`validateArguments` | 引数定義、または順番付きの型付き引数を検証します。引数間の追加検証も指定できます。 |
+| `resolveArguments`、`parseArgument`、`setLegacyArguments` | 指定値と末尾の既定値を呼び出し側の領域に展開、一つの厳密なASCII値を解析、または従来のスカラー入力欄へ引数を対応付けます。容量と失敗時の規則は[`numeric.h`](https://github.com/akared819/numeric/blob/main/numericApp/src/numeric.h)を参照。 |
+| `validateArray`、`validateWritableArray` | 型付き配列ビューの形状、ストライド、バイト容量を検証します。rank 0はスカラー、最大rankは8です。 |
+| `readElement`、`writeElement`、`convertElement` | 指定要素の読み書き、または正確な型変換を行います。書き込みは同じ型のみ、複素数から実数への変換は虚部が厳密に0の場合のみです。 |
+| `TypedMean`、`TypedComplexMean` | 最大要素数を指定して生成し、`reserve`で作業領域を準備、`execute`で`ArrayView`から平均を計算、`reset`で領域を解除します。同一インスタンスの並行利用は同期が必要です。 |
+| `AcknowledgedStream::create`、`submit` | ストリームを生成し、セッション番号・連番付きのサンプル／リセットを送ります。確認応答と統計を受け取ります。アクセスを直列化し、[単一プロデューサーの規約](https://github.com/akared819/numeric/blob/main/docs/streaming-transport.md)に従ってください。 |
+| `UniformRandomStream::initialize`、`fill`、`reset` | 32ビットのシードで初期化、呼び出し側の配列に生成、または同じシードから再開します。インスタンスは独立しており、同時アクセスは安全ではありません。 |
+| `differentiateCentral` | 関数とコンテキスト、評価点、正の刻みを受け取り、微分値と絶対誤差の推定値を返します。 |
+| `integrateAdaptive` | 関数、有限の増加区間、許容誤差、分割上限から、積分値と絶対誤差の推定値を返します。 |
+| `findRootBrent` | 関数、根を挟む区間、許容誤差、反復上限から根と区間誤差を返します。 |
+| `minimizeBrent` | 関数、下限・初期値・上限、許容誤差、反復上限から最小位置と区間誤差を返します。 |
+| `solveOdeRkf45` | 微分方程式のコールバック、時間区間、初期状態、次元、刻み、許容誤差、上限を受け取り、最終状態を呼び出し側の配列に書き込みます。 |
+| `fitNonlinear` | 残差コールバック、初期パラメーター、残差数、許容誤差、反復上限を受け取り、推定パラメーターと残差平方和を返します。 |
+
+失敗時の出力保持、コールバックの制約、数値上の上限と実例は[コールバック](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md)、[フィッティング](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md)、[乱数](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md)の各ガイドを参照してください。GSLの誤差推定は保証された誤差上限ではありません。

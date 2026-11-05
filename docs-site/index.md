@@ -9,6 +9,8 @@ title: Examples and usage
 
 <p class="lead">Build the example IOC, send it data, and explore the GSL-backed calculations available through numeric. Each example below uses the databases in this repository.</p>
 
+Explore [the operation reference]({{ "/reference/" | relative_url }}) for input links, arguments, results and constraints.
+
 <div class="callout" markdown="1">
 **Before you start:** numeric uses GSL 2.8 or newer and EPICS Base 7.0.10. Follow the [build instructions](https://github.com/akared819/numeric#build-and-test), then return here to try the IOC.
 </div>

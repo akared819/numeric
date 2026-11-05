@@ -15,19 +15,25 @@
       <nav aria-label="Main navigation">
         <a href="{{ '/' | relative_url }}#quick-start">Quick start</a>
         <a href="{{ '/' | relative_url }}#examples">Examples</a>
+        <a href="{% if page.lang == 'ja' %}{{ '/ja/reference/' | relative_url }}{% else %}{{ '/reference/' | relative_url }}{% endif %}">{% if page.lang == 'ja' %}リファレンス{% else %}Reference{% endif %}</a>
         <a href="https://github.com/akared819/numeric">GitHub ↗</a>
         <span class="language-switch" role="group" aria-label="{% if page.lang == 'ja' %}言語{% else %}Language{% endif %}">
           <span class="language-label">Lang:</span>
-          <a href="{{ '/' | relative_url }}" hreflang="en"{% unless page.lang == 'ja' %} aria-current="page"{% endunless %} aria-label="English">EN</a>
+          <a href="{% if page.lang == 'ja' and page.alternate %}{{ page.alternate | relative_url }}{% elsif page.section == 'reference' %}{{ '/reference/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}" hreflang="en"{% unless page.lang == 'ja' %} aria-current="page"{% endunless %} aria-label="English">EN</a>
           <span class="language-divider" aria-hidden="true">/</span>
-          <a href="{{ '/ja/' | relative_url }}" hreflang="ja"{% if page.lang == 'ja' %} aria-current="page"{% endif %} aria-label="Japanese">JA</a>
+          <a href="{% if page.lang != 'ja' and page.alternate %}{{ page.alternate | relative_url }}{% elsif page.section == 'reference' %}{{ '/ja/reference/' | relative_url }}{% else %}{{ '/ja/' | relative_url }}{% endif %}" hreflang="ja"{% if page.lang == 'ja' %} aria-current="page"{% endif %} aria-label="Japanese">JA</a>
         </span>
       </nav>
     </div>
   </header>
   <div class="layout">
     <aside class="sidebar" aria-label="{% if page.lang == 'ja' %}このページの目次{% else %}On this page{% endif %}">
-      {% if page.lang == 'ja' %}
+      {% if page.section == 'reference' %}
+      <p class="sidebar-title">{% if page.lang == 'ja' %}このページ{% else %}ON THIS PAGE{% endif %}</p>
+      <a href="{% if page.lang == 'ja' %}#reading-fields{% else %}#reading-record-fields{% endif %}">{% if page.lang == 'ja' %}フィールドの読み方{% else %}Record fields{% endif %}</a>
+      <a href="{% if page.lang == 'ja' %}#operations{% else %}#operations{% endif %}">{% if page.lang == 'ja' %}操作一覧{% else %}Operations{% endif %}</a>
+      <a href="#other-interfaces">{% if page.lang == 'ja' %}その他のインターフェース{% else %}Other interfaces{% endif %}</a>
+      {% elsif page.lang == 'ja' %}
       <p class="sidebar-title">このページ</p>
       <a href="#first-steps">はじめに</a>
       <a href="#fields">フィールドの役割</a>

@@ -1,0 +1,380 @@
+[
+  {
+    "name": "mean",
+    "interface": "scalar",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Arithmetic mean; at least one finite sample.",
+    "result_ja": "算術平均。有限値を1個以上。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "variance",
+    "interface": "scalar",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Sample variance with denominator N−1; at least two samples.",
+    "result_ja": "標本分散。分母N−1、2要素以上。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "stddev",
+    "interface": "scalar",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Sample standard deviation with denominator N−1; at least two samples.",
+    "result_ja": "標本標準偏差。分母N−1、2要素以上。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "population_variance",
+    "interface": "scalar",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Population variance with denominator N; at least one sample.",
+    "result_ja": "母分散。分母N、1要素以上。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "population_stddev",
+    "interface": "scalar",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Population standard deviation with denominator N; at least one sample.",
+    "result_ja": "母標準偏差。分母N、1要素以上。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "covariance",
+    "interface": "scalar",
+    "inputs_en": "A: X waveform; B: Y waveform",
+    "inputs_ja": "A: X波形、B: Y波形",
+    "result_en": "Sample covariance (N−1); equal lengths of at least two.",
+    "result_ja": "標本共分散（N−1）。同じ長さで2要素以上。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "correlation",
+    "interface": "scalar",
+    "inputs_en": "A: X waveform; B: Y waveform",
+    "inputs_ja": "A: X波形、B: Y波形",
+    "result_en": "Pearson correlation; equal lengths of at least two, neither constant.",
+    "result_ja": "ピアソン相関。同じ長さで2要素以上、どちらも定数列不可。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "weighted_mean",
+    "interface": "scalar",
+    "inputs_en": "A: data waveform; B: weight waveform",
+    "inputs_ja": "A: データ波形、B: 重み波形",
+    "result_en": "Weighted mean. Equal nonempty lengths; weights nonnegative and at least one positive.",
+    "result_ja": "加重平均。同じ長さで空不可。重みは非負で1個以上が正。",
+    "doc": "numeric-scalar.md"
+  },
+  {
+    "name": "quantile_sorted",
+    "interface": "scalar",
+    "inputs_en": "A: sorted waveform; B: fraction",
+    "inputs_ja": "A: 昇順の波形、B: 割合",
+    "result_en": "Interpolated quantile; fraction is in [0, 1]; input must be sorted.",
+    "result_ja": "補間した分位点。割合は0〜1、入力は昇順。",
+    "doc": "numeric-scalar.md"
+  },
+  {
+    "name": "vector_norm",
+    "interface": "scalar",
+    "inputs_en": "A: vector waveform",
+    "inputs_ja": "A: ベクトル波形",
+    "result_en": "Euclidean norm.",
+    "result_ja": "ユークリッドノルム。",
+    "doc": "linear-algebra.md"
+  },
+  {
+    "name": "erf",
+    "interface": "scalar",
+    "inputs_en": "A: scalar value",
+    "inputs_ja": "A: スカラー値",
+    "result_en": "Error function.",
+    "result_ja": "誤差関数。",
+    "doc": "special-functions.md"
+  },
+  {
+    "name": "gamma",
+    "interface": "scalar",
+    "inputs_en": "A: scalar value",
+    "inputs_ja": "A: スカラー値",
+    "result_en": "Gamma function; excludes non-positive integer poles.",
+    "result_ja": "ガンマ関数。0以下の整数の極は不可。",
+    "doc": "special-functions.md"
+  },
+  {
+    "name": "log1p",
+    "interface": "scalar",
+    "inputs_en": "A: scalar value",
+    "inputs_ja": "A: スカラー値",
+    "result_en": "Natural logarithm of 1 + A; A must be greater than −1.",
+    "result_ja": "1 + A の自然対数。Aは−1より大きい必要あり。",
+    "doc": "elementary.md"
+  },
+  {
+    "name": "normal_cdf",
+    "interface": "scalar",
+    "inputs_en": "A: scalar value",
+    "inputs_ja": "A: スカラー値",
+    "result_en": "Standard normal lower-tail probability.",
+    "result_ja": "標準正規分布の下側累積確率。",
+    "doc": "probability.md"
+  },
+  {
+    "name": "pow_int",
+    "interface": "scalar",
+    "inputs_en": "A: base value",
+    "inputs_ja": "A: 底の値",
+    "result_en": "Integer power. ARGA: exponent −1024 to 1024, default 2.",
+    "result_ja": "整数乗。ARGAは指数（−1024〜1024）、既定値2。",
+    "doc": "elementary.md"
+  },
+  {
+    "name": "polynomial_eval",
+    "interface": "scalar",
+    "inputs_en": "A: coefficients; B: evaluation point",
+    "inputs_ja": "A: 係数波形、B: 評価点",
+    "result_en": "Polynomial value; coefficients in ascending powers.",
+    "result_ja": "多項式の値。係数は定数項から昇べき順。",
+    "doc": "polynomials.md"
+  },
+  {
+    "name": "interp_linear",
+    "interface": "scalar",
+    "inputs_en": "A: X waveform; B: Y waveform; C: query",
+    "inputs_ja": "A: X波形、B: Y波形、C: 評価点",
+    "result_en": "Linear interpolation; X is strictly increasing and query is in range.",
+    "result_ja": "線形補間。Xは狭義単調増加、評価点は範囲内。",
+    "doc": "interpolation.md"
+  },
+  {
+    "name": "interp_cspline",
+    "interface": "scalar",
+    "inputs_en": "A: X waveform; B: Y waveform; C: query",
+    "inputs_ja": "A: X波形、B: Y波形、C: 評価点",
+    "result_en": "Natural cubic spline; at least three points and in-range query.",
+    "result_ja": "自然三次スプライン。3点以上で評価点は範囲内。",
+    "doc": "interpolation.md"
+  },
+  {
+    "name": "polynomial_integral",
+    "interface": "scalar",
+    "inputs_en": "A: coefficients; B: lower bound; C: upper bound",
+    "inputs_ja": "A: 係数波形、B: 下限、C: 上限",
+    "result_en": "Polynomial definite integral.",
+    "result_ja": "多項式の定積分。",
+    "doc": "integration.md"
+  },
+  {
+    "name": "polynomial_root",
+    "interface": "scalar",
+    "inputs_en": "A: coefficients; B: lower bound; C: upper bound",
+    "inputs_ja": "A: 係数波形、B: 下限、C: 上限",
+    "result_en": "Bracketed polynomial root; bounds must form a valid bracket.",
+    "result_ja": "区間内の多項式の根。有効な括り区間が必要。",
+    "doc": "roots.md"
+  },
+  {
+    "name": "matrix_determinant",
+    "interface": "scalar",
+    "inputs_en": "A: row-major matrix; B: dimension",
+    "inputs_ja": "A: 行優先の行列波形、B: 次元",
+    "result_en": "Determinant. Dimension 1–1024; A has dimension squared elements.",
+    "result_ja": "行列式。次元は1〜1024、Aは次元の二乗個。",
+    "doc": "linear-algebra.md"
+  },
+  {
+    "name": "array_scale",
+    "interface": "array",
+    "inputs_en": "A: waveform",
+    "inputs_ja": "A: 波形",
+    "result_en": "Scaled waveform. ARGA: finite factor, default 1.",
+    "result_ja": "倍率を掛けた波形。ARGAは有限の倍率、既定値1。",
+    "doc": "linear-algebra.md"
+  },
+  {
+    "name": "moving_mean",
+    "interface": "array",
+    "inputs_en": "A: waveform",
+    "inputs_ja": "A: 波形",
+    "result_en": "Same-length centered moving mean. ARGA: odd window width 3–4095; blank uses WIN.",
+    "result_ja": "入力と同じ長さの中心移動平均。ARGAは3〜4095の奇数窓幅。空欄はWIN。",
+    "doc": "window-statistics.md"
+  },
+  {
+    "name": "moving_median",
+    "interface": "array",
+    "inputs_en": "A: waveform",
+    "inputs_ja": "A: 波形",
+    "result_en": "Same-length centered moving median. ARGA: odd window width 3–4095; blank uses WIN.",
+    "result_ja": "入力と同じ長さの中心移動中央値。ARGAは3〜4095の奇数窓幅。空欄はWIN。",
+    "doc": "window-statistics.md"
+  },
+  {
+    "name": "gaussian_smooth",
+    "interface": "array",
+    "inputs_en": "A: waveform",
+    "inputs_ja": "A: 波形",
+    "result_en": "Smoothed waveform. ARGA: odd window width 3–4095; ARGB: alpha 0.01–10; blanks use WIN and ALPH.",
+    "result_ja": "平滑化波形。ARGAは3〜4095の奇数窓幅、ARGBはalpha 0.01〜10。空欄はWINとALPH。",
+    "doc": "window-statistics.md"
+  },
+  {
+    "name": "histogram_uniform",
+    "interface": "array",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Bin counts. ARGA: lower, ARGB: upper, ARGC: bin count 1–65536; blanks use HMIN, HMAX, NBIN. Range includes lower and excludes upper.",
+    "result_ja": "ビンごとの個数。ARGAは下限、ARGBは上限、ARGCはビン数1〜65536。空欄はHMIN、HMAX、NBIN。下限を含み上限を含まない。",
+    "doc": "histograms.md"
+  },
+  {
+    "name": "linear_fit",
+    "interface": "array",
+    "inputs_en": "A: X waveform; B: Y waveform",
+    "inputs_ja": "A: X波形、B: Y波形",
+    "result_en": "Six values: intercept, slope, three covariance values, residual sum of squares.",
+    "result_ja": "6要素：切片、傾き、共分散3値、残差平方和。",
+    "doc": "fitting.md"
+  },
+  {
+    "name": "fft_real_radix2_forward",
+    "interface": "array",
+    "inputs_en": "A: real waveform",
+    "inputs_ja": "A: 実数波形",
+    "result_en": "Full complex spectrum as interleaved real and imaginary values; N must be a power of two and OMAX at least 2N.",
+    "result_ja": "実部・虚部を交互に並べた全複素スペクトル。Nは2の累乗、OMAXは2N以上。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "fft_real_radix2_inverse",
+    "interface": "array",
+    "inputs_en": "A: conjugate-symmetric complex spectrum",
+    "inputs_ja": "A: 共役対称の複素スペクトル",
+    "result_en": "Real inverse; complex length is a power of two, normalized by 1/N.",
+    "result_ja": "実数逆変換。複素数の個数は2の累乗、1/Nで正規化。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "fft_complex_radix2_forward",
+    "interface": "array",
+    "inputs_en": "A: interleaved complex waveform",
+    "inputs_ja": "A: 実部・虚部交互の複素波形",
+    "result_en": "Complex forward FFT; complex length is a power of two.",
+    "result_ja": "複素正変換。複素数の個数は2の累乗。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "fft_complex_radix2_inverse",
+    "interface": "array",
+    "inputs_en": "A: interleaved complex waveform",
+    "inputs_ja": "A: 実部・虚部交互の複素波形",
+    "result_en": "Complex inverse FFT; power-of-two length, normalized by 1/N.",
+    "result_ja": "複素逆変換。個数は2の累乗、1/Nで正規化。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "fft_complex_mixed_forward",
+    "interface": "array",
+    "inputs_en": "A: interleaved complex waveform",
+    "inputs_ja": "A: 実部・虚部交互の複素波形",
+    "result_en": "Mixed-radix complex forward FFT; any positive complex length.",
+    "result_ja": "混合基数の複素正変換。複素数の個数は任意の正数。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "fft_complex_mixed_inverse",
+    "interface": "array",
+    "inputs_en": "A: interleaved complex waveform",
+    "inputs_ja": "A: 実部・虚部交互の複素波形",
+    "result_en": "Mixed-radix inverse FFT; positive complex length, normalized by 1/N.",
+    "result_ja": "混合基数の複素逆変換。正の個数、1/Nで正規化。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "fft_frequency_axis",
+    "interface": "array",
+    "inputs_en": "A: sample count; B: sample interval",
+    "inputs_ja": "A: サンプル数、B: サンプル間隔",
+    "result_en": "Signed full frequency axis in Hz; positive interval.",
+    "result_ja": "符号付きの全周波数軸（Hz）。間隔は正。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "window_hann",
+    "interface": "array",
+    "inputs_en": "A: waveform",
+    "inputs_ja": "A: 波形",
+    "result_en": "Symmetric Hann-windowed waveform; a single sample is unchanged.",
+    "result_ja": "対称Hann窓を適用した波形。1要素は変更なし。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "spectrum_power",
+    "interface": "array",
+    "inputs_en": "A: interleaved complex spectrum",
+    "inputs_ja": "A: 実部・虚部交互の複素スペクトル",
+    "result_en": "Squared magnitude per bin; no normalization.",
+    "result_ja": "各ビンの振幅二乗。正規化なし。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "welch_psd",
+    "interface": "array",
+    "inputs_en": "A: waveform; B: segment length; C: overlap; D: sample interval",
+    "inputs_ja": "A: 波形、B: 区間長、C: 重なり、D: サンプル間隔",
+    "result_en": "One-sided Welch PSD; segment length is a power of two of at least 4.",
+    "result_ja": "片側Welch PSD。区間長は4以上の2の累乗。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "stft_hann",
+    "interface": "array",
+    "inputs_en": "A: waveform; B: frame length; C: hop",
+    "inputs_ja": "A: 波形、B: フレーム長、C: ホップ幅",
+    "result_en": "Complex STFT frames flattened in frame order; OMAX must hold every frame.",
+    "result_ja": "複素STFTをフレーム順に並べた配列。OMAXは全フレーム分必要。",
+    "doc": "fft.md"
+  },
+  {
+    "name": "matrix_eigenvalues_symmetric",
+    "interface": "array",
+    "inputs_en": "A: row-major symmetric matrix; B: dimension",
+    "inputs_ja": "A: 行優先の対称行列、B: 次元",
+    "result_en": "Real eigenvalues in ascending order.",
+    "result_ja": "昇順に並べた実固有値。",
+    "doc": "linear-algebra.md"
+  },
+  {
+    "name": "minmax",
+    "interface": "asub",
+    "inputs_en": "A: sample waveform",
+    "inputs_ja": "A: サンプル波形",
+    "result_en": "Minimum and maximum in separate outputs; not a numericScalar operation.",
+    "result_ja": "最小値と最大値を別々に出力。numericScalarでは使用不可。",
+    "doc": "asub-mean.md"
+  },
+  {
+    "name": "running_mean",
+    "interface": "asub",
+    "inputs_en": "A: sample; reset through streaming interface",
+    "inputs_ja": "A: サンプル、リセットはストリーミング側で指定",
+    "result_en": "Stateful running mean; state belongs to an instance.",
+    "result_ja": "状態を保持する逐次平均。状態はインスタンス単位。",
+    "doc": "streaming.md"
+  },
+  {
+    "name": "running_stats",
+    "interface": "asub",
+    "inputs_en": "A: sample; reset through streaming interface",
+    "inputs_ja": "A: サンプル、リセットはストリーミング側で指定",
+    "result_en": "Stateful mean, sample variance, standard deviation, RMS, minimum, maximum and count.",
+    "result_ja": "逐次平均、標本分散、標準偏差、RMS、最小・最大、個数。",
+    "doc": "streaming.md"
+  }
+]

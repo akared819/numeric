@@ -18,6 +18,8 @@ jobs:
       pages_enabled: ${{ steps.pages_status.outputs.enabled }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check operation reference coverage
+        run: python3 tests/check-doc-operation-index.py
       - name: Build documentation
         uses: actions/jekyll-build-pages@v1
         with:
@@ -35,6 +37,12 @@ jobs:
           grep -q 'href="/numeric/ja/"' _site/index.html
           grep -q 'href="/numeric/" hreflang="en" aria-current="page"' _site/index.html
           grep -q 'href="/numeric/ja/" hreflang="ja" aria-current="page"' _site/ja/index.html
+          test -s _site/reference/index.html
+          test -s _site/ja/reference/index.html
+          grep -q 'id="welch_psd"' _site/reference/index.html
+          grep -q 'id="welch_psd"' _site/ja/reference/index.html
+          grep -q 'href="/numeric/ja/reference/" hreflang="ja"' _site/reference/index.html
+          grep -q 'href="/numeric/reference/" hreflang="en"' _site/ja/reference/index.html
           if grep -q '日本語' _site/index.html; then
             echo 'The English page must not contain Japanese text.' >&2
             exit 1
