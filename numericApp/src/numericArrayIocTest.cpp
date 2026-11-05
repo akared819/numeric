@@ -56,6 +56,18 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    double hannSamples[] = {1,1,1,1,1}, hannExpected[] = {0,.5,1,.5,0};
+    testdbPutArrFieldOk("hannInput", DBF_DOUBLE, 5, hannSamples);
+    testdbPutFieldOk("hannWindow.PROC", DBF_LONG, 1);
+    testOk(matches("hannWindow.VAL", hannExpected, 5), "symmetric Hann window is applied");
+    hannSamples[0] = std::numeric_limits<double>::quiet_NaN();
+    testdbPutArrFieldOk("hannInput", DBF_DOUBLE, 5, hannSamples);
+    testdbPutFieldOk("hannWindow.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("hannWindow.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("hannWindow.VAL", hannExpected, 5), "invalid Hann input preserves output");
+    hannSamples[0] = 1; testdbPutArrFieldOk("hannInput", DBF_DOUBLE, 5, hannSamples);
+    testdbPutFieldOk("hannWindow.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("hannWindow.SEVR", DBF_STRING, "NO_ALARM");
     double axisExpected[] = {0, .5, -1, -.5};
     testdbPutFieldOk("frequencyAxis.PROC", DBF_LONG, 1);
     testOk(matches("frequencyAxis.VAL", axisExpected, 4), "frequency axis uses sample count and interval");

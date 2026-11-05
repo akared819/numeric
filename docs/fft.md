@@ -20,6 +20,14 @@ The operation checks the output capacity and floating-point range and does not
 allocate; invalid input leaves output values unchanged. It is an arithmetic
 utility, not a GSL FFT call, and is available through numericArray.
 
+`window_hann` multiplies an input waveform by the symmetric Hann window
+`0.5 * (1 - cos(2*pi*i/(N-1)))`; for N=1 the input is unchanged. It is a
+high-level arithmetic operation rather than a direct GSL wrapper. Its
+per-instance scratch buffer allows overlapping input and output and is reused
+until reset or destruction. Invalid inputs leave output values unchanged.
+No amplitude or power compensation is applied. It is available through
+numericArray.
+
 The registry exposes `fft_complex_radix2_forward` and `fft_complex_radix2_inverse`. Both take one FLOAT64 array input and one FLOAT64 array output. Each complex number is represented by consecutive doubles `[real, imaginary]`, in natural sample or frequency-bin order. Counts and capacities are numbers of doubles, not complex numbers. Input stride must be 1. The input count must be even and represent a positive power-of-two number of complex values (including one); both buffers must have capacity for the full count. The output count is that same number of doubles on success and zero on failure.
 
 Forward uses the negative exponential, without normalization. Inverse uses the positive exponential and divides by the complex length, so a forward/inverse pair returns the original values within floating-point error. These conventions match the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html). Neither complex operation computes magnitudes, frequencies, or windowing. A separate real-input operation is described below.

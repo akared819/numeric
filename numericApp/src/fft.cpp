@@ -10,6 +10,31 @@
 
 namespace numeric {
 namespace {
+class HannWindow : public Operation {
+    std::vector<double> scratch_;
+public:
+    void reset() override { std::vector<double>().swap(scratch_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 1 || no != 1) return {Status::InvalidArgument, "Hann window requires one input and output"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.stride != 1 ||
+            x.count > x.capacity || y.type != Type::Float64 || y.shape != Shape::Array || !y.data || y.capacity < x.count)
+            return {Status::InvalidArgument, "invalid Hann window buffers"};
+        for (std::size_t i = 0; i < x.count; ++i) if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "window input must be finite"};
+        try { scratch_.resize(x.count); }
+        catch (...) { return {Status::NumericalError, "window scratch allocation failed"}; }
+        const double pi = std::acos(-1.0);
+        for (std::size_t i = 0; i < x.count; ++i) {
+            const double weight = x.count == 1 ? 1.0 : 0.5 * (1.0 - std::cos(2.0 * pi * (static_cast<double>(i) / static_cast<double>(x.count - 1))));
+            scratch_[i] = x.data[i] * weight;
+            if (!std::isfinite(scratch_[i])) return {Status::NumericalError, "non-finite window result"};
+        }
+        for (std::size_t i = 0; i < x.count; ++i) y.data[i] = scratch_[i];
+        y.count = x.count; return {Status::Ok, "ok"};
+    }
+};
 class FrequencyAxis : public Operation {
 public:
     void reset() override {}
@@ -185,12 +210,16 @@ std::unique_ptr<Operation> forward() { return std::unique_ptr<Operation>(new Com
 std::unique_ptr<Operation> mixedForward() { return std::unique_ptr<Operation>(new MixedComplexFft(false)); }
 std::unique_ptr<Operation> mixedInverse() { return std::unique_ptr<Operation>(new MixedComplexFft(true)); }
 std::unique_ptr<Operation> frequencyAxis() { return std::unique_ptr<Operation>(new FrequencyAxis); }
+std::unique_ptr<Operation> hannWindow() { return std::unique_ptr<Operation>(new HannWindow); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
+    r.addWithoutArguments(Metadata{"window_hann", "signal processing", arrays, arrays,
+                   "symmetric Hann window, single sample unchanged", false,
+                   "per-instance reusable scratch; reset frees it", "invalid buffers or numerical failure"}, &hannWindow);
     r.addWithoutArguments(Metadata{"fft_frequency_axis", "fft", {{Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}}, arrays,
                    "sample count and positive sample interval; signed full frequency axis", false,
                    "per-instance object; no workspace", "invalid parameters, capacity or numeric range"}, &frequencyAxis);

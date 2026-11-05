@@ -18,6 +18,17 @@ int main() {
     CHECK(f->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     CHECK(real->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     initializeGsl();
+    auto hann = r.create("window_hann"); CHECK(hann);
+    double hannData[] = {1,1,1,1,1}, hannResult[5] = {};
+    Input hannInput{hannData,5,5,1,Type::Float64,Shape::Array};
+    Output hannOutput{hannResult,5,0,Type::Float64,Shape::Array};
+    CHECK(hann->execute(&hannInput, 1, &hannOutput, 1).status == Status::Ok && hannOutput.count == 5);
+    CHECK(std::fabs(hannResult[0]) < 1e-12 && std::fabs(hannResult[1]-.5) < 1e-12 && std::fabs(hannResult[2]-1) < 1e-12 && std::fabs(hannResult[3]-.5) < 1e-12 && std::fabs(hannResult[4]) < 1e-12);
+    hannInput.count = 1; CHECK(hann->execute(&hannInput, 1, &hannOutput, 1).status == Status::Ok && hannResult[0] == 1);
+    hannInput.count = 5; hannData[0] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(hann->execute(&hannInput, 1, &hannOutput, 1).status == Status::InvalidArgument && hannResult[0] == 1);
+    hannData[0] = 1; hannOutput.capacity = 4; CHECK(hann->execute(&hannInput, 1, &hannOutput, 1).status == Status::InvalidArgument);
+    hannOutput.capacity = 5; hann->reset(); CHECK(hann->execute(&hannInput, 1, &hannOutput, 1).status == Status::Ok);
     auto axis = r.create("fft_frequency_axis"); CHECK(axis);
     double axisLength = 4, interval = 0.5, frequencies[5] = {};
     Input axisInputs[] = {{&axisLength,1,1,1,Type::Float64,Shape::Scalar}, {&interval,1,1,1,Type::Float64,Shape::Scalar}};

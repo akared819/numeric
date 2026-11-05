@@ -9,6 +9,7 @@
 | `fft_complex_radix2_forward`, `fft_complex_radix2_inverse` | Interleaved complex input to equal-length interleaved complex output | None |
 | `fft_complex_mixed_forward`, `fft_complex_mixed_inverse` | Interleaved complex input to equal-length interleaved complex output, arbitrary positive length | None |
 | `fft_frequency_axis` | Scalar sample count and interval to signed frequency-bin array | None |
+| `window_hann` | Real waveform multiplied by a symmetric Hann window | None |
 | `fft_real_radix2_forward` | Real input to full interleaved complex spectrum | None |
 | `fft_real_radix2_inverse` | Conjugate-symmetric full interleaved spectrum to real output | None |
 | `histogram_uniform` | Real samples to uniform bin counts | HMIN, HMAX and NBIN: lower/upper range and bin count |
