@@ -1,0 +1,1044 @@
+{
+  "mean": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "3",
+    "error_en": "empty",
+    "error_ja": "空の入力",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "variance": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "4",
+    "error_en": "fewer than two samples",
+    "error_ja": "2要素未満",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "stddev": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "2",
+    "error_en": "fewer than two samples",
+    "error_ja": "2要素未満",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "population_variance": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "2.66666666667",
+    "error_en": "empty",
+    "error_ja": "空の入力",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "population_stddev": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "1.63299316186",
+    "error_en": "empty",
+    "error_ja": "空の入力",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "covariance": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3]"
+      },
+      {
+        "name": "INPB",
+        "value": "[2, 4, 6]"
+      }
+    ],
+    "example_output": "2",
+    "error_en": "different lengths or fewer than two samples",
+    "error_ja": "長さの不一致、または2要素未満",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "correlation": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3]"
+      },
+      {
+        "name": "INPB",
+        "value": "[2, 4, 6]"
+      }
+    ],
+    "example_output": "1",
+    "error_en": "different lengths, fewer than two samples or a constant series",
+    "error_ja": "長さの不一致、2要素未満、または定数列",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "weighted_mean": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3]"
+      },
+      {
+        "name": "INPB",
+        "value": "[1, 1, 2]"
+      }
+    ],
+    "example_output": "2.25",
+    "error_en": "unequal or empty inputs, negative weights or no positive weight",
+    "error_ja": "入力の長さが異なる、空、負の重み、または正の重みがない",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "quantile_sorted": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3, 4]"
+      },
+      {
+        "name": "INPB",
+        "value": "0.75"
+      }
+    ],
+    "example_output": "3.25",
+    "error_en": "empty or unsorted data, or fraction outside [0, 1]",
+    "error_ja": "空または昇順でないデータ、割合が0〜1の範囲外",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "vector_norm": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[3, -4]"
+      }
+    ],
+    "example_output": "5",
+    "error_en": "empty data or unsupported length/stride",
+    "error_ja": "空のデータ、または未対応の長さ・ストライド",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "erf": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "0"
+      }
+    ],
+    "example_output": "0",
+    "error_en": "non-finite scalar",
+    "error_ja": "有限でない値",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "gamma": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "5"
+      }
+    ],
+    "example_output": "24",
+    "error_en": "a non-positive integer pole or overflow",
+    "error_ja": "0以下の整数の極、またはオーバーフロー",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "log1p": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "0"
+      }
+    ],
+    "example_output": "0",
+    "error_en": "input less than or equal to −1",
+    "error_ja": "入力が−1以下",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "normal_cdf": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "0"
+      }
+    ],
+    "example_output": "0.5",
+    "error_en": "non-finite scalar",
+    "error_ja": "有限でない値",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "pow_int": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "2"
+      },
+      {
+        "name": "ARGA",
+        "value": "3"
+      }
+    ],
+    "example_output": "8",
+    "error_en": "exponent outside −1024…1024, zero raised to a negative exponent or overflow/underflow",
+    "error_ja": "指数が−1024〜1024の範囲外、ゼロの負乗、またはオーバーフロー・アンダーフロー",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "polynomial_eval": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[2, 3, 4]"
+      },
+      {
+        "name": "INPB",
+        "value": "2"
+      }
+    ],
+    "example_output": "24",
+    "error_en": "empty coefficients or non-finite calculation",
+    "error_ja": "空の係数、または有限でない計算結果",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "interp_linear": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "A"
+      },
+      {
+        "name": "INPC",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[0, 1, 3]"
+      },
+      {
+        "name": "INPB",
+        "value": "[0, 2, 6]"
+      },
+      {
+        "name": "INPC",
+        "value": "2"
+      }
+    ],
+    "example_output": "4",
+    "error_en": "fewer than two points, unequal lengths, non-increasing X or out-of-range query",
+    "error_ja": "2点未満、長さの不一致、Xの非単調増加、または範囲外の評価点",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "interp_cspline": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "A"
+      },
+      {
+        "name": "INPC",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[0, 1, 2]"
+      },
+      {
+        "name": "INPB",
+        "value": "[0, 1, 2]"
+      },
+      {
+        "name": "INPC",
+        "value": "1"
+      }
+    ],
+    "example_output": "1",
+    "error_en": "fewer than three points, unequal lengths, non-increasing X or out-of-range query",
+    "error_ja": "3点未満、長さの不一致、Xの非単調増加、または範囲外の評価点",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "polynomial_integral": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      },
+      {
+        "name": "INPC",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[2, 3]"
+      },
+      {
+        "name": "INPB",
+        "value": "0"
+      },
+      {
+        "name": "INPC",
+        "value": "2"
+      }
+    ],
+    "example_output": "10",
+    "error_en": "coefficient count outside 1–64 or non-finite bounds/result",
+    "error_ja": "係数が1〜64個の範囲外、または有限でない積分範囲・結果",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "polynomial_root": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      },
+      {
+        "name": "INPC",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[-2, 0, 1]"
+      },
+      {
+        "name": "INPB",
+        "value": "0"
+      },
+      {
+        "name": "INPC",
+        "value": "2"
+      }
+    ],
+    "example_output": "1.41421356237",
+    "error_en": "coefficient count outside 2–64, invalid root bracket or failure to converge",
+    "error_ja": "係数が2〜64個の範囲外、根を括れない区間、または収束失敗",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "matrix_determinant": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3, 4]"
+      },
+      {
+        "name": "INPB",
+        "value": "2"
+      }
+    ],
+    "example_output": "-2",
+    "error_en": "dimension outside 1–1024 or array length different from dimension squared",
+    "error_ja": "次元が1〜1024の範囲外、または要素数が次元の二乗と異なる",
+    "output_shape": "S",
+    "example_kind": "scalar"
+  },
+  "array_scale": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3]"
+      },
+      {
+        "name": "ARGA",
+        "value": "2"
+      }
+    ],
+    "example_output": "[2, 4, 6]",
+    "error_en": "non-finite factor, invalid input or non-finite result",
+    "error_ja": "有限でない倍率、無効な入力、または有限でない結果",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "moving_mean": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 2, 3, 4, 5]"
+      },
+      {
+        "name": "ARGA",
+        "value": "3"
+      }
+    ],
+    "example_output": "[1.33333333333, 2, 3, 4, 4.66666666667]",
+    "error_en": "even/out-of-range window, window larger than input or insufficient output capacity",
+    "error_ja": "偶数・範囲外の窓幅、入力より大きな窓、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "moving_median": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 1, 99, 1, 1]"
+      },
+      {
+        "name": "ARGA",
+        "value": "3"
+      }
+    ],
+    "example_output": "[1, 1, 1, 1, 1]",
+    "error_en": "even/out-of-range window, window larger than input or insufficient output capacity",
+    "error_ja": "偶数・範囲外の窓幅、入力より大きな窓、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "gaussian_smooth": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[7, 7, 7, 7, 7]"
+      },
+      {
+        "name": "ARGA",
+        "value": "3"
+      },
+      {
+        "name": "ARGB",
+        "value": "1"
+      }
+    ],
+    "example_output": "[7, 7, 7, 7, 7]",
+    "error_en": "invalid window or alpha, or insufficient output capacity",
+    "error_ja": "無効な窓幅・alpha、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "histogram_uniform": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[0, 0.25, 0.5, 0.75, 0.999]"
+      },
+      {
+        "name": "ARGA",
+        "value": "0"
+      },
+      {
+        "name": "ARGB",
+        "value": "1"
+      },
+      {
+        "name": "ARGC",
+        "value": "4"
+      }
+    ],
+    "example_output": "[1, 1, 1, 2]",
+    "error_en": "invalid bounds or bin count, a sample outside [lower, upper), or insufficient output capacity",
+    "error_ja": "無効な境界・ビン数、[下限, 上限)外の値、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "linear_fit": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[0, 1, 2]"
+      },
+      {
+        "name": "INPB",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "[1, 2, 0, 0, 0, 0]",
+    "error_en": "incompatible lengths, insufficient data or degenerate X values",
+    "error_ja": "入力長の不一致、データ不足、または退化したX値",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_real_radix2_forward": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 0, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 1, 0, 1, 0, 1, 0]",
+    "error_en": "non-power-of-two length or output capacity below 2N",
+    "error_ja": "長さが2の累乗でない、または出力容量が2N未満",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_real_radix2_inverse": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 1, 0, 1, 0, 1, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 0, 0]",
+    "error_en": "invalid length, spectrum without conjugate symmetry, or insufficient output",
+    "error_ja": "無効な長さ、共役対称でないスペクトル、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_complex_radix2_forward": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 0, 0, 0, 0, 0, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 1, 0, 1, 0, 1, 0]",
+    "error_en": "odd element count, non-power-of-two complex length or insufficient output",
+    "error_ja": "要素数が奇数、複素数の個数が2の累乗でない、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_complex_radix2_inverse": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 1, 0, 1, 0, 1, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 0, 0, 0, 0, 0, 0]",
+    "error_en": "odd element count, non-power-of-two complex length or insufficient output",
+    "error_ja": "要素数が奇数、複素数の個数が2の累乗でない、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_complex_mixed_forward": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 0, 0, 0, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 1, 0, 1, 0]",
+    "error_en": "empty or odd-length complex input, or insufficient output",
+    "error_ja": "空または要素数が奇数の複素入力、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_complex_mixed_inverse": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 1, 0, 1, 0]"
+      }
+    ],
+    "example_output": "[1, 0, 0, 0, 0, 0]",
+    "error_en": "empty or odd-length complex input, or insufficient output",
+    "error_ja": "空または要素数が奇数の複素入力、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "fft_frequency_axis": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "S"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "4"
+      },
+      {
+        "name": "INPB",
+        "value": "0.5"
+      }
+    ],
+    "example_output": "[0, 0.5, -1, -0.5]",
+    "error_en": "non-positive/non-integral sample count, non-positive interval or insufficient output",
+    "error_ja": "サンプル数が正の整数でない、間隔が正でない、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "window_hann": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 1, 1, 1, 1]"
+      }
+    ],
+    "example_output": "[0, 0.5, 1, 0.5, 0]",
+    "error_en": "empty waveform or insufficient output",
+    "error_ja": "空の波形、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "spectrum_power": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[3, 4, 0, 2]"
+      }
+    ],
+    "example_output": "[25, 4]",
+    "error_en": "empty/odd-length complex input or overflow",
+    "error_ja": "空・奇数長の複素入力、またはオーバーフロー",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "welch_psd": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      },
+      {
+        "name": "INPC",
+        "shape": "S"
+      },
+      {
+        "name": "INPD",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 1, 1, 1, 1, 1, 1, 1]"
+      },
+      {
+        "name": "INPB",
+        "value": "4"
+      },
+      {
+        "name": "INPC",
+        "value": "2"
+      },
+      {
+        "name": "INPD",
+        "value": "1"
+      }
+    ],
+    "example_output": "[2, 2, 0]",
+    "error_en": "invalid segment length, overlap, sample interval or output capacity",
+    "error_ja": "無効な区間長・重なり・サンプル間隔、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "stft_hann": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      },
+      {
+        "name": "INPC",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 1, 1, 1]"
+      },
+      {
+        "name": "INPB",
+        "value": "4"
+      },
+      {
+        "name": "INPC",
+        "value": "2"
+      }
+    ],
+    "example_output": "[1.5, 0, -0.75, -0.75, 0, 0, -0.75, 0.75]",
+    "error_en": "invalid frame length or hop, too few samples or insufficient output",
+    "error_ja": "無効なフレーム長・ホップ幅、サンプル不足、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "matrix_eigenvalues_symmetric": {
+    "types": [
+      {
+        "name": "INPA",
+        "shape": "A"
+      },
+      {
+        "name": "INPB",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "INPA",
+        "value": "[1, 0, 0, 2]"
+      },
+      {
+        "name": "INPB",
+        "value": "2"
+      }
+    ],
+    "example_output": "[1, 2]",
+    "error_en": "invalid dimension, length mismatch, non-symmetric matrix or insufficient output",
+    "error_ja": "無効な次元、要素数の不一致、非対称の行列、または出力容量不足",
+    "output_shape": "A",
+    "example_kind": "array"
+  },
+  "minmax": {
+    "types": [
+      {
+        "name": "A",
+        "shape": "A"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "[1, 3, 5]"
+      }
+    ],
+    "example_output": "1; 5",
+    "error_en": "empty data or invalid output buffers",
+    "error_ja": "空のデータ、または無効な出力バッファー",
+    "output_shape": "SS",
+    "example_kind": "asub"
+  },
+  "running_mean": {
+    "types": [
+      {
+        "name": "A",
+        "shape": "S"
+      },
+      {
+        "name": "B",
+        "shape": "S"
+      },
+      {
+        "name": "C",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "2"
+      },
+      {
+        "name": "B",
+        "value": "1"
+      },
+      {
+        "name": "C",
+        "value": "0"
+      }
+    ],
+    "example_output": "2; 1",
+    "error_en": "non-finite sample, invalid sequence/reset token or uninitialized GSL",
+    "error_ja": "有限でないサンプル、無効な連番・リセットトークン、または未初期化のGSL",
+    "output_shape": "SS",
+    "example_kind": "asub"
+  },
+  "running_stats": {
+    "types": [
+      {
+        "name": "A",
+        "shape": "S"
+      },
+      {
+        "name": "B",
+        "shape": "S"
+      },
+      {
+        "name": "C",
+        "shape": "S"
+      }
+    ],
+    "example_inputs": [
+      {
+        "name": "A",
+        "value": "2"
+      },
+      {
+        "name": "B",
+        "value": "1"
+      },
+      {
+        "name": "C",
+        "value": "0"
+      }
+    ],
+    "example_output": "2; NaN; NaN; 2; 2; 2; 1",
+    "error_en": "non-finite sample, invalid sequence/reset token or uninitialized GSL",
+    "error_ja": "有限でないサンプル、無効な連番・リセットトークン、または未初期化のGSL",
+    "output_shape": "SSSSSSS",
+    "example_kind": "asub"
+  }
+}

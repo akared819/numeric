@@ -47,17 +47,43 @@ record(numericScalar, "SIGNAL:CORR") {
 {% for op in site.data.operations %}[`{{ op.name }}`](#{{ op.name }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for op in site.data.operations %}
+{% assign detail = site.data.operation_details[op.name] %}
 ### `{{ op.name }}`
 
 **利用方法：** {% if op.interface == 'scalar' %}`numericScalar`{% elsif op.interface == 'array' %}`numericArray`{% else %}aSub／ネイティブレジストリ。専用レコードでは使用不可{% endif %}。
 
 **入力：** {{ op.inputs_ja }}。
 
-**結果と条件：** {{ op.result_ja }}
+{% for input in detail.types %}- `{{ input.name }}`：{% if input.shape == 'S' %}有限の数値スカラー1個{% else %}数値波形{% endif %}{% if op.interface == 'asub' %}（aSub入力、DOUBLE）{% else %}（DOUBLEに変換されるPVリンク。必須、既定値なし）{% endif %}。
+{% endfor %}
+
+**戻り値：** {% if detail.output_shape == 'S' %}`VAL`にDOUBLEスカラー1個{% elsif detail.output_shape == 'A' %}`VAL`にDOUBLE配列{% else %}以下に示す順番のDOUBLEスカラー{{ detail.output_shape.size }}個{% endif %}。{{ op.result_ja }}
 
 {% if op.args_ja %}**設定引数：** {{ op.args_ja }}{% else %}**設定引数：** なし。{% endif %}
 
-**詳しい仕様と例：** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }})（英語）。
+**エラー条件：** 例えば{{ detail.error_ja }}の場合です。無効なバッファー、未対応の非有限入力、GSLの未初期化、数値計算・メモリー確保の失敗などでもエラーになります。専用レコードでは`CALC/INVALID`となり、前回の`VAL`が残ることがあります。`SEVR`を確認してください。詳細な条件はリンク先を参照してください。
+
+**使用例：** {% if op.interface == 'asub' %}新しいインスタンスのaSub入力として{% else %}次の入力PVと設定引数を使用します{% endif %}。
+
+{% for value in detail.example_inputs %}- `{{ value.name }}` = `{{ value.value }}`
+{% endfor %}
+結果：`{{ detail.example_output }}`{% if detail.output_shape.size > 1 %}（出力の順番）{% endif %}。浮動小数点の丸めがある結果は近似値です。{% if op.name == 'running_stats' %}初回サンプルでは標本分散と標本標準偏差が未定義のため`NaN`です。{% endif %}
+
+{% if op.interface != 'asub' %}例えば、下記のソースPVを別途用意してから、次の結果レコードを設定します。この例自体はソースPVや上記の値を作成しません。
+
+```db
+record(numeric{% if op.interface == 'scalar' %}Scalar{% else %}Array{% endif %}, "EXAMPLE:RESULT") {
+    field(OP, "{{ op.name }}")
+{% for input in detail.types %}    field({{ input.name }}, "EXAMPLE:{{ input.name }} NPP NMS")
+{% endfor %}{% for value in detail.example_inputs %}{% if value.name contains 'ARG' %}    field({{ value.name }}, "{{ value.value }}")
+{% endif %}{% endfor %}    field(NMAX, "128")
+{% if op.interface == 'array' %}    field(OMAX, "128")
+{% endif %}}
+```
+
+各ソースPVに上の値を設定し、`EXAMPLE:RESULT.PROC`を処理してから`VAL`と`SEVR`を読みます。配列結果は`caget`の配列形式で読みます。実際のデータに合わせて容量を変更してください。{% endif %}
+
+**詳しい仕様：** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }})（英語）。
 {% endfor %}
 
 <h2 id="other-interfaces">その他のインターフェース</h2>
@@ -93,3 +119,30 @@ record(numericScalar, "SIGNAL:CORR") {
 | `fitNonlinear` | 残差コールバック、初期パラメーター、残差数、許容誤差、反復上限を受け取り、推定パラメーターと残差平方和を返します。 |
 
 失敗時の出力保持、コールバックの制約、数値上の上限と実例は[コールバック](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md)、[フィッティング](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md)、[乱数](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md)の各ガイドを参照してください。GSLの誤差推定は保証された誤差上限ではありません。
+
+## ネイティブ数値APIの詳細
+
+以下はC++ APIです。引数は明記されたものを除き既定値がなく、すべて指定します。`Result.status == Status::Ok`を確認してから出力を使ってください。コールバックとコンテキストは呼び出し中有効に保ち、GSLエラー処理を初期化します。推定誤差は厳密な上限ではありません。
+
+[完全な実行例（コールバック定義を含む）](https://github.com/akared819/numeric/blob/main/examples/native-api-reference.cpp)では、`square(x)=x*x`、`rootFn(x)=x*x-2`、`minimumFn(x)=(x-2)^2`、`ode`は`dx/dt=x`、`residual`は3点の指数モデル残差です。以下の呼び出しはこの例の変数を使います。
+
+{% for api in site.data.native_details %}
+### `{{ api.name }}`
+
+```cpp
+{{ api.signature }}
+```
+
+**引数：** {{ api.parameters_ja }}
+
+**戻り値：** `Result`（状態とメッセージ）。成功時：{{ api.returns_ja }}
+
+**エラー条件：** {{ api.errors_ja }}
+
+**使用例：**
+
+```cpp
+auto result = {{ api.example }};
+// result.status == Status::Ok: {{ api.expected }}
+```
+{% endfor %}

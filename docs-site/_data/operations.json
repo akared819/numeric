@@ -209,8 +209,8 @@
     "result_en": "Same-length centered moving mean.",
     "result_ja": "入力と同じ長さの中心移動平均。",
     "doc": "window-statistics.md",
-    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN.",
-    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN。"
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN (default 3).",
+    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN（既定3）。"
   },
   {
     "name": "moving_median",
@@ -220,8 +220,8 @@
     "result_en": "Same-length centered moving median.",
     "result_ja": "入力と同じ長さの中心移動中央値。",
     "doc": "window-statistics.md",
-    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN.",
-    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN。"
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; blank uses WIN (default 3).",
+    "args_ja": "ARGA：3〜4095の奇数窓幅。入力要素数以下。空欄はWIN（既定3）。"
   },
   {
     "name": "gaussian_smooth",
@@ -231,8 +231,8 @@
     "result_en": "Smoothed waveform.",
     "result_ja": "平滑化波形。",
     "doc": "window-statistics.md",
-    "args_en": "ARGA: odd window width 3–4095, no greater than input length; ARGB: alpha 0.01–10. Blanks use WIN and ALPH.",
-    "args_ja": "ARGA：3〜4095の奇数窓幅（入力要素数以下）。ARGB：alpha 0.01〜10。空欄はWIN、ALPH。"
+    "args_en": "ARGA: odd window width 3–4095, no greater than input length; ARGB: alpha 0.01–10. Blanks use WIN (default 3) and ALPH (default 1.1774100225154747).",
+    "args_ja": "ARGA：3〜4095の奇数窓幅（入力要素数以下）。ARGB：alpha 0.01〜10。空欄はWIN（既定3）、ALPH（既定1.1774100225154747）。"
   },
   {
     "name": "histogram_uniform",
@@ -242,8 +242,8 @@
     "result_en": "Bin counts; lower bound is included and upper bound is excluded.",
     "result_ja": "ビンごとの個数。下限を含み上限を含みません。",
     "doc": "histograms.md",
-    "args_en": "ARGA: lower bound; ARGB: upper bound; ARGC: bin count 1–65536. Blanks use HMIN, HMAX and NBIN.",
-    "args_ja": "ARGA：下限、ARGB：上限、ARGC：ビン数1〜65536。空欄はHMIN、HMAX、NBIN。"
+    "args_en": "ARGA: lower bound; ARGB: upper bound; ARGC: bin count 1–65536. Blanks use HMIN=0, HMAX=1 and NBIN=10.",
+    "args_ja": "ARGA：下限、ARGB：上限、ARGC：ビン数1〜65536。空欄はHMIN=0、HMAX=1、NBIN=10。"
   },
   {
     "name": "linear_fit",

@@ -46,17 +46,43 @@ Update both waveform PVs, then process `SIGNAL:CORR.PROC` and inspect `VAL` and 
 {% for op in site.data.operations %}[`{{ op.name }}`](#{{ op.name }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for op in site.data.operations %}
+{% assign detail = site.data.operation_details[op.name] %}
 ### `{{ op.name }}`
 
 **Interface:** {% if op.interface == 'scalar' %}`numericScalar`{% elsif op.interface == 'array' %}`numericArray`{% else %}aSub / native registry; not a dedicated record{% endif %}.
 
-**Inputs:** {{ op.inputs_en }}.
+**Parameters:** {{ op.inputs_en }}.
 
-**Result and conditions:** {{ op.result_en }}
+{% for input in detail.types %}- `{{ input.name }}`: {% if input.shape == 'S' %}one finite numeric scalar{% else %}numeric waveform{% endif %}{% if op.interface == 'asub' %} (aSub input; use DOUBLE){% else %} (PV link, converted to DOUBLE; required, no default){% endif %}.
+{% endfor %}
+
+**Returns:** {% if detail.output_shape == 'S' %}one DOUBLE scalar in `VAL`{% elsif detail.output_shape == 'A' %}a DOUBLE array in `VAL`{% else %}{{ detail.output_shape.size }} DOUBLE scalar outputs, in the order described below{% endif %}. {{ op.result_en }}
 
 {% if op.args_en %}**Configuration arguments:** {{ op.args_en }}{% else %}**Configuration arguments:** None.{% endif %}
 
-**Details and examples:** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }}).
+**Errors:** Examples include {{ detail.error_en }}. Invalid buffers, non-finite inputs where unsupported, an uninitialized GSL policy, and numerical or allocation failures can also cause failure. Dedicated records raise `CALC/INVALID` and can retain the previous `VAL`; inspect `SEVR`. See the linked detailed specification for the complete rules.
+
+**Example:** {% if op.interface == 'asub' %}For a fresh instance, using aSub inputs{% else %}With the following input PV values and argument settings{% endif %}:
+
+{% for value in detail.example_inputs %}- `{{ value.name }}` = `{{ value.value }}`
+{% endfor %}
+Result: `{{ detail.example_output }}`{% if detail.output_shape.size > 1 %} (outputs in order){% endif %}. Values shown are approximate where floating-point rounding applies.{% if op.name == 'running_stats' %} `NaN` indicates the sample variance and standard deviation are undefined for the first sample.{% endif %}
+
+{% if op.interface != 'asub' %}For example, configure this result record after creating the named source PVs (the sources and their values above are not created by this snippet):
+
+```db
+record(numeric{% if op.interface == 'scalar' %}Scalar{% else %}Array{% endif %}, "EXAMPLE:RESULT") {
+    field(OP, "{{ op.name }}")
+{% for input in detail.types %}    field({{ input.name }}, "EXAMPLE:{{ input.name }} NPP NMS")
+{% endfor %}{% for value in detail.example_inputs %}{% if value.name contains 'ARG' %}    field({{ value.name }}, "{{ value.value }}")
+{% endif %}{% endfor %}    field(NMAX, "128")
+{% if op.interface == 'array' %}    field(OMAX, "128")
+{% endif %}}
+```
+
+Set the source PVs to the example values, process `EXAMPLE:RESULT.PROC`, then read `VAL` and `SEVR`. Use the array form of `caget` for array results. Adjust the capacities for your own data. {% endif %}
+
+**Further details:** [{{ op.doc }}](https://github.com/akared819/numeric/blob/main/docs/{{ op.doc }}).
 {% endfor %}
 
 ## Other interfaces
@@ -92,3 +118,30 @@ These interfaces are synchronous and use caller-owned inputs and outputs unless 
 | `fitNonlinear` | Residual callback, initial parameters, residual count, tolerance and iteration limit; writes fitted parameters and sum of squared residuals. |
 
 Output preservation, callback restrictions, numerical limits and examples are specified in the linked [callback guide](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md), [fitting guide](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md) and [sampling guide](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md). GSL error estimates are not guaranteed bounds.
+
+## Native numerical API details
+
+These are C++ APIs. Unless stated otherwise every parameter is required and has no default. Check `Result.status == Status::Ok` before using outputs. Keep callbacks and contexts alive during the call and initialize the GSL error policy first. Error estimates are not guaranteed bounds.
+
+The [complete runnable example, including callback definitions](https://github.com/akared819/numeric/blob/main/examples/native-api-reference.cpp), uses `square(x)=x*x`, `rootFn(x)=x*x-2`, `minimumFn(x)=(x-2)^2`, `ode` for `dx/dt=x`, and `residual` for a three-point exponential model. The following calls use variables defined in that example.
+
+{% for api in site.data.native_details %}
+### `{{ api.name }}`
+
+```cpp
+{{ api.signature }}
+```
+
+**Parameters:** {{ api.parameters_en }}
+
+**Returns:** `Result` (status and message). On success: {{ api.returns_en }}
+
+**Errors:** {{ api.errors_en }}
+
+**Example:**
+
+```cpp
+auto result = {{ api.example }};
+// result.status == Status::Ok: {{ api.expected }}
+```
+{% endfor %}
