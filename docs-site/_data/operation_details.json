@@ -13,7 +13,7 @@
       }
     ],
     "example_output": "3",
-    "error_en": "empty",
+    "error_en": "an empty input waveform",
     "error_ja": "空の入力",
     "output_shape": "S",
     "example_kind": "scalar"
@@ -70,7 +70,7 @@
       }
     ],
     "example_output": "2.66666666667",
-    "error_en": "empty",
+    "error_en": "an empty input waveform",
     "error_ja": "空の入力",
     "output_shape": "S",
     "example_kind": "scalar"
@@ -89,7 +89,7 @@
       }
     ],
     "example_output": "1.63299316186",
-    "error_en": "empty",
+    "error_en": "an empty input waveform",
     "error_ja": "空の入力",
     "output_shape": "S",
     "example_kind": "scalar"

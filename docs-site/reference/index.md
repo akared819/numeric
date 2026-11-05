@@ -145,3 +145,65 @@ auto result = {{ api.example }};
 // result.status == Status::Ok: {{ api.expected }}
 ```
 {% endfor %}
+
+## Native core and utility API details
+
+These C++ APIs are not dedicated-record fields. The signature, parameters, return and failure conditions are listed below; parameters without an explicit C++ default are required. Each snippet is taken from the [complete executable example](https://github.com/akared819/numeric/blob/main/examples/native-core-reference.cpp). In real code, check every returned status and pointer and keep caller-owned buffers alive throughout each call.
+
+### Shared types and ownership
+
+| Type | Fields and meaning |
+| --- | --- |
+| `Input` | Caller-owned `const double* data`, valid element `count`, addressable `capacity`, element `stride`, `Type` and `Shape`. Capacity and valid count are distinct. |
+| `Output` | Caller-owned `double* data`, `capacity`, operation-written `count`, `Type` and `Shape`. |
+| `Descriptor` / `Type` / `Shape` | Input or output type and shape. Registry operations currently use `Float64` and `Scalar` or `Array`. |
+| `Result` / `Status` | Status is `Ok`, `InvalidArgument`, `NumericalError` or `NotInitialized`; `message` is diagnostic text. |
+| `ArgumentValue` / `ArgumentDescriptor` | Tagged integer, floating, boolean or enumeration value, plus name, required/default flags, limits, choices and mapping to legacy inputs. |
+| `Metadata` | Name, category, input/output descriptors, argument schema, statefulness, ownership and error descriptions. A `Registry::find` result is registry-owned. |
+| `ArrayView` / `MutableArrayView` | Caller-owned storage, capacity in bytes, `ElementType`, rank, extents and byte strides. Keep data, shape and stride arrays alive throughout use. |
+| `ElementValue` | `ElementType` and integer or real/imaginary components. Complex components are real then imaginary. |
+| `Event` / `Acknowledgment` | An event contains session, sequence, kind and value. An acknowledgment contains the event, seven statistics and a `replayed` flag. |
+
+{% for api in site.data.native_core_details %}
+### `{{ api.name }}`
+
+```cpp
+{{ api.signature }}
+```
+
+**Parameters and types:** {{ api.parameters_en }}
+
+**Returns:** {{ api.returns_en }}
+
+**Errors:** {{ api.errors_en }}
+
+**Example:**
+
+```cpp
+{{ api.example }}
+```
+{% endfor %}
+
+
+## aSub function details
+
+Set the function name in an `aSub` record’s `SNAM`. A, B and C are aSub inputs fetched through links such as `INPA`; **they are not the dedicated-record `ARGA` fields**. Configure the used inputs and outputs as DOUBLE. For waveform inputs reserve one more `NO*` element than the largest source waveform and allocate sufficient `NOV*` output capacity to detect truncation. See each linked specification for exceptions and further constraints. Call `numericInitialize` before `iocInit`.
+
+No operation-specific numerical input is filled automatically: configure each aSub input link or constant explicitly. Input updates generally do not schedule processing. An input-fetch failure can happen before the numeric callback, so inspect the record, links and data freshness. Previous output may remain on failure. Acknowledged streaming follows a separate processing protocol.
+
+{% for api in site.data.asub_details %}
+{% assign operation = site.data.operation_details[api.operation] %}
+### `{{ api.name }}`
+
+**Configuration:** `SNAM="{{ api.name }}"`. {{ api.inputs_en }}. Used inputs and outputs are DOUBLE.
+
+**Parameter types and defaults:** A–C above are DOUBLE aSub inputs, not `ARGA`. Waveforms use `NO*` capacity and `NE*` valid count; scalars contain one element. No operation-specific numerical default is applied.
+
+**Returns:** {{ api.outputs_en }}. Inspect the corresponding `NEV*` for valid output counts.
+
+**Errors:** {{ operation.error_en }}, among others. Invalid types or capacities, numerical failures and missing GSL initialization can also fail. {% if api.name == 'numericRunningMean' or api.name == 'numericRunningStats' %}Reprocessing the same sequence is ignored with `VAL=1`.{% elsif api.name == 'numericAcknowledgedStats' %}The acknowledgment protocol also validates session and sequence.{% else %}Failures detected inside the function normally raise `CALC/INVALID` and do not update output links.{% endif %}
+
+**Example:** {% for value in api.example_inputs %}`{{ value.name }}={{ value.value }}`{% unless forloop.last %}, {% endunless %}{% endfor %} → `{{ api.example_output }}`. Rounded values are approximate. {% if api.name == 'numericAcknowledgedStats' %}Submit this event with `numericAckSend demo:event demo:acknowledgedStats 1 0 sample 2`; do not issue a separate `.PROC` write.{% endif %}
+
+[Example configuration: {{ api.db }}](https://github.com/akared819/numeric/blob/main/examples/{{ api.db }}){% if api.adapt_example %}; change its `SNAM` to `{{ api.name }}`{% endif %}. {% if api.name == 'numericRealFftForward' %}`FTVB=DOUBLE` and `NOVB >= 2N` are required; leave OUTB unconfigured. {% endif %}[Numerical operation details](#{{ api.operation }}).
+{% endfor %}

@@ -146,3 +146,65 @@ auto result = {{ api.example }};
 // result.status == Status::Ok: {{ api.expected }}
 ```
 {% endfor %}
+
+## ネイティブコア・ユーティリティAPIの詳細
+
+以下はC++ APIであり、専用レコードのフィールドではありません。型・引数・結果・エラーを示します。宣言に明記された既定値以外の引数は必須です。各スニペットは[完全な実行例](https://github.com/akared819/numeric/blob/main/examples/native-core-reference.cpp)からの抜粋です。実際のコードでは全戻り値とポインターを確認し、バッファーを呼び出し中有効に保ってください。
+
+### 共通の型と所有権
+
+| 型 | フィールドと意味 |
+| --- | --- |
+| `Input` | 呼び出し側所有の`const double* data`、有効要素`count`、アクセス可能な`capacity`、要素単位`stride`、`Type`と`Shape`。入力の容量と有効数は別です。 |
+| `Output` | 呼び出し側所有の`double* data`、`capacity`、操作が設定する`count`、`Type`と`Shape`。 |
+| `Descriptor` / `Type` / `Shape` | 入出力の型と形状。レジストリ操作は現在`Float64`と`Scalar`／`Array`を使います。 |
+| `Result` / `Status` | 状態は`Ok`、`InvalidArgument`、`NumericalError`、`NotInitialized`。`message`は診断用文字列です。 |
+| `ArgumentValue` / `ArgumentDescriptor` | 型付きの整数・浮動小数・真偽・列挙値と、名前、必須、既定値、境界、選択肢、従来入力への対応付け。 |
+| `Metadata` | 名前、分類、入出力記述子、引数定義、状態の有無、所有権とエラーの説明。`Registry::find`の戻り値はレジストリが所有します。 |
+| `ArrayView` / `MutableArrayView` | 呼び出し側所有の領域、容量（バイト）、`ElementType`、rank、各次元の要素数とバイトストライド。配列データ、形状、ストライドは使用中有効にしてください。 |
+| `ElementValue` | `ElementType`と整数または実部・虚部を保持。複素数は実部・虚部の順です。 |
+| `Event` / `Acknowledgment` | `Event`はsession、sequence、種別、値。確認応答はイベント、7個の統計、再送を示す`replayed`を保持。 |
+
+{% for api in site.data.native_core_details %}
+### `{{ api.name }}`
+
+```cpp
+{{ api.signature }}
+```
+
+**引数と型：** {{ api.parameters_ja }}
+
+**戻り値：** {{ api.returns_ja }}
+
+**エラー条件：** {{ api.errors_ja }}
+
+**使用例：**
+
+```cpp
+{{ api.example }}
+```
+{% endfor %}
+
+
+## aSub関数の詳細
+
+各関数は`aSub`レコードの`SNAM`に名前を設定します。A、B、CはaSubの入力で、対応する`INPA`などから取得されます。**専用レコードの`ARGA`とは別物です。** 使用する入力と出力はDOUBLEに設定します。波形入力は、最大入力長より1要素多い`NO*`を確保し、出力には必要な`NOV*`を確保してください。これは切り詰めを検出するためです。例外を含む詳しい制約は各リンク先を確認してください。`numericInitialize`は`iocInit`前に実行します。
+
+数値の設定に自動的な既定値はありません。リンクや定数をaSubに明示して設定してください。値を更新しただけでは通常は処理されません。入力取得が関数呼び出し前に失敗した場合は、numeric側の警報処理を通らないことがあります。失敗時は古い出力が残ることがあるため、警報と入力の鮮度を確認してください。確認応答付きストリーミングは別の処理規約を持ちます。
+
+{% for api in site.data.asub_details %}
+{% assign operation = site.data.operation_details[api.operation] %}
+### `{{ api.name }}`
+
+**設定：** `SNAM="{{ api.name }}"`。{{ api.inputs_ja }}。使用する入力と出力はDOUBLE。
+
+**引数の型・既定値：** 上記のA〜CはDOUBLE入力で、`ARGA`ではありません。波形は`NO*`の容量と`NE*`の有効数を区別し、スカラーは1要素です。操作固有の数値に自動の既定値はありません。
+
+**戻り値：** {{ api.outputs_ja }}。成功時の出力個数は対応する`NEV*`を参照します。
+
+**エラー条件：** {{ operation.error_ja }}など。無効な型・容量、数値エラー、GSL未初期化も失敗の原因です。{% if api.name == 'numericRunningMean' or api.name == 'numericRunningStats' %}同じ連番の再処理は更新せず、`VAL=1`で無視されます。{% elsif api.name == 'numericAcknowledgedStats' %}確認応答プロトコルの連番やセッションも検証します。{% else %}関数内で検出した失敗は通常`CALC/INVALID`となり、出力リンクを更新しません。{% endif %}
+
+**使用例：** {% for value in api.example_inputs %}`{{ value.name }}={{ value.value }}`{% unless forloop.last %}、{% endunless %}{% endfor %} → `{{ api.example_output }}`。丸めがある結果は近似値です。{% if api.name == 'numericAcknowledgedStats' %}このイベントは`numericAckSend demo:event demo:acknowledgedStats 1 0 sample 2`で送信でき、別途`.PROC`を書き込まないでください。{% endif %}
+
+[設定例：{{ api.db }}](https://github.com/akared819/numeric/blob/main/examples/{{ api.db }}){% if api.adapt_example %}。このファイルの`SNAM`を`{{ api.name }}`に変更して使用します{% endif %}。{% if api.name == 'numericRealFftForward' %}`FTVB=DOUBLE`、`NOVB >= 2N`が必要で、OUTBは未設定のままにします。{% endif %} [対応する数値操作の詳細](#{{ api.operation }})。
+{% endfor %}
