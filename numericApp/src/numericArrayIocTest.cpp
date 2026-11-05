@@ -58,6 +58,16 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
     double welchSamples[] = {1,1,1,1,1,1,1,1}, welchExpected[] = {2,2,0};
     testdbPutArrFieldOk("welchSamples", DBF_DOUBLE, 8, welchSamples);
+    double stftExpected[] = {1.5,0,-.75,-.75,0,0,-.75,.75,1.5,0,-.75,-.75,0,0,-.75,.75};
+    testdbPutFieldOk("stft.PROC", DBF_LONG, 1);
+    testOk(matches("stft.VAL", stftExpected, 16), "STFT publishes frames in order");
+    testdbPutFieldOk("stftHop.VAL", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("stft.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stft.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("stft.VAL", stftExpected, 16), "invalid STFT parameters preserve output");
+    testdbPutFieldOk("stftHop.VAL", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("stft.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("stft.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("welchPsd.PROC", DBF_LONG, 1);
     testOk(matches("welchPsd.VAL", welchExpected, 3), "Welch PSD averages overlapping windows");
     testdbPutFieldOk("welchOverlap.VAL", DBF_DOUBLE, 4.0);

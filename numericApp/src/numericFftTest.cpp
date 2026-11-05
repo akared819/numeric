@@ -18,6 +18,17 @@ int main() {
     CHECK(f->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     CHECK(real->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     initializeGsl();
+    auto stft = r.create("stft_hann"); CHECK(stft);
+    double stftSamples[] = {1,1,1,1,1,1,1,1}, frameLength = 4, hop = 2, frames[24] = {};
+    Input stftInputs[] = {{stftSamples,8,8,1,Type::Float64,Shape::Array}, {&frameLength,1,1,1,Type::Float64,Shape::Scalar}, {&hop,1,1,1,Type::Float64,Shape::Scalar}};
+    Output stftOutput{frames,24,0,Type::Float64,Shape::Array};
+    CHECK(stft->execute(stftInputs, 3, &stftOutput, 1).status == Status::Ok && stftOutput.count == 24);
+    const double expectedFrame[] = {1.5,0,-.75,-.75,0,0,-.75,.75};
+    for (int i=0; i<24; ++i) CHECK(std::fabs(frames[i]-expectedFrame[i%8]) < 1e-12);
+    hop = 0; CHECK(stft->execute(stftInputs, 3, &stftOutput, 1).status == Status::InvalidArgument && stftOutput.count == 0 && std::fabs(frames[0]-1.5) < 1e-12);
+    hop = 2; stftOutput.capacity = 23; CHECK(stft->execute(stftInputs, 3, &stftOutput, 1).status == Status::InvalidArgument);
+    stftOutput.capacity = 24; stftSamples[0] = std::numeric_limits<double>::quiet_NaN(); CHECK(stft->execute(stftInputs, 3, &stftOutput, 1).status == Status::InvalidArgument);
+    stftSamples[0] = 1; stft->reset(); CHECK(stft->execute(stftInputs, 3, &stftOutput, 1).status == Status::Ok);
     auto welch = r.create("welch_psd"); CHECK(welch);
     double welchSamples[] = {1,1,1,1,1,1,1,1}, segmentLength = 4, overlap = 2, sampleInterval = 1, psd[3] = {};
     Input welchInputs[] = {{welchSamples,8,8,1,Type::Float64,Shape::Array}, {&segmentLength,1,1,1,Type::Float64,Shape::Scalar},

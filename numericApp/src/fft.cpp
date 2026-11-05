@@ -10,6 +10,46 @@
 
 namespace numeric {
 namespace {
+class ShortTimeFft : public Operation {
+    std::vector<double> fft_, window_, result_;
+public:
+    void reset() override { std::vector<double>().swap(fft_); std::vector<double>().swap(window_); std::vector<double>().swap(result_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 3 || no != 1) return {Status::InvalidArgument, "STFT requires samples, frame length and hop"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.stride != 1 || x.count > x.capacity ||
+            y.type != Type::Float64 || y.shape != Shape::Array || !y.data) return {Status::InvalidArgument, "invalid STFT buffers"};
+        for (std::size_t i = 1; i < 3; ++i)
+            if (in[i].type != Type::Float64 || in[i].shape != Shape::Scalar || !in[i].data || in[i].count != 1 || !in[i].capacity || !in[i].stride)
+                return {Status::InvalidArgument, "invalid STFT scalar input"};
+        const double nd = in[1].data[0], hd = in[2].data[0];
+        if (!std::isfinite(nd) || !std::isfinite(hd) || nd < 4 || nd > static_cast<double>(x.count) || nd > 9007199254740991.0 ||
+            std::floor(nd) != nd || hd < 1 || hd > nd || std::floor(hd) != hd)
+            return {Status::InvalidArgument, "invalid STFT frame length or hop"};
+        const std::size_t n = static_cast<std::size_t>(nd), hop = static_cast<std::size_t>(hd);
+        if ((n & (n - 1)) || n > std::numeric_limits<std::size_t>::max() / 2) return {Status::InvalidArgument, "invalid STFT frame length"};
+        const std::size_t frames = 1 + (x.count - n) / hop, frameValues = 2 * n;
+        if (frames > std::numeric_limits<std::size_t>::max() / frameValues || frames * frameValues > y.capacity)
+            return {Status::InvalidArgument, "STFT output capacity too small"};
+        for (std::size_t i = 0; i < x.count; ++i) if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "STFT input must be finite"};
+        try { fft_.resize(n); window_.resize(n); result_.resize(frames * frameValues); }
+        catch (...) { return {Status::NumericalError, "STFT workspace allocation failed"}; }
+        const double pi = std::acos(-1.0);
+        for (std::size_t i = 0; i < n; ++i) window_[i] = 0.5 * (1.0 - std::cos(2.0*pi*(static_cast<double>(i)/static_cast<double>(n-1))));
+        for (std::size_t frame = 0; frame < frames; ++frame) {
+            const std::size_t start = frame * hop;
+            for (std::size_t i = 0; i < n; ++i) fft_[i] = x.data[start+i] * window_[i];
+            if (gsl_fft_real_radix2_transform(fft_.data(), 1, n) != GSL_SUCCESS ||
+                gsl_fft_halfcomplex_radix2_unpack(fft_.data(), result_.data() + frame * frameValues, 1, n) != GSL_SUCCESS)
+                return {Status::NumericalError, "GSL STFT failed"};
+        }
+        for (double value : result_) if (!std::isfinite(value)) return {Status::NumericalError, "non-finite STFT result"};
+        for (std::size_t i = 0; i < result_.size(); ++i) y.data[i] = result_[i];
+        y.count = result_.size(); return {Status::Ok, "ok"};
+    }
+};
 class WelchPsd : public Operation {
     std::vector<double> window_, fft_, result_;
 public:
@@ -285,12 +325,16 @@ std::unique_ptr<Operation> frequencyAxis() { return std::unique_ptr<Operation>(n
 std::unique_ptr<Operation> hannWindow() { return std::unique_ptr<Operation>(new HannWindow); }
 std::unique_ptr<Operation> powerSpectrum() { return std::unique_ptr<Operation>(new PowerSpectrum); }
 std::unique_ptr<Operation> welchPsd() { return std::unique_ptr<Operation>(new WelchPsd); }
+std::unique_ptr<Operation> shortTimeFft() { return std::unique_ptr<Operation>(new ShortTimeFft); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
+    r.addWithoutArguments(Metadata{"stft_hann", "signal processing", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}}, arrays,
+                   "full complex symmetric-Hann STFT; frame length and hop", false,
+                   "per-instance reusable vectors; reset frees them", "invalid parameters, allocation or numerical failure"}, &shortTimeFft);
     r.addWithoutArguments(Metadata{"welch_psd", "signal processing", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}}, arrays,
                    "one-sided symmetric-Hann Welch PSD; segment length, overlap and sample interval", false,
                    "per-instance reusable vectors; reset frees them", "invalid parameters, allocation or numerical failure"}, &welchPsd);

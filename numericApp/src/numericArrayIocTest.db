@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
 record(waveform, "welchSamples") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(ao, "stftHop") { field(VAL, "4") }
+record(numericArray, "stft") {
+    field(OP, "stft_hann") field(INPA, "welchSamples NPP NMS") field(INPB, "welchLength NPP NMS")
+    field(INPC, "stftHop NPP NMS") field(NMAX, "8") field(OMAX, "16")
+}
 record(ao, "welchLength") { field(VAL, "4") }
 record(ao, "welchOverlap") { field(VAL, "2") }
 record(ao, "welchInterval") { field(VAL, "1") }

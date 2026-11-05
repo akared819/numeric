@@ -51,6 +51,19 @@ inputs, allocation failures and non-finite results preserve output values.
 numericArray supports the four inputs through INPA–INPD; updates to separate
 links are not an atomic snapshot.
 
+`stft_hann` accepts a real waveform, frame length N, and hop size in samples.
+N must be a power of two of at least four; hop must be an integer in `[1, N]`.
+It applies the symmetric Hann window to each complete frame and uses GSL's
+radix-2 real FFT. No detrending, scaling, padding, or incomplete final frame
+is included. The output is a flattened sequence of frames: each frame contains
+N complex bins in natural frequency order as 2N interleaved real/imaginary
+doubles. The frame count is `1 + floor((sample_count-N)/hop)`, and output
+capacity must hold `2*N*frame_count` doubles. The instance owns and reuses its
+work buffers, released by reset or destruction. Invalid data, allocation or
+numerical failure preserves output values. numericArray exposes waveform,
+frame length and hop through INPA–INPC; separately updated links are not an
+atomic snapshot. This is a composition using GSL FFT primitives.
+
 The registry exposes `fft_complex_radix2_forward` and `fft_complex_radix2_inverse`. Both take one FLOAT64 array input and one FLOAT64 array output. Each complex number is represented by consecutive doubles `[real, imaginary]`, in natural sample or frequency-bin order. Counts and capacities are numbers of doubles, not complex numbers. Input stride must be 1. The input count must be even and represent a positive power-of-two number of complex values (including one); both buffers must have capacity for the full count. The output count is that same number of doubles on success and zero on failure.
 
 Forward uses the negative exponential, without normalization. Inverse uses the positive exponential and divides by the complex length, so a forward/inverse pair returns the original values within floating-point error. These conventions match the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html). Neither complex operation computes magnitudes, frequencies, or windowing. A separate real-input operation is described below.
