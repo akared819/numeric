@@ -28,3 +28,21 @@ yet connect argument metadata to record fields or populate all built-ins.
 Adding fields to the C++ `Metadata` structure changes its binary layout: native
 applications must be rebuilt with the library; source compatibility for the
 existing aggregate initializers is retained. No database interface is changed.
+
+## Remaining work
+
+- Define complete metadata for every built-in and distinguish an explicitly
+  empty argument list from an operation whose schema has not been migrated.
+- Specify default application, argument-to-input mapping, enum names and
+  schema validation, then connect these to a parameterized execution API.
+- Remove operation-name-specific parameter dispatch from record support only
+  after its legacy-field precedence and runtime update behavior are tested.
+- Verify all native and IOC regressions and required Linux, macOS and Windows
+  checks before treating Phase 7 as complete.
+
+Local increment validation on 2026-11-05: `make -j4
+GSL_DIR=/tmp/numeric-gsl-2.8-install`, `numericTest`, `numericWindowTest`,
+`numericHistogramTest` and `numericWindowIocTest` passed on macOS arm64 using
+GSL 2.8 and the supplied EPICS Base checkout, which reported R7.0.11. The
+window IOC test passed 67 assertions. This is not the release's clean Base
+7.0.10 cross-platform acceptance run.
