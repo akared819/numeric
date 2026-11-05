@@ -219,6 +219,14 @@ int main() {
     CHECK(fitNonlinear(&fitResidual, nullptr, fitInitial, 2, 3, 100, 1e-8, fitResult, 2, fitError).status == Status::NotInitialized);
     CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto scale = r.create("array_scale"); CHECK(scale && r.find("array_scale") && r.find("array_scale")->arguments.size() == 1);
+    double scaleData[] = {1,-2,3}, scaleFactor = 2, scaleResult[] = {9,9,9};
+    Input scaleInputs[] = {{scaleData,3,3,1,Type::Float64,Shape::Array}, {&scaleFactor,1,1,1,Type::Float64,Shape::Scalar}};
+    Output scaleOutput{scaleResult,3,0,Type::Float64,Shape::Array};
+    CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::Ok && scaleResult[0] == 2 && scaleResult[1] == -4 && scaleResult[2] == 6);
+    scaleFactor = std::numeric_limits<double>::quiet_NaN(); CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::InvalidArgument && scaleResult[0] == 2);
+    scaleFactor = std::numeric_limits<double>::max(); CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::NumericalError && scaleResult[0] == 2);
+    scaleFactor = 1; scale->reset(); CHECK(scale->execute(scaleInputs, 2, &scaleOutput, 1).status == Status::Ok && scaleResult[1] == -2);
     auto gamma = r.create("gamma"); CHECK(gamma);
     double gammaInput = 5, gammaValue = 99;
     Input gammaIn{&gammaInput,1,1,1,Type::Float64,Shape::Scalar}; Output gammaOut{&gammaValue,1,0,Type::Float64,Shape::Scalar};

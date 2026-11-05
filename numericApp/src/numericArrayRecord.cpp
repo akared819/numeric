@@ -64,7 +64,7 @@ long initRecord(dbCommon* common, int pass) {
         state->arguments.resize(m->arguments.size()); state->slots.resize(m->arguments.size());
         for (const auto& argument : m->arguments) {
             const double* field = legacyField(rec, argument.name);
-            if (!field || argument.inputIndex >= m->inputs.size()) return S_db_badField;
+            if (argument.inputIndex >= m->inputs.size()) return S_db_badField;
             state->legacyFields.push_back(field);
         }
         for (std::size_t i = 0; i < m->inputs.size(); ++i) {
@@ -132,6 +132,12 @@ long process(dbCommon* common) {
                         state->parsedValues[i] = parsed; state->parsedValid[i] = true;
                     }
                     state->arguments[i] = state->parsedValues[i];
+                    continue;
+                }
+                if (!state->legacyFields[i]) {
+                    const auto& descriptor = state->metadata.arguments[i];
+                    if (descriptor.required || !descriptor.hasDefault) { parametersValid = false; break; }
+                    state->arguments[i] = descriptor.defaultValue;
                     continue;
                 }
                 const double value = *state->legacyFields[i];

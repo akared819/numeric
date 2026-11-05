@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 record(waveform, "inverseSpectrum") { field(FTVL, "DOUBLE") field(NELM, "8") }
+record(numericArray, "arrayScale") {
+    field(OP, "array_scale") field(INP, "arrayInput NPP NMS") field(NMAX, "5") field(OMAX, "5")
+}
 record(waveform, "eigenMatrix") { field(FTVL, "DOUBLE") field(NELM, "4") }
 record(ao, "eigenDimension") { field(VAL, "2") }
 record(numericArray, "eigenValues") {

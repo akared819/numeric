@@ -12,6 +12,29 @@
 
 namespace numeric {
 namespace {
+class ArrayScale : public Operation {
+    std::vector<double> scratch_;
+public:
+    void reset() override { std::vector<double>().swap(scratch_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "array scale requires array and factor"};
+        const Input& x = in[0]; const Input& factor = in[1]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.count > INT_MAX || x.stride != 1 || x.count > x.capacity ||
+            factor.type != Type::Float64 || factor.shape != Shape::Scalar || !factor.data || factor.count != 1 || !factor.capacity || factor.stride != 1 ||
+            !std::isfinite(factor.data[0]) || y.type != Type::Float64 || y.shape != Shape::Array || !y.data || y.capacity < x.count)
+            return {Status::InvalidArgument, "invalid array scale buffers or factor"};
+        for (std::size_t i = 0; i < x.count; ++i) if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "array values must be finite"};
+        try { scratch_.assign(x.data, x.data+x.count); }
+        catch (...) { return {Status::NumericalError, "scale workspace allocation failed"}; }
+        gsl_vector_view vector = gsl_vector_view_array(scratch_.data(), x.count);
+        if (gsl_vector_scale(&vector.vector, factor.data[0]) != GSL_SUCCESS) return {Status::NumericalError, "GSL vector scaling failed"};
+        for (double value : scratch_) if (!std::isfinite(value)) return {Status::NumericalError, "non-finite scaled value"};
+        for (std::size_t i = 0; i < x.count; ++i) y.data[i] = scratch_[i];
+        y.count = x.count; return {Status::Ok, "ok"};
+    }
+};
 class SymmetricEigenvalues : public Operation {
     std::vector<double> matrix_, values_;
     std::unique_ptr<gsl_eigen_symm_workspace, decltype(&gsl_eigen_symm_free)> workspace_{nullptr, &gsl_eigen_symm_free};
@@ -117,8 +140,16 @@ protected:
 std::unique_ptr<Operation> makeVectorNorm() { return std::unique_ptr<Operation>(new VectorNorm); }
 std::unique_ptr<Operation> makeMatrixDeterminant() { return std::unique_ptr<Operation>(new MatrixDeterminant); }
 std::unique_ptr<Operation> makeSymmetricEigenvalues() { return std::unique_ptr<Operation>(new SymmetricEigenvalues); }
+std::unique_ptr<Operation> makeArrayScale() { return std::unique_ptr<Operation>(new ArrayScale); }
 }
 void registerLinearAlgebra(Registry& r) {
+    const ArgumentValue defaultFactor{ArgumentType::Floating, 1.0, 0};
+    ArgumentDescriptor factor{"factor", ArgumentType::Floating, false, true, defaultFactor, false, false, defaultFactor, defaultFactor, {}};
+    factor.inputIndex = 1;
+    Metadata scale{"array_scale", "linear algebra", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
+                   {{Type::Float64, Shape::Array}}, "finite scale factor; default 1", false,
+                   "per-instance reusable scratch; reset frees it", "invalid input, allocation or numerical error"};
+    scale.arguments = {factor}; scale.argumentSchemaComplete = true; r.add(scale, &makeArrayScale);
     r.addWithoutArguments(Metadata{"matrix_eigenvalues_symmetric", "linear algebra", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Array}}, "row-major symmetric matrix and dimension 1..1024; sorted real eigenvalues", false,
                    "per-instance reusable matrix and GSL workspace; reset frees them", "invalid matrix, allocation or numerical error"}, &makeSymmetricEigenvalues);
