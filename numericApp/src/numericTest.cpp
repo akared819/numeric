@@ -209,6 +209,14 @@ int main() {
     double odeInitial[] = {1,1}, odeOutput[] = {7,8};
     CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto gamma = r.create("gamma"); CHECK(gamma);
+    double gammaInput = 5, gammaValue = 99;
+    Input gammaIn{&gammaInput,1,1,1,Type::Float64,Shape::Scalar}; Output gammaOut{&gammaValue,1,0,Type::Float64,Shape::Scalar};
+    CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::Ok && std::fabs(gammaValue-24) < 1e-12);
+    gammaInput = .5; CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::Ok && std::fabs(gammaValue-std::sqrt(std::acos(-1.0))) < 1e-12);
+    gammaInput = -1; CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::InvalidArgument && std::fabs(gammaValue-std::sqrt(std::acos(-1.0))) < 1e-12);
+    gammaInput = std::numeric_limits<double>::infinity(); CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::InvalidArgument);
+    gammaInput = 172; CHECK(gamma->execute(&gammaIn, 1, &gammaOut, 1).status == Status::NumericalError);
     CHECK(random.initialize(123).status == Status::Ok && random.fill(samples,4,4).status == Status::Ok);
     gsl_rng* referenceRng = gsl_rng_alloc(gsl_rng_mt19937); CHECK(referenceRng); gsl_rng_set(referenceRng, 123);
     for (double sample : samples) CHECK(sample == gsl_rng_uniform(referenceRng) && sample >= 0 && sample < 1);

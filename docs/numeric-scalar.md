@@ -2,6 +2,11 @@
 
 `numericScalar` is a synchronous EPICS record that reads numeric scalar or waveform inputs and returns one DOUBLE scalar VAL using a compatible stateless numeric registry operation. Configure OP at database load time (default `mean`); supported names include `mean`, `variance`, `stddev`, `population_variance`, `population_stddev`, [`vector_norm`](linear-algebra.md), `correlation`, `covariance`, `polynomial_eval` and `pow_int`. OP must resolve to one or more Float64 scalar or array numerical inputs, optional mapped configuration arguments, and one Float64 scalar output; it must not be stateful. OP and NMAX are not modifiable at runtime. Scalar inputs require exactly one element. Multi-output operations are unsupported.
 
+`gamma` evaluates GSL's gamma function for a finite scalar input, excluding
+non-positive integers where the function has poles. Numerical failures such as
+overflow raise INVALID and preserve the previous result. See [GSL special
+functions](https://www.gnu.org/software/gsl/doc/html/specfunc.html).
+
 `interp_cspline` accepts ascending x coordinates in INPA, corresponding y
 values in INPB and a scalar query in INPC. At least three finite points are
 required and the query must lie inside the x range. It calls GSL's natural cubic

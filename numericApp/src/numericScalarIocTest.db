@@ -7,6 +7,7 @@ record(numericScalar, "matrixDeterminant") {
 }
 record(waveform, "multiY") { field(FTVL, "DOUBLE") field(NELM, "5") }
 record(ao, "multiPoint") { field(VAL, "2") }
+record(numericScalar, "gammaValue") { field(OP, "gamma") field(INP, "multiPoint NPP NMS") field(NMAX, "1") }
 record(numericScalar, "scalarPower") {
     field(OP, "pow_int") field(INP, "multiPoint NPP NMS") field(NMAX, "1")
 }

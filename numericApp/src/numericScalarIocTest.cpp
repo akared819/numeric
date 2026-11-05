@@ -68,6 +68,15 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    testdbPutFieldOk("gammaValue.PROC", DBF_LONG, 1);
+    testOk(valueNear("gammaValue.VAL", 1), "gamma function evaluates scalar input");
+    testdbPutFieldOk("multiPoint.VAL", DBF_DOUBLE, 0.0);
+    testdbPutFieldOk("gammaValue.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("gammaValue.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("gammaValue.VAL", 1), "gamma pole preserves previous result");
+    testdbPutFieldOk("multiPoint.VAL", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("gammaValue.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("gammaValue.SEVR", DBF_STRING, "NO_ALARM");
     double matrixData[] = {1,2,3,4};
     testdbPutArrFieldOk("matrixData", DBF_DOUBLE, 4, matrixData);
     testdbPutFieldOk("matrixDeterminant.PROC", DBF_LONG, 1);
