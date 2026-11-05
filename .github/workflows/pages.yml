@@ -28,6 +28,11 @@ jobs:
           test -s _site/index.html
           test -s _site/assets/style.css
           grep -q 'From data to results' _site/index.html
+          test -s _site/ja/index.html
+          grep -q 'INPA' _site/ja/index.html
+          grep -q 'ARGA' _site/ja/index.html
+          grep -q 'href="/numeric/assets/style.css"' _site/ja/index.html
+          grep -q 'href="/numeric/ja/"' _site/index.html
       - name: Upload pull request preview
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

@@ -4,6 +4,11 @@ This document describes the development candidate; it is not a declaration
 that version 0.2.0 has been released. Final commit, platform results and release
 approval must be recorded against the actual candidate.
 
+The proposed version is `0.2.0`. The tag, publication date and final
+distribution artifacts have not yet been selected or published. Prepare and
+review them with the release owner when publication is requested; do not treat
+the development-branch validation as approval to publish.
+
 ## Changes
 
 - Operation metadata describes argument types, defaults and validation.
@@ -15,6 +20,9 @@ approval must be recorded against the actual candidate.
 - New functionality includes weighted means, sorted quantiles, real inverse
   and mixed-radix FFT, frequency axes, Hann windows, raw power, Welch PSD,
   STFT, natural cubic splines, matrix determinant and symmetric eigenvalues.
+- The spectral magnitude calculation uses GSL `gsl_hypot` to address a
+  `std::hypot` recursion observed with one Windows MinGW toolchain. The Windows
+  test runner applies per-test timeouts.
 - Native callback interfaces provide adaptive differentiation and integration,
   Brent root finding and minimization, RKF45 ODE solving and nonlinear least
   squares. A separately owned seeded stream supports GSL uniform sampling.
@@ -56,3 +64,28 @@ The [Phase 11 scope and test summary](phase11-acceptance.md) records the
 representative functionality and the local validation performed so far.
 The [0.2.0 Linux validation](linux-validation-0.2.0.md) records the separate
 development-branch run on Ubuntu 26.04.1.
+
+## User PC validation
+
+The maintainer reported testing on Windows 11 with EPICS Base 7.0.10 and on
+Ubuntu 26.04.1 with GCC 15.2, EPICS Base 7.0.10 and GSL 2.8. The recorded
+[Windows validation](windows.md#develop-validation-2026-11-05) additionally
+identifies GSL 2.8 and MinGW-w64 GCC 9.1.0, documents the spectral calculation
+issue found on that PC and the passing test run after its fix. The
+[Linux validation](linux-validation-0.2.0.md) records the tested development
+commit, detailed test scope and results. These records describe the tested
+hosts and commits; they do not automatically verify a later release commit or
+other deployments.
+
+## Publication preparation
+
+- [x] Record reported Windows and Linux host versions and link the detailed
+  test records, including the Windows spectral fix and its regression tests.
+- [x] Prepare the upgrade notes, known limitations, licensing references and
+  user guide for record inputs and arguments.
+- [ ] Re-run the required CI checks and review the exact release candidate,
+  including the Windows fix and documentation changes, after integration.
+- [ ] Choose the final release commit and publication date; verify the source
+  and any binary artifacts, their checksums and corresponding-source notices.
+- [ ] Review the tag, release notes and artifacts with the release owner before
+  creating the tag or publishing 0.2.0.

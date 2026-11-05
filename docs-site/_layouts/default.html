@@ -1,26 +1,37 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ page.lang | default: 'en' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Practical examples for the numeric EPICS support module.">
+  <meta name="description" content="{{ page.description | default: 'Practical examples for the numeric EPICS support module.' | escape }}">
   <title>{{ page.title | escape }} · numeric</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
 </head>
 <body>
-  <a class="skip" href="#content">Skip to content</a>
+  <a class="skip" href="#content">{% if page.lang == 'ja' %}本文へ移動{% else %}Skip to content{% endif %}</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="brand" href="./"><span class="brand-mark">n</span> numeric <span class="brand-label">for EPICS</span></a>
+      <a class="brand" href="{{ '/' | relative_url }}"><span class="brand-mark">n</span> numeric <span class="brand-label">for EPICS</span></a>
       <nav aria-label="Main navigation">
-        <a href="#quick-start">Quick start</a>
-        <a href="#examples">Examples</a>
+        <a href="{{ '/' | relative_url }}#quick-start">Quick start</a>
+        <a href="{{ '/' | relative_url }}#examples">Examples</a>
+        <a href="{{ '/ja/' | relative_url }}">日本語ガイド</a>
         <a href="https://github.com/akared819/numeric">GitHub ↗</a>
       </nav>
     </div>
   </header>
   <div class="layout">
-    <aside class="sidebar" aria-label="On this page">
+    <aside class="sidebar" aria-label="{% if page.lang == 'ja' %}このページの目次{% else %}On this page{% endif %}">
+      {% if page.lang == 'ja' %}
+      <p class="sidebar-title">このページ</p>
+      <a href="#first-steps">はじめに</a>
+      <a href="#fields">フィールドの役割</a>
+      <a href="#inputs">入力リンク</a>
+      <a href="#arguments">計算の引数</a>
+      <a href="#recipes">実際に試す</a>
+      <a href="#operations">操作一覧</a>
+      <a href="#troubleshooting">困ったとき</a>
+      {% else %}
       <p class="sidebar-title">ON THIS PAGE</p>
       <a href="#quick-start">Quick start</a>
       <a href="#examples">Worked examples</a>
@@ -28,6 +39,7 @@
       <a href="#database-files">Database files</a>
       <a href="#using-your-own-ioc">Your own IOC</a>
       <a href="#troubleshooting">Troubleshooting</a>
+      {% endif %}
     </aside>
     <main id="content" class="content">{{ content }}</main>
   </div>
