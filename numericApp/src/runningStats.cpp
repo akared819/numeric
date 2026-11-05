@@ -68,7 +68,7 @@ std::unique_ptr<Operation> makeRunningStats() {
 }
 void registerRunningStats(Registry& r) {
     const Descriptor scalar{Type::Float64, Shape::Scalar};
-    r.add(Metadata{"running_stats", "running statistics", {scalar},
+    r.addWithoutArguments(Metadata{"running_stats", "running statistics", {scalar},
                    {scalar, scalar, scalar, scalar, scalar, scalar, scalar},
                    "none; sample variance uses N-1", true,
                    "per-instance GSL workspace; reset clears state",

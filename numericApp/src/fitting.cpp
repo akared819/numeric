@@ -45,7 +45,7 @@ std::unique_ptr<Operation> makeLinearFit() { return std::unique_ptr<Operation>(n
 }
 void registerFitting(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array};
-    r.add(Metadata{"linear_fit", "least squares and fitting", {array, array}, {array},
+    r.addWithoutArguments(Metadata{"linear_fit", "least squares and fitting", {array, array}, {array},
         "unweighted straight line; output c0,c1,cov00,cov01,cov11,sumsq", false,
         "per-instance object; no workspace", "invalid input, unsafe numeric range or GSL error"}, &makeLinearFit);
 }

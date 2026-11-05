@@ -132,29 +132,29 @@ void registerFitting(Registry&);
 void registerIntegration(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
-    r.add(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "Pearson correlation; at least two paired non-constant samples", false,
                    "per-instance object; no workspace", "invalid or constant input; unsupported numeric range or non-finite result"}, &makeCorrelation);
-    r.add(Metadata{"covariance", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"covariance", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample covariance (N-1); at least two paired samples", false,
                    "per-instance object; no workspace", "invalid input or non-finite result"}, &makeCovariance);
-    r.add(Metadata{"minmax", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"minmax", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}},
                    "minimum and maximum; at least one finite sample", false,
                    "per-instance object; no workspace", "invalid input or output"}, &makeMinmax);
-    r.add(Metadata{"mean", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"mean", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "none", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeMean);
-    r.add(Metadata{"variance", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"variance", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample variance (N-1); at least two samples", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeVariance);
-    r.add(Metadata{"stddev", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"stddev", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "sample standard deviation (N-1); at least two samples", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makeStddev);
-    r.add(Metadata{"population_variance", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"population_variance", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "population variance (N); at least one sample", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makePopulationVariance);
-    r.add(Metadata{"population_stddev", "statistics", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"population_stddev", "statistics", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "population standard deviation (N); at least one sample", false,
                    "per-instance object; no workspace", "invalid argument or non-finite result"}, &makePopulationStddev);
     registerRunningStatistics(r);

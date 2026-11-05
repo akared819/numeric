@@ -80,6 +80,7 @@ using Factory = std::unique_ptr<Operation> (*)();
 class NUMERIC_API Registry {
 public:
     bool add(const Metadata& metadata, Factory factory);
+    bool addWithoutArguments(Metadata metadata, Factory factory);
     const Metadata* find(const std::string& name) const;
     std::unique_ptr<Operation> create(const std::string& name) const;
 private:

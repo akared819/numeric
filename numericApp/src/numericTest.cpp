@@ -111,7 +111,13 @@ int main() {
     badMeta.arguments[0].inputIndex = 2; CHECK(!r.add(badMeta, &makeLifetime));
     const Metadata* histMeta = r.find("histogram_uniform");
     CHECK(histMeta && histMeta->argumentSchemaComplete && histMeta->arguments.size() == 3);
-    CHECK(r.find("mean") && !r.find("mean")->argumentSchemaComplete);
+    CHECK(r.find("mean") && r.find("mean")->argumentSchemaComplete && r.find("mean")->arguments.empty());
+    CHECK(r.find("correlation") && r.find("correlation")->argumentSchemaComplete);
+    CHECK(r.find("fft_real_radix2_forward") && r.find("fft_real_radix2_forward")->argumentSchemaComplete);
+    CHECK(r.find("running_mean") && r.find("running_mean")->argumentSchemaComplete);
+    CHECK(r.find("polynomial_root") && !r.find("polynomial_root")->argumentSchemaComplete);
+    Metadata noArguments = *gaussMeta; noArguments.name = "wrong-no-arguments";
+    CHECK(!r.addWithoutArguments(noArguments, &makeLifetime));
     CHECK(histMeta->arguments[0].inputIndex == 1 && histMeta->arguments[2].inputIndex == 3);
     ArgumentValue histArgs[] = {{ArgumentType::Floating, -1.0, 0},
                                 {ArgumentType::Floating, 1.0, 0}, {ArgumentType::Integer, 0.0, 10}};

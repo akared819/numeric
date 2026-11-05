@@ -61,7 +61,7 @@ std::unique_ptr<Operation> makeRunningMean() {
 }
 }
 void registerRunningStatistics(Registry& r) {
-    r.add(Metadata{"running_mean", "running statistics", {{Type::Float64, Shape::Scalar}},
+    r.addWithoutArguments(Metadata{"running_mean", "running statistics", {{Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}},
                    "none", true, "per-instance GSL workspace; reset clears state",
                    "invalid sample or output; numerical error requires reset"}, &makeRunningMean);

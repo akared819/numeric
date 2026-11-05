@@ -28,7 +28,7 @@ protected:
 std::unique_ptr<Operation> makeNormalCdf() { return std::unique_ptr<Operation>(new NormalCdf); }
 }
 void registerProbability(Registry& r) {
-    r.add(Metadata{"normal_cdf", "probability distributions", {{Type::Float64, Shape::Scalar}},
+    r.addWithoutArguments(Metadata{"normal_cdf", "probability distributions", {{Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Scalar}}, "standard normal lower-tail CDF; finite scalar input", false,
                    "per-instance object; no workspace or random state", "invalid input or non-finite/out-of-range result"}, &makeNormalCdf);
 }

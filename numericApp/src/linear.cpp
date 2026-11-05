@@ -36,7 +36,7 @@ protected:
 std::unique_ptr<Operation> makeVectorNorm() { return std::unique_ptr<Operation>(new VectorNorm); }
 }
 void registerLinearAlgebra(Registry& r) {
-    r.add(Metadata{"vector_norm", "linear algebra", {{Type::Float64, Shape::Array}},
+    r.addWithoutArguments(Metadata{"vector_norm", "linear algebra", {{Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "Euclidean norm of a nonempty finite vector", false,
                    "per-instance object; no workspace", "invalid vector or non-finite result"}, &makeVectorNorm);
 }

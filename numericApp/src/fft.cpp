@@ -85,13 +85,13 @@ std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
-    r.add(Metadata{"fft_complex_radix2_forward", "fft", arrays, arrays,
+    r.addWithoutArguments(Metadata{"fft_complex_radix2_forward", "fft", arrays, arrays,
                    "interleaved complex DOUBLE; power-of-two complex length", false,
                    "per-instance object; no workspace", "invalid buffers or non-finite data/result"}, &forward);
-    r.add(Metadata{"fft_complex_radix2_inverse", "fft", arrays, arrays,
+    r.addWithoutArguments(Metadata{"fft_complex_radix2_inverse", "fft", arrays, arrays,
                    "interleaved complex DOUBLE; power-of-two complex length; inverse scales by 1/N", false,
                    "per-instance object; no workspace", "invalid buffers or non-finite data/result"}, &inverse);
-    r.add(Metadata{"fft_real_radix2_forward", "fft", arrays, arrays,
+    r.addWithoutArguments(Metadata{"fft_real_radix2_forward", "fft", arrays, arrays,
                    "real DOUBLE input; power-of-two length; full interleaved complex output", false,
                    "per-instance reusable scratch; reset frees it", "invalid buffers or allocation or numerical failure"}, &realForward);
 }

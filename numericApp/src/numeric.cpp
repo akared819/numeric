@@ -175,6 +175,11 @@ bool Registry::add(const Metadata& metadata, Factory factory) {
     entries_.push_back(Entry{metadata, factory});
     return true;
 }
+bool Registry::addWithoutArguments(Metadata metadata, Factory factory) {
+    if (!metadata.arguments.empty() || metadata.argumentValidator) return false;
+    metadata.argumentSchemaComplete = true;
+    return add(metadata, factory);
+}
 const Metadata* Registry::find(const std::string& name) const {
     for (const auto& entry : entries_) if (name == entry.metadata.name) return &entry.metadata;
     return nullptr;

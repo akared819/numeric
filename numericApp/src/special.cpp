@@ -29,7 +29,7 @@ protected:
 std::unique_ptr<Operation> makeErf() { return std::unique_ptr<Operation>(new ErrorFunction); }
 }
 void registerSpecialFunctions(Registry& r) {
-    r.add(Metadata{"erf", "special functions", {{Type::Float64, Shape::Scalar}},
+    r.addWithoutArguments(Metadata{"erf", "special functions", {{Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Scalar}}, "finite scalar input", false,
                    "per-instance object; no workspace", "invalid argument or GSL numerical error"}, &makeErf);
 }

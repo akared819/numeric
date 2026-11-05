@@ -26,7 +26,7 @@ protected:
 std::unique_ptr<Operation> makeLogOnePlus() { return std::unique_ptr<Operation>(new LogOnePlus); }
 }
 void registerElementary(Registry& r) {
-    r.add(Metadata{"log1p", "elementary functions", {{Type::Float64, Shape::Scalar}},
+    r.addWithoutArguments(Metadata{"log1p", "elementary functions", {{Type::Float64, Shape::Scalar}},
                    {{Type::Float64, Shape::Scalar}}, "finite scalar input greater than -1", false,
                    "per-instance object; no workspace", "invalid input or non-finite result"}, &makeLogOnePlus);
 }

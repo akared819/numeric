@@ -4,7 +4,12 @@ The registry exposes optional `Metadata::arguments` descriptors for
 `moving_mean`, `moving_median`, `gaussian_smooth`, and `histogram_uniform`. The original `inputs`
 and `parameters` fields and execution interface remain unchanged. The
 `argumentSchemaComplete` flag distinguishes a complete, possibly empty schema
-from one that has not been migrated. The remaining operations are incomplete.
+from one that has not been migrated. Statistics, running statistics, radix-2
+FFTs, the vector norm, `erf`, `log1p`, the normal CDF, and linear fitting are
+explicitly registered without configuration arguments. Their numerical inputs
+and constraints are unchanged. Polynomial evaluation, interpolation,
+integration and roots still need review before their schemas are marked
+complete.
 
 An argument descriptor names its position in the descriptor list, its type,
 whether it is required, whether it has a default, inclusive bounds, and
