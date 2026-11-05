@@ -4,11 +4,7 @@
 
 `numeric` is a native C++ EPICS support module. It connects GSL calculations to scalar and waveform process variables through a small numerical core, aSub routines, and dedicated `numericScalar` and `numericArray` records. It requires no Python runtime.
 
-> **Release candidate:** `0.1.0-rc.2` includes native Windows support and local Linux validation. See the [candidate notes](docs/release-candidate.md) for validation and limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for publication status.
-
-The `develop` branch also contains the in-progress 0.2.0 interfaces and
-[draft notes](docs/release-0.2.0-draft.md). Their presence does not mean a
-0.2.0 release has been published.
+> **Version 0.2.0:** See the [release notes](docs/release-0.2.0-draft.md) for upgrades, validation and known limitations, and [GitHub releases](https://github.com/akared819/numeric/releases) for published downloads.
 
 ## What it provides
 
@@ -18,7 +14,7 @@ The `develop` branch also contains the in-progress 0.2.0 interfaces and
 | Waveform calculations | Radix-2 FFT, moving mean and median, Gaussian smoothing, histogram | [FFT](docs/fft.md), [windows](docs/window-statistics.md), [histograms](docs/histograms.md) |
 | Numerical functions | Interpolation, fitting, polynomial evaluation and integration, root finding, `erf`, `log1p`, normal CDF, vector norm | [GSL coverage](docs/gsl-coverage.md) |
 | EPICS interfaces | aSub functions, scalar and array records, acknowledged single-producer streaming | [Scalar record](docs/numeric-scalar.md), [array record](docs/numeric-array.md), [streaming protocol](docs/streaming-transport.md) |
-| 0.2.0 development | Multiple input links, runtime arguments, typed views, Welch PSD, STFT, matrix operations and native callback solvers | [Draft notes](docs/release-0.2.0-draft.md), [FFT and spectral analysis](docs/fft.md), [native callbacks](docs/numerical-differentiation.md), [fitting](docs/nonlinear-fitting.md), [sampling](docs/random-sampling.md) |
+| 0.2.0 interfaces | Multiple input links, runtime arguments, typed views, Welch PSD, STFT, matrix operations and native callback solvers | [Release notes](docs/release-0.2.0-draft.md), [FFT and spectral analysis](docs/fft.md), [native callbacks](docs/numerical-differentiation.md), [fitting](docs/nonlinear-fitting.md), [sampling](docs/random-sampling.md) |
 
 Coverage is a tested subset of GSL, not its complete API. See the [coverage inventory](docs/gsl-coverage.md) for exact operations and limits.
 
@@ -73,7 +69,7 @@ To exercise the example IOC and the separate-process Channel Access tests, from 
 
 These tests use loopback ports 25064–25066, which must be available. The [Linux](.github/workflows/ci.yml) and [macOS](.github/workflows/macos.yml) workflows show the full native and IOC test suites. Linux additionally runs the GDB notification stress checks. Build products install under `include/`, `lib/<arch>/`, `dbd/`, and `bin/<arch>/`; `make clean` removes build products.
 
-For a step-by-step tour of the example databases, see the [examples and usage guide](docs-site/index.md). A [Japanese guide to record fields, arguments and operations](https://akared819.github.io/numeric/ja/) is also available for the 0.2.0 development version. To publish the guides with GitHub Pages, set the repository’s Pages source to **GitHub Actions**; the documentation workflow deploys changes from `main` when that source is enabled and otherwise skips deployment.
+For a step-by-step tour of the example databases, see the [examples and usage guide](docs-site/index.md). A [Japanese guide to record fields, arguments and operations](https://akared819.github.io/numeric/ja/) is also available for version 0.2.0. To publish the guides with GitHub Pages, set the repository’s Pages source to **GitHub Actions**; the documentation workflow deploys changes from `main` when that source is enabled and otherwise skips deployment.
 
 ## Try the example IOC
 

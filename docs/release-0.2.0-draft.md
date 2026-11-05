@@ -1,13 +1,7 @@
-# numeric 0.2.0 development notes
+# numeric 0.2.0 release notes
 
-This document describes the development candidate; it is not a declaration
-that version 0.2.0 has been released. Final commit, platform results and release
-approval must be recorded against the actual candidate.
-
-The proposed version is `0.2.0`. The tag, publication date and final
-distribution artifacts have not yet been selected or published. Prepare and
-review them with the release owner when publication is requested; do not treat
-the development-branch validation as approval to publish.
+These notes describe version 0.2.0. See [GitHub releases](https://github.com/akared819/numeric/releases)
+for its publication status, exact source commit, validation and artifacts.
 
 ## Changes
 
@@ -77,15 +71,11 @@ commit, detailed test scope and results. These records describe the tested
 hosts and commits; they do not automatically verify a later release commit or
 other deployments.
 
-## Publication preparation
+## Publication preparation record
 
 - [x] Record reported Windows and Linux host versions and link the detailed
   test records, including the Windows spectral fix and its regression tests.
 - [x] Prepare the upgrade notes, known limitations, licensing references and
   user guide for record inputs and arguments.
-- [ ] Re-run the required CI checks and review the exact release candidate,
-  including the Windows fix and documentation changes, after integration.
-- [ ] Choose the final release commit and publication date; verify the source
-  and any binary artifacts, their checksums and corresponding-source notices.
-- [ ] Review the tag, release notes and artifacts with the release owner before
-  creating the tag or publishing 0.2.0.
+- Consult the GitHub release for the final commit, CI results, publication date,
+  source distribution and checksum. Binary distributions are not included.
