@@ -72,6 +72,22 @@ Result differentiateCentral(ScalarCallback callback, void* context, double x, do
         return {Status::NumericalError, "differentiation or callback failed"};
     value = result; absoluteError = error; return {Status::Ok, "ok"};
 }
+Result integrateAdaptive(ScalarCallback callback, void* context, double lower, double upper,
+                         double absTol, double relTol, std::size_t limit, double& value, double& absoluteError) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    if (!callback || &value == &absoluteError || !std::isfinite(lower) || !std::isfinite(upper) || lower >= upper ||
+        !std::isfinite(upper - lower) || !std::isfinite(absTol) || !std::isfinite(relTol) || absTol < 0 || relTol < 0 ||
+        (absTol == 0 && relTol < 50 * std::numeric_limits<double>::epsilon()) || limit == 0 || limit > 1000000)
+        return {Status::InvalidArgument, "invalid integration inputs"};
+    std::unique_ptr<gsl_integration_workspace, decltype(&gsl_integration_workspace_free)> workspace(gsl_integration_workspace_alloc(limit), &gsl_integration_workspace_free);
+    if (!workspace) return {Status::NumericalError, "integration workspace allocation failed"};
+    CallbackData data{callback, context, false}; gsl_function function{&invokeCallback, &data};
+    double result = 0, error = 0;
+    const int status = gsl_integration_qags(&function, lower, upper, absTol, relTol, limit, workspace.get(), &result, &error);
+    if (data.failed || status != GSL_SUCCESS || !std::isfinite(result) || !std::isfinite(error) || error < 0)
+        return {Status::NumericalError, "integration did not converge or callback failed"};
+    value = result; absoluteError = error; return {Status::Ok, "ok"};
+}
 void registerIntegration(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
     r.addWithoutArguments(Metadata{"polynomial_integral", "numerical integration", {array,scalarDesc,scalarDesc}, {scalarDesc},

@@ -19,5 +19,15 @@ must avoid concurrent modification of its context and output variables. This
 call uses no operation-owned workspace; callback execution time is under the
 caller's control.
 
+`numeric::integrateAdaptive` uses the same callback contract with GSL QAGS on
+a finite, strictly increasing interval. The caller supplies nonnegative
+absolute and relative tolerances and a limit of 1 to 1,000,000 subintervals;
+when the absolute tolerance is zero the relative tolerance must be at least
+50 machine epsilons. The workspace is allocated for the call and freed before
+return. GSL failure to converge, callback failure or non-finite results return
+an error and preserve both outputs. The reported absolute error is an estimate,
+not a guaranteed bound. The subdivision limit does not bound the execution time
+of a user callback. See [GSL adaptive integration](https://www.gnu.org/software/gsl/doc/html/integration.html).
+
 The function is a native C++ interface, not an IOC record operation. See the
 [GSL numerical differentiation documentation](https://www.gnu.org/software/gsl/doc/html/diff.html).

@@ -98,6 +98,10 @@ using ScalarCallback = double (*)(double x, void* context);
 // Output values are unchanged on error. The error value is an estimate, not a bound.
 NUMERIC_API Result differentiateCentral(ScalarCallback callback, void* context, double x, double step,
                                          double& value, double& absoluteError);
+// Adaptive integral over a finite increasing interval, with a bounded subdivision count.
+NUMERIC_API Result integrateAdaptive(ScalarCallback callback, void* context, double lower, double upper,
+                                     double absoluteTolerance, double relativeTolerance, std::size_t maxSubintervals,
+                                     double& value, double& absoluteError);
 NUMERIC_API void registerBuiltins(Registry& registry);
 }
 #endif

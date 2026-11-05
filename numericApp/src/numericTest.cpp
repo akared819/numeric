@@ -15,6 +15,7 @@ namespace {
 double squareCallback(double x, void* context) { return x*x * *static_cast<double*>(context); }
 double badCallback(double, void*) { return std::numeric_limits<double>::quiet_NaN(); }
 double throwingCallback(double, void*) { throw 1; }
+double sqrtCallback(double x, void*) { return std::sqrt(x); }
 int destroyed = 0;
 class Lifetime : public Operation {
 public:
@@ -190,6 +191,7 @@ int main() {
     CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::NotInitialized && iv == 42);
     double derivative = 7, derivativeError = 8, multiplier = 3;
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::NotInitialized && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::Ok && std::fabs(derivative - 12) < 1e-8 && derivativeError >= 0);
     derivative = 7; derivativeError = 8;
@@ -198,6 +200,14 @@ int main() {
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivative).status == Status::InvalidArgument);
     CHECK(differentiateCentral(&badCallback, nullptr, 2, .01, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
     CHECK(differentiateCentral(&throwingCallback, nullptr, 2, .01, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::Ok && std::fabs(derivative - 8) < 1e-10 && derivativeError >= 0);
+    derivative = 7; derivativeError = 8;
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 2, 0, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 0, 0, 100, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 0, derivative, derivativeError).status == Status::InvalidArgument);
+    CHECK(integrateAdaptive(&badCallback, nullptr, 0, 2, 1e-9, 1e-9, 10, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&throwingCallback, nullptr, 0, 2, 1e-9, 1e-9, 10, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(integrateAdaptive(&sqrtCallback, nullptr, 0, 1, 1e-14, 1e-14, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
     auto spline = r.create("interp_cspline"); CHECK(spline);
     double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
     Input splineInputs[] = {{sx,3,3,1,Type::Float64,Shape::Array}, {sy,3,3,1,Type::Float64,Shape::Array}, {&sq,1,1,1,Type::Float64,Shape::Scalar}};
