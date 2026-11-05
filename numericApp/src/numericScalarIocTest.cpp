@@ -8,6 +8,7 @@
 #include <testMain.h>
 #include <cstdlib>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
 static bool valueNear(const char* name, double expected) {
@@ -30,6 +31,11 @@ MAIN(numericScalarIocTest) {
     testdbReadDatabase("numericApp/src/numericScalarIocTest.db", nullptr, nullptr);
     if (!noInit) iocshCmd("numericInitialize");
     testIocInitOk();
+    for (char letter = 'A'; letter <= 'P'; ++letter) {
+        char name[32]; std::snprintf(name, sizeof(name), "scalarMean.ARG%c", letter);
+        DBADDR argumentAddress;
+        testOk(dbNameToAddr(name, &argumentAddress) == 0, "%s is accessible", name);
+    }
     testMonitor* valueMonitor = testMonitorCreate("scalarMean.VAL", DBE_VALUE | DBE_ALARM, 0);
     testMonitorSync(valueMonitor); testMonitorCount(valueMonitor, 1);
     double values[] = {1,2,3,4};

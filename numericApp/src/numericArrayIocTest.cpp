@@ -7,6 +7,7 @@
 #include <iocsh.h>
 #include <testMain.h>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <limits>
 extern "C" int numericIocTest_registerRecordDeviceDriver(struct dbBase*);
@@ -31,6 +32,11 @@ MAIN(numericArrayIocTest) {
     testdbReadDatabase("numericApp/src/numericArrayIocTest.db", nullptr, nullptr);
     if (!noInit) iocshCmd("numericInitialize");
     testIocInitOk();
+    for (char letter = 'A'; letter <= 'P'; ++letter) {
+        char name[32]; std::snprintf(name, sizeof(name), "arrayMean.ARG%c", letter);
+        DBADDR argumentAddress;
+        testOk(dbNameToAddr(name, &argumentAddress) == 0, "%s is accessible", name);
+    }
     testMonitor* monitor = testMonitorCreate("arrayMean.VAL", DBE_VALUE | DBE_ALARM, 0);
     testMonitorSync(monitor); testMonitorCount(monitor, 1);
     double data[] = {1,2,3,4,5}, expected[] = {4.0/3,2,3,4,14.0/3};
