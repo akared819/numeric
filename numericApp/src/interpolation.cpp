@@ -10,10 +10,12 @@ namespace {
 struct InterpFree { void operator()(gsl_interp* p) const { if (p) gsl_interp_free(p); } };
 struct AccelFree { void operator()(gsl_interp_accel* p) const { if (p) gsl_interp_accel_free(p); } };
 class LinearInterpolation : public Operation {
+    bool cubic_;
     std::unique_ptr<gsl_interp, InterpFree> interp_;
     std::unique_ptr<gsl_interp_accel, AccelFree> accel_;
     std::size_t size_ = 0;
 public:
+    explicit LinearInterpolation(bool cubic = false) : cubic_(cubic) {}
     void reset() override { interp_.reset(); accel_.reset(); size_ = 0; }
 protected:
     Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
@@ -21,7 +23,7 @@ protected:
         if (!in || !out || ni != 3 || no != 1)
             return {Status::InvalidArgument, "interpolation requires x, y, and query"};
         const Input &x = in[0], &y = in[1], &q = in[2]; Output& result = out[0];
-        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || x.count < 2 || x.count > x.capacity || x.stride != 1 ||
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || x.count < (cubic_ ? 3u : 2u) || x.count > x.capacity || x.stride != 1 ||
             y.type != Type::Float64 || y.shape != Shape::Array || !y.data || y.count != x.count || y.count > y.capacity || y.stride != 1 ||
             q.type != Type::Float64 || q.shape != Shape::Scalar || !q.data || q.count != 1 || q.capacity < 1 || q.stride != 1 ||
             result.type != Type::Float64 || result.shape != Shape::Scalar || !result.data || !result.capacity || !std::isfinite(q.data[0]))
@@ -35,7 +37,7 @@ protected:
         if (q.data[0] < x.data[0] || q.data[0] > x.data[x.count-1])
             return {Status::InvalidArgument, "query outside interpolation domain"};
         if (size_ != x.count) {
-            std::unique_ptr<gsl_interp, InterpFree> fresh(gsl_interp_alloc(gsl_interp_linear, x.count));
+            std::unique_ptr<gsl_interp, InterpFree> fresh(gsl_interp_alloc(cubic_ ? gsl_interp_cspline : gsl_interp_linear, x.count));
             if (!fresh) return {Status::NumericalError, "interpolation allocation failed"};
             interp_.swap(fresh); size_ = x.count;
         }
@@ -54,11 +56,15 @@ protected:
     }
 };
 std::unique_ptr<Operation> makeLinearInterpolation() { return std::unique_ptr<Operation>(new LinearInterpolation); }
+std::unique_ptr<Operation> makeCubicInterpolation() { return std::unique_ptr<Operation>(new LinearInterpolation(true)); }
 }
 void registerInterpolation(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalar{Type::Float64, Shape::Scalar};
     r.addWithoutArguments(Metadata{"interp_linear", "interpolation", {array, array, scalar}, {scalar},
         "strictly increasing finite x, finite y and query in closed x domain", false,
         "per-instance reusable GSL interpolation and accelerator; reset releases both", "invalid input, allocation or GSL numerical error"}, &makeLinearInterpolation);
+    r.addWithoutArguments(Metadata{"interp_cspline", "interpolation", {array, array, scalar}, {scalar},
+        "natural cubic spline; at least three strictly increasing finite x points and a query in range", false,
+        "per-instance reusable GSL interpolation and accelerator; reset releases both", "invalid input, allocation or GSL numerical error"}, &makeCubicInterpolation);
 }
 }

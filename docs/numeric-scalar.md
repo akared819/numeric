@@ -2,6 +2,13 @@
 
 `numericScalar` is a synchronous EPICS record that reads numeric scalar or waveform inputs and returns one DOUBLE scalar VAL using a compatible stateless numeric registry operation. Configure OP at database load time (default `mean`); supported names include `mean`, `variance`, `stddev`, `population_variance`, `population_stddev`, [`vector_norm`](linear-algebra.md), `correlation`, `covariance`, `polynomial_eval` and `pow_int`. OP must resolve to one or more Float64 scalar or array numerical inputs, optional mapped configuration arguments, and one Float64 scalar output; it must not be stateful. OP and NMAX are not modifiable at runtime. Scalar inputs require exactly one element. Multi-output operations are unsupported.
 
+`interp_cspline` accepts ascending x coordinates in INPA, corresponding y
+values in INPB and a scalar query in INPC. At least three finite points are
+required and the query must lie inside the x range. It calls GSL's natural cubic
+spline, whose endpoint second derivatives are zero. Each instance owns its
+interpolation workspace; separate input links do not form an atomic snapshot.
+See [GSL interpolation](https://www.gnu.org/software/gsl/doc/html/interp.html).
+
 `weighted_mean` takes data in INPA and weights in INPB. Both arrays must have
 equal, nonzero lengths and finite values; weights must be nonnegative with at
 least one positive weight. Zero weights exclude the corresponding sample.

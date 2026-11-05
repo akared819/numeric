@@ -18,6 +18,9 @@ record(numericScalar, "typedMixedCorrelation") {
 record(numericScalar, "multiCorrelation") {
     field(OP, "correlation") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(NMAX, "4")
 }
+record(numericScalar, "cubicSpline") {
+    field(OP, "interp_cspline") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(INPC, "multiPoint NPP NMS") field(NMAX, "4")
+}
 record(numericScalar, "weightedMean") {
     field(OP, "weighted_mean") field(INPA, "multiX NPP NMS") field(INPB, "multiY NPP NMS") field(NMAX, "4")
 }

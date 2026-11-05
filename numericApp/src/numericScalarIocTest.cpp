@@ -104,6 +104,15 @@ MAIN(numericScalarIocTest) {
     double multiX[] = {1, 2, 3, 4, 5}, multiY[] = {2, 4, 6, 8, 10};
     testdbPutArrFieldOk("multiX", DBF_DOUBLE, 4, multiX);
     testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, multiY);
+    testdbPutFieldOk("cubicSpline.PROC", DBF_LONG, 1);
+    testOk(valueNear("cubicSpline.VAL", 4.0), "natural cubic spline evaluates linked data");
+    testdbPutFieldOk("multiPoint.VAL", DBF_DOUBLE, 10.0);
+    testdbPutFieldOk("cubicSpline.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("cubicSpline.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("cubicSpline.VAL", 4.0), "out-of-domain spline query preserves output");
+    testdbPutFieldOk("multiPoint.VAL", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("cubicSpline.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("cubicSpline.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("sortedQuantile.PROC", DBF_LONG, 1);
     testOk(valueNear("sortedQuantile.VAL", 3.25), "quantile accepts waveform and scalar inputs");
     testdbPutFieldOk("quantileFraction.VAL", DBF_DOUBLE, 2.0);

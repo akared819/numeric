@@ -186,6 +186,15 @@ int main() {
     Output interpolationOut{&iv, 1, 0, Type::Float64, Shape::Scalar};
     CHECK(interpolation->execute(interpolationIn, 3, &interpolationOut, 1).status == Status::NotInitialized && iv == 42);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto spline = r.create("interp_cspline"); CHECK(spline);
+    double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
+    Input splineInputs[] = {{sx,3,3,1,Type::Float64,Shape::Array}, {sy,3,3,1,Type::Float64,Shape::Array}, {&sq,1,1,1,Type::Float64,Shape::Scalar}};
+    Output splineOutput{&sv,1,0,Type::Float64,Shape::Scalar};
+    CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::Ok && std::fabs(sv-.6875) < 1e-12);
+    sq = 3; CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::InvalidArgument && std::fabs(sv-.6875) < 1e-12);
+    sq = .5; sx[1] = 0; CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::InvalidArgument);
+    sx[1] = 1; splineInputs[0].count = splineInputs[1].count = 2; CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::InvalidArgument);
+    splineInputs[0].count = splineInputs[1].count = 3; spline->reset(); CHECK(spline->execute(splineInputs, 3, &splineOutput, 1).status == Status::Ok);
     auto power = r.create("pow_int"); CHECK(power && r.find("pow_int"));
     double powerBase = 2, powerExponent = 3, powerValue = 42;
     Input powerIn[] = {{&powerBase, 1, 1, 1, Type::Float64, Shape::Scalar},
