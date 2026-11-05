@@ -59,3 +59,20 @@ DOUBLE waveform benchmark and excludes network overhead; allocations were not
 instrumented. The earlier table used a different OS and Base checkout, so this
 is not a controlled before-and-after comparison. Additional FLOAT/LONG/INT64
 conversion measurements remain necessary.
+
+For a closer comparison on 2026-11-05, clean source from `main` commit
+`1f71916` and the typed-link development implementation were built with the
+same EPICS Base R7.0.11, GSL 2.8, Apple LLVM 21.0.0 and macOS 27.2 on an Apple
+M3. Three runs alternated baseline and development for each size; the displayed
+values are mean nanoseconds per processing call from each run:
+
+| DOUBLE array size | Iterations per run | `main` ns/process | `develop` ns/process |
+| --- | ---: | --- | --- |
+| 1,024 | 10,000 | 7,362.2; 7,470.2; 7,589.9 | 7,552.9; 7,538.5; 7,470.2 |
+| 65,536 | 200 | 422,829.4; 420,800.8; 419,297.7 | 426,510.0; 426,092.5; 419,140.8 |
+
+These overlapping observations do not show a clear regression at these sizes,
+but the machine was not isolated and the results are run averages, not
+per-call latency distributions. This comparison covers local DOUBLE links only,
+does not instrument allocations, and does not establish hard-real-time
+behavior.

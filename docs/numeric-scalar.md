@@ -25,4 +25,9 @@ Each record owns a separate operation instance and one input buffer per link, al
 
 For an IOC application, include both `numericSupport.dbd` and `numericScalarRecord.dbd` in its application DBD and link `numericIoc` and `numeric`. See [scalar.db](../examples/scalar.db) for mean and sample variance records. Write a waveform, explicitly process the desired record, and read VAL and SEVR. EPICS links can acquire data asynchronously and can report changing values; the record does not guarantee that every update is processed or that external data is stable across multiple PVs.
 
+The additional link and argument fields change the generated record structure.
+Rebuild the application DBD, generated record headers and linked record support
+together when upgrading; do not mix binaries built against different versions.
+Existing databases using only INP retain their documented behavior.
+
 The standalone IOC also loads [multi-input.db](../examples/multi-input.db), with two-waveform correlation and waveform-plus-scalar polynomial examples. Set both inputs before triggering processing and inspect the result alarm.
