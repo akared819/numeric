@@ -30,6 +30,10 @@ fail() {
     exit 1
 }
 start_relay() {
+    # Clear the previous invocation synchronously before starting the child.
+    # Otherwise the readiness check may read the old "ready" line before
+    # the new process has opened and truncated its log.
+    : >"$test_dir/relay.log"
     "./bin/$1/numericCaRelay" >"$test_dir/relay.log" 2>&1 &
     relay_pid=$!
     count=0
