@@ -127,6 +127,13 @@ Result parseArgument(ArgumentType type, const char* text, std::size_t length, Ar
         stream >> std::noskipws >> parsed;
         if (!stream || stream.peek() != std::char_traits<char>::eof() || !std::isfinite(parsed))
             return {Status::InvalidArgument, "invalid floating argument"};
+        if (parsed == 0.0) {
+            for (const char character : input) {
+                if (character == 'e' || character == 'E') break;
+                if (character >= '1' && character <= '9')
+                    return {Status::InvalidArgument, "floating argument underflow"};
+            }
+        }
         value = {type, parsed, 0};
         return {Status::Ok, "ok"};
     }

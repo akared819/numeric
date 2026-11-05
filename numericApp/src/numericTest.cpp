@@ -49,6 +49,7 @@ int main() {
     CHECK(parseArgument(ArgumentType::Floating, "1.2 ", 4, parsed).status == Status::InvalidArgument);
     CHECK(parseArgument(ArgumentType::Floating, "1e999", 5, parsed).status == Status::InvalidArgument);
     CHECK(parseArgument(ArgumentType::Floating, "1e-999", 6, parsed).status == Status::InvalidArgument);
+    CHECK(parseArgument(ArgumentType::Floating, "-0.0", 4, parsed).status == Status::Ok && parsed.floating == 0.0);
     CHECK(parseArgument(ArgumentType::Boolean, "true", 4, parsed).status == Status::Ok && parsed.integer == 1);
     CHECK(parseArgument(ArgumentType::Boolean, "2", 1, parsed).status == Status::InvalidArgument);
     CHECK(parseArgument(ArgumentType::Enumeration, "7", 1, parsed).status == Status::Ok && parsed.integer == 7);
