@@ -15,6 +15,7 @@ assert set(names) == registered, f'missing: {sorted(registered - set(names))}; e
 for item in entries:
     for field in ('inputs_en', 'inputs_ja', 'result_en', 'result_ja'):
         assert item[field].strip(), f"{item['name']}: missing {field}"
+    assert bool(item.get('args_en')) == bool(item.get('args_ja')), f"{item['name']}: untranslated arguments"
     assert item['interface'] in ('scalar', 'array', 'asub')
     assert (root / 'docs' / item['doc']).is_file(), f"{item['name']}: missing reference"
 print(f'{len(names)} registered operations documented in English and Japanese')
