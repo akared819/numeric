@@ -43,6 +43,7 @@ jobs:
           grep -q 'id="welch_psd"' _site/ja/reference/index.html
           grep -q 'href="/numeric/ja/reference/" hreflang="ja"' _site/reference/index.html
           grep -q 'href="/numeric/reference/" hreflang="en"' _site/ja/reference/index.html
+          python3 tests/check-doc-generated.py _site
           if grep -q '日本語' _site/index.html; then
             echo 'The English page must not contain Japanese text.' >&2
             exit 1

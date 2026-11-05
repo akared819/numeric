@@ -94,6 +94,14 @@ Set the source PVs to the example values, process `EXAMPLE:RESULT.PROC`, then re
 
 GSL coverage is a subset, not the complete library; see the [coverage inventory](https://github.com/akared819/numeric/blob/main/docs/gsl-coverage.md).
 
+### Run the native examples
+
+After building numeric, run this from the repository root. Replace the Base path and configure the GSL shared-library search path if needed.
+
+```sh
+./tests/native-reference-examples.sh "$(/absolute/path/to/base/startup/EpicsHostArch)"
+```
+
 ## Native C++ API quick reference
 
 These interfaces are synchronous and use caller-owned inputs and outputs unless stated otherwise. See the linked headers for exact signatures. `Result` contains a `Status` and a message; check it before consuming an output. Initialize the process-wide GSL policy at single-threaded startup with `initializeGsl()`; `isGslInitialized()` reports whether numeric performed initialization. The IOC command is `numericInitialize`.
@@ -119,11 +127,13 @@ These interfaces are synchronous and use caller-owned inputs and outputs unless 
 
 Output preservation, callback restrictions, numerical limits and examples are specified in the linked [callback guide](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md), [fitting guide](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md) and [sampling guide](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md). GSL error estimates are not guaranteed bounds.
 
-## Native numerical API details
+<h2 id="native-numerical">Native numerical API details</h2>
 
 These are C++ APIs. Unless stated otherwise every parameter is required and has no default. Check `Result.status == Status::Ok` before using outputs. Keep callbacks and contexts alive during the call and initialize the GSL error policy first. Error estimates are not guaranteed bounds.
 
 The [complete runnable example, including callback definitions](https://github.com/akared819/numeric/blob/main/examples/native-api-reference.cpp), uses `square(x)=x*x`, `rootFn(x)=x*x-2`, `minimumFn(x)=(x-2)^2`, `ode` for `dx/dt=x`, and `residual` for a three-point exponential model. The following calls use variables defined in that example.
+
+{% for api in site.data.native_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for api in site.data.native_details %}
 ### `{{ api.name }}`
@@ -146,7 +156,7 @@ auto result = {{ api.example }};
 ```
 {% endfor %}
 
-## Native core and utility API details
+<h2 id="native-core">Native core and utility API details</h2>
 
 These C++ APIs are not dedicated-record fields. The signature, parameters, return and failure conditions are listed below; parameters without an explicit C++ default are required. Each snippet is taken from the [complete executable example](https://github.com/akared819/numeric/blob/main/examples/native-core-reference.cpp). In real code, check every returned status and pointer and keep caller-owned buffers alive throughout each call.
 
@@ -163,6 +173,8 @@ These C++ APIs are not dedicated-record fields. The signature, parameters, retur
 | `ArrayView` / `MutableArrayView` | Caller-owned storage, capacity in bytes, `ElementType`, rank, extents and byte strides. Keep data, shape and stride arrays alive throughout use. |
 | `ElementValue` | `ElementType` and integer or real/imaginary components. Complex components are real then imaginary. |
 | `Event` / `Acknowledgment` | An event contains session, sequence, kind and value. An acknowledgment contains the event, seven statistics and a `replayed` flag. |
+
+{% for api in site.data.native_core_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for api in site.data.native_core_details %}
 ### `{{ api.name }}`
@@ -185,11 +197,13 @@ These C++ APIs are not dedicated-record fields. The signature, parameters, retur
 {% endfor %}
 
 
-## aSub function details
+<h2 id="asub-reference">aSub function details</h2>
 
 Set the function name in an `aSub` record’s `SNAM`. A, B and C are aSub inputs fetched through links such as `INPA`; **they are not the dedicated-record `ARGA` fields**. Configure the used inputs and outputs as DOUBLE. For waveform inputs reserve one more `NO*` element than the largest source waveform and allocate sufficient `NOV*` output capacity to detect truncation. See each linked specification for exceptions and further constraints. Call `numericInitialize` before `iocInit`.
 
 No operation-specific numerical input is filled automatically: configure each aSub input link or constant explicitly. Input updates generally do not schedule processing. An input-fetch failure can happen before the numeric callback, so inspect the record, links and data freshness. Previous output may remain on failure. Acknowledged streaming follows a separate processing protocol.
+
+{% for api in site.data.asub_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for api in site.data.asub_details %}
 {% assign operation = site.data.operation_details[api.operation] %}

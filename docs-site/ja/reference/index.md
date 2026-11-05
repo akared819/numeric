@@ -95,6 +95,14 @@ record(numeric{% if op.interface == 'scalar' %}Scalar{% else %}Array{% endif %},
 
 利用可能な機能はGSLの一部です。[対応状況一覧](https://github.com/akared819/numeric/blob/main/docs/gsl-coverage.md)を参照してください。
 
+### ネイティブ実行例の試し方
+
+numericをビルドした後、リポジトリのルートから実行します。Baseのパスは自分の環境に変更し、必要ならGSLの共有ライブラリーへのパスを設定してください。
+
+```sh
+./tests/native-reference-examples.sh "$(/absolute/path/to/base/startup/EpicsHostArch)"
+```
+
 ## ネイティブC++ API早見表
 
 以下は同期呼び出しです。特に指定がなければ、入力と出力の所有者は呼び出し側です。`Result`の`Status`とメッセージを確認してから出力を使います。GSLのプロセス全体の設定は、単一スレッドの起動時に`initializeGsl()`で初期化します。`isGslInitialized()`はnumeric側の初期化状態を返します。IOCコマンドは`numericInitialize`です。
@@ -120,11 +128,13 @@ record(numeric{% if op.interface == 'scalar' %}Scalar{% else %}Array{% endif %},
 
 失敗時の出力保持、コールバックの制約、数値上の上限と実例は[コールバック](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md)、[フィッティング](https://github.com/akared819/numeric/blob/main/docs/nonlinear-fitting.md)、[乱数](https://github.com/akared819/numeric/blob/main/docs/random-sampling.md)の各ガイドを参照してください。GSLの誤差推定は保証された誤差上限ではありません。
 
-## ネイティブ数値APIの詳細
+<h2 id="native-numerical">ネイティブ数値APIの詳細</h2>
 
 以下はC++ APIです。引数は明記されたものを除き既定値がなく、すべて指定します。`Result.status == Status::Ok`を確認してから出力を使ってください。コールバックとコンテキストは呼び出し中有効に保ち、GSLエラー処理を初期化します。推定誤差は厳密な上限ではありません。
 
 [完全な実行例（コールバック定義を含む）](https://github.com/akared819/numeric/blob/main/examples/native-api-reference.cpp)では、`square(x)=x*x`、`rootFn(x)=x*x-2`、`minimumFn(x)=(x-2)^2`、`ode`は`dx/dt=x`、`residual`は3点の指数モデル残差です。以下の呼び出しはこの例の変数を使います。
+
+{% for api in site.data.native_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for api in site.data.native_details %}
 ### `{{ api.name }}`
@@ -147,7 +157,7 @@ auto result = {{ api.example }};
 ```
 {% endfor %}
 
-## ネイティブコア・ユーティリティAPIの詳細
+<h2 id="native-core">ネイティブコア・ユーティリティAPIの詳細</h2>
 
 以下はC++ APIであり、専用レコードのフィールドではありません。型・引数・結果・エラーを示します。宣言に明記された既定値以外の引数は必須です。各スニペットは[完全な実行例](https://github.com/akared819/numeric/blob/main/examples/native-core-reference.cpp)からの抜粋です。実際のコードでは全戻り値とポインターを確認し、バッファーを呼び出し中有効に保ってください。
 
@@ -164,6 +174,8 @@ auto result = {{ api.example }};
 | `ArrayView` / `MutableArrayView` | 呼び出し側所有の領域、容量（バイト）、`ElementType`、rank、各次元の要素数とバイトストライド。配列データ、形状、ストライドは使用中有効にしてください。 |
 | `ElementValue` | `ElementType`と整数または実部・虚部を保持。複素数は実部・虚部の順です。 |
 | `Event` / `Acknowledgment` | `Event`はsession、sequence、種別、値。確認応答はイベント、7個の統計、再送を示す`replayed`を保持。 |
+
+{% for api in site.data.native_core_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for api in site.data.native_core_details %}
 ### `{{ api.name }}`
@@ -186,11 +198,13 @@ auto result = {{ api.example }};
 {% endfor %}
 
 
-## aSub関数の詳細
+<h2 id="asub-reference">aSub関数の詳細</h2>
 
 各関数は`aSub`レコードの`SNAM`に名前を設定します。A、B、CはaSubの入力で、対応する`INPA`などから取得されます。**専用レコードの`ARGA`とは別物です。** 使用する入力と出力はDOUBLEに設定します。波形入力は、最大入力長より1要素多い`NO*`を確保し、出力には必要な`NOV*`を確保してください。これは切り詰めを検出するためです。例外を含む詳しい制約は各リンク先を確認してください。`numericInitialize`は`iocInit`前に実行します。
 
 数値の設定に自動的な既定値はありません。リンクや定数をaSubに明示して設定してください。値を更新しただけでは通常は処理されません。入力取得が関数呼び出し前に失敗した場合は、numeric側の警報処理を通らないことがあります。失敗時は古い出力が残ることがあるため、警報と入力の鮮度を確認してください。確認応答付きストリーミングは別の処理規約を持ちます。
+
+{% for api in site.data.asub_details %}[`{{ api.name }}`](#{{ api.name | downcase | remove: ":" }}){% unless forloop.last %} · {% endunless %}{% endfor %}
 
 {% for api in site.data.asub_details %}
 {% assign operation = site.data.operation_details[api.operation] %}

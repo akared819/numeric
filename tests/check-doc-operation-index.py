@@ -53,5 +53,8 @@ for item in asub_entries:
                   'example_inputs', 'example_output'):
         assert item.get(field), f"{item['name']}: missing {field}"
     assert item['operation'] in details, f"{item['name']}: missing operation"
-    assert (root / 'examples' / item['db']).is_file(), f"{item['name']}: missing example"
+    example = root / 'examples' / item['db']
+    assert example.is_file(), f"{item['name']}: missing example"
+    if not item.get('adapt_example'):
+        assert item['name'] in example.read_text(), f"{item['name']}: incorrect example"
 print(f'{len(asub_entries)} aSub functions have bilingual details and examples')
