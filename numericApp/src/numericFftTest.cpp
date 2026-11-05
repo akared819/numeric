@@ -18,6 +18,17 @@ int main() {
     CHECK(f->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     CHECK(real->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     initializeGsl();
+    auto axis = r.create("fft_frequency_axis"); CHECK(axis);
+    double axisLength = 4, interval = 0.5, frequencies[5] = {};
+    Input axisInputs[] = {{&axisLength,1,1,1,Type::Float64,Shape::Scalar}, {&interval,1,1,1,Type::Float64,Shape::Scalar}};
+    Output axisOutput{frequencies,5,0,Type::Float64,Shape::Array};
+    CHECK(axis->execute(axisInputs, 2, &axisOutput, 1).status == Status::Ok && axisOutput.count == 4);
+    CHECK(frequencies[0] == 0 && frequencies[1] == .5 && frequencies[2] == -1 && frequencies[3] == -.5);
+    axisLength = 5; CHECK(axis->execute(axisInputs, 2, &axisOutput, 1).status == Status::Ok && std::fabs(frequencies[2] - .8) < 1e-12 && std::fabs(frequencies[3] + .8) < 1e-12);
+    axisLength = 4.5; CHECK(axis->execute(axisInputs, 2, &axisOutput, 1).status == Status::InvalidArgument && axisOutput.count == 0 && std::fabs(frequencies[2] - .8) < 1e-12);
+    axisLength = 4; interval = 0; CHECK(axis->execute(axisInputs, 2, &axisOutput, 1).status == Status::InvalidArgument);
+    interval = std::numeric_limits<double>::infinity(); CHECK(axis->execute(axisInputs, 2, &axisOutput, 1).status == Status::InvalidArgument);
+    interval = .5; axisOutput.capacity = 3; CHECK(axis->execute(axisInputs, 2, &axisOutput, 1).status == Status::InvalidArgument);
     double mixedSignal[] = {1,0, 0,0, 0,0}, mixedSpectrum[6] = {};
     Input mixedInput{mixedSignal,6,6,1,Type::Float64,Shape::Array};
     Output mixedOutput{mixedSpectrum,6,0,Type::Float64,Shape::Array};

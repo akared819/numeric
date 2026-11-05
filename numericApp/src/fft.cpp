@@ -10,6 +10,35 @@
 
 namespace numeric {
 namespace {
+class FrequencyAxis : public Operation {
+public:
+    void reset() override {}
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "frequency axis requires length and sample interval"};
+        for (std::size_t i = 0; i < 2; ++i)
+            if (in[i].type != Type::Float64 || in[i].shape != Shape::Scalar || !in[i].data || in[i].count != 1 || !in[i].capacity || !in[i].stride)
+                return {Status::InvalidArgument, "invalid scalar input"};
+        Output& y = out[0];
+        const double length = in[0].data[0], dt = in[1].data[0];
+        if (y.type != Type::Float64 || y.shape != Shape::Array || !y.data || !std::isfinite(length) || length < 1 ||
+            length > 9007199254740991.0 || std::floor(length) != length ||
+            length > static_cast<double>(std::numeric_limits<std::size_t>::max() / sizeof(double)) ||
+            !std::isfinite(dt) || dt <= 0)
+            return {Status::InvalidArgument, "invalid frequency axis parameters"};
+        const std::size_t n = static_cast<std::size_t>(length);
+        if (n > y.capacity) return {Status::InvalidArgument, "frequency axis output too small"};
+        const double period = length * dt;
+        if (!std::isfinite(period) || period <= 0) return {Status::NumericalError, "sample period outside floating-point range"};
+        const double spacing = 1.0 / period;
+        if (!std::isfinite(spacing) || spacing == 0 || !std::isfinite(static_cast<double>(n / 2) * spacing))
+            return {Status::NumericalError, "frequency outside floating-point range"};
+        for (std::size_t k = 0; k < n; ++k)
+            y.data[k] = k <= (n - 1) / 2 ? static_cast<double>(k) * spacing : -static_cast<double>(n - k) * spacing;
+        y.count = n; return {Status::Ok, "ok"};
+    }
+};
 class MixedComplexFft : public Operation {
     bool inverse_;
     std::size_t length_ = 0;
@@ -155,12 +184,16 @@ protected:
 std::unique_ptr<Operation> forward() { return std::unique_ptr<Operation>(new ComplexFft(false)); }
 std::unique_ptr<Operation> mixedForward() { return std::unique_ptr<Operation>(new MixedComplexFft(false)); }
 std::unique_ptr<Operation> mixedInverse() { return std::unique_ptr<Operation>(new MixedComplexFft(true)); }
+std::unique_ptr<Operation> frequencyAxis() { return std::unique_ptr<Operation>(new FrequencyAxis); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
+    r.addWithoutArguments(Metadata{"fft_frequency_axis", "fft", {{Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}}, arrays,
+                   "sample count and positive sample interval; signed full frequency axis", false,
+                   "per-instance object; no workspace", "invalid parameters, capacity or numeric range"}, &frequencyAxis);
     r.addWithoutArguments(Metadata{"fft_complex_mixed_forward", "fft", arrays, arrays,
                    "interleaved complex DOUBLE; positive length", false,
                    "per-instance reusable GSL wavetable, workspace and scratch", "invalid buffers or allocation or numerical failure"}, &mixedForward);

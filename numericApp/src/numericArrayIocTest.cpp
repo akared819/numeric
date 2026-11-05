@@ -56,6 +56,16 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    double axisExpected[] = {0, .5, -1, -.5};
+    testdbPutFieldOk("frequencyAxis.PROC", DBF_LONG, 1);
+    testOk(matches("frequencyAxis.VAL", axisExpected, 4), "frequency axis uses sample count and interval");
+    testdbPutFieldOk("axisInterval.VAL", DBF_DOUBLE, 0);
+    testdbPutFieldOk("frequencyAxis.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("frequencyAxis.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("frequencyAxis.VAL", axisExpected, 4), "invalid interval preserves frequency axis");
+    testdbPutFieldOk("axisInterval.VAL", DBF_DOUBLE, .5);
+    testdbPutFieldOk("frequencyAxis.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("frequencyAxis.SEVR", DBF_STRING, "NO_ALARM");
     double mixedInput[] = {1,0,0,0,0,0}, mixedExpected[] = {1,0,1,0,1,0};
     testdbPutArrFieldOk("mixedSignal", DBF_DOUBLE, 6, mixedInput);
     testdbPutFieldOk("mixedFft.PROC", DBF_LONG, 1);
