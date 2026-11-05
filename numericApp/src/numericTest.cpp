@@ -193,6 +193,16 @@ int main() {
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::NotInitialized && derivative == 7 && derivativeError == 8);
     CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
+    auto determinant = r.create("matrix_determinant"); CHECK(determinant);
+    double matrixData[] = {1,2,3,4}, matrixDimension = 2, matrixResult = 42;
+    Input matrixInputs[] = {{matrixData,4,4,1,Type::Float64,Shape::Array}, {&matrixDimension,1,1,1,Type::Float64,Shape::Scalar}};
+    Output matrixOutput{&matrixResult,1,0,Type::Float64,Shape::Scalar};
+    CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::Ok && std::fabs(matrixResult + 2) < 1e-12);
+    matrixData[2] = 2; CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::Ok && matrixResult == 0);
+    matrixData[2] = 3; matrixDimension = 1.5; CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::InvalidArgument && matrixResult == 0);
+    matrixDimension = 2; matrixInputs[0].count = 3; CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::InvalidArgument);
+    matrixInputs[0].count = 4; matrixData[0] = std::numeric_limits<double>::quiet_NaN(); CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::InvalidArgument);
+    matrixData[0] = 1; determinant->reset(); CHECK(determinant->execute(matrixInputs, 2, &matrixOutput, 1).status == Status::Ok && std::fabs(matrixResult + 2) < 1e-12);
     CHECK(differentiateCentral(&squareCallback, &multiplier, 2, .01, derivative, derivativeError).status == Status::Ok && std::fabs(derivative - 12) < 1e-8 && derivativeError >= 0);
     derivative = 7; derivativeError = 8;
     CHECK(differentiateCentral(nullptr, nullptr, 2, .01, derivative, derivativeError).status == Status::InvalidArgument);

@@ -9,6 +9,16 @@ spline, whose endpoint second derivatives are zero. Each instance owns its
 interpolation workspace; separate input links do not form an atomic snapshot.
 See [GSL interpolation](https://www.gnu.org/software/gsl/doc/html/interp.html).
 
+`matrix_determinant` accepts a row-major DOUBLE waveform in INPA and the square
+matrix dimension in scalar INPB. The dimension must be an integer from 1 to
+1024, and the waveform must contain exactly dimension squared values. It uses
+GSL LU decomposition with partial pivoting; a singular matrix may yield zero.
+The usual floating-point conditioning, overflow and underflow limitations
+apply, so a small or zero determinant alone does not establish rank. Each
+instance owns reusable matrix and permutation storage. Invalid input or a
+non-finite decomposition or result raises INVALID and preserves the previous
+value. See [GSL linear algebra](https://www.gnu.org/software/gsl/doc/html/linalg.html).
+
 `weighted_mean` takes data in INPA and weights in INPB. Both arrays must have
 equal, nonzero lengths and finite values; weights must be nonnegative with at
 least one positive weight. Zero weights exclude the corresponding sample.

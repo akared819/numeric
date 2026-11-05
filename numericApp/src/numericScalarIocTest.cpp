@@ -68,6 +68,17 @@ MAIN(numericScalarIocTest) {
     testdbGetFieldEqual("scalarMean.VAL", DBF_DOUBLE, 2.5);
     testdbGetFieldEqual("scalarMean.NORD", DBF_ULONG, 4u);
     testdbGetFieldEqual("scalarMean.SEVR", DBF_STRING, "NO_ALARM");
+    double matrixData[] = {1,2,3,4};
+    testdbPutArrFieldOk("matrixData", DBF_DOUBLE, 4, matrixData);
+    testdbPutFieldOk("matrixDeterminant.PROC", DBF_LONG, 1);
+    testOk(valueNear("matrixDeterminant.VAL", -2), "LU determinant uses row-major matrix input");
+    testdbPutFieldOk("matrixDimension.VAL", DBF_DOUBLE, 3.0);
+    testdbPutFieldOk("matrixDeterminant.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("matrixDeterminant.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("matrixDeterminant.VAL", -2), "invalid matrix dimensions preserve result");
+    testdbPutFieldOk("matrixDimension.VAL", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("matrixDeterminant.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("matrixDeterminant.SEVR", DBF_STRING, "NO_ALARM");
     epicsFloat32 typedFloat[] = {1, 2, 3, 4}; epicsInt32 typedLong[] = {2, 4, 6, 8};
     epicsInt64 typedInt64[] = {1, 2, 3, 4};
     testdbPutArrFieldOk("typedFloatInput", DBF_FLOAT, 4, typedFloat);
