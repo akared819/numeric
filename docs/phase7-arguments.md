@@ -1,7 +1,7 @@
 # Phase 7: typed argument metadata (in progress)
 
 The registry exposes optional `Metadata::arguments` descriptors for
-`moving_mean`, `moving_median`, and `gaussian_smooth`. The original `inputs`
+`moving_mean`, `moving_median`, `gaussian_smooth`, and `histogram_uniform`. The original `inputs`
 and `parameters` fields and execution interface remain unchanged. An empty
 descriptor list does not yet establish that an operation has no parameters;
 the remaining operations have not been migrated.
@@ -20,6 +20,8 @@ The window descriptors cover window and alpha bounds, and their operation
 validator rejects even window sizes. The existing operation execution also
 validates the window against the input length and all buffers. Metadata
 validation alone is not a substitute for executing those checks.
+The histogram descriptors check finite ordered bounds and the integer bin-count
+range; the operation additionally checks output capacity and samples.
 
 This is an API development increment, not completion of Phase 7. It does not
 yet connect argument metadata to record fields or populate all built-ins.

@@ -53,6 +53,15 @@ int main() {
     CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
     typedValues[1].integer = 1; typedValues[2].integer = 4;
     CHECK(validateArguments(typed, typedValues, 3).status == Status::InvalidArgument);
+    const Metadata* histMeta = r.find("histogram_uniform");
+    CHECK(histMeta && histMeta->arguments.size() == 3);
+    ArgumentValue histArgs[] = {{ArgumentType::Floating, -1.0, 0},
+                                {ArgumentType::Floating, 1.0, 0}, {ArgumentType::Integer, 0.0, 10}};
+    CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::Ok);
+    histArgs[1].floating = -1.0;
+    CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::InvalidArgument);
+    histArgs[1].floating = 1.0; histArgs[2].integer = 65537;
+    CHECK(validateArguments(histMeta->arguments, histArgs, 3, histMeta->argumentValidator).status == Status::InvalidArgument);
     auto op = r.create("mean"); CHECK(op && r.find("mean") && !r.find("missing") && !r.create("missing"));
     double data[] = {1, 99, 3, 99, 5}; double result = -1;
     Input in{data, 3, 5, 2, Type::Float64, Shape::Array};

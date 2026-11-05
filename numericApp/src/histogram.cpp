@@ -59,11 +59,24 @@ protected:
     }
 };
 std::unique_ptr<Operation> makeHistogram() { return std::unique_ptr<Operation>(new UniformHistogram); }
+Result validateHistogramArguments(const ArgumentValue* values, std::size_t count) {
+    if (!values || count != 3 || !(values[0].floating < values[1].floating) ||
+        !std::isfinite(values[1].floating - values[0].floating))
+        return {Status::InvalidArgument, "invalid histogram bounds"};
+    return {Status::Ok, "ok"};
+}
 }
 void registerHistogram(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};
-    r.add(Metadata{"histogram_uniform", "histograms", {array, scalarDesc, scalarDesc, scalarDesc}, {array},
+    const ArgumentValue unusedFloat{ArgumentType::Floating, 0.0, 0};
+    const ArgumentValue minBins{ArgumentType::Integer, 0.0, 1}, maxBins{ArgumentType::Integer, 0.0, 65536};
+    const ArgumentDescriptor lower{"lower", ArgumentType::Floating, true, false, unusedFloat, false, false, unusedFloat, unusedFloat, {}};
+    const ArgumentDescriptor upper{"upper", ArgumentType::Floating, true, false, unusedFloat, false, false, unusedFloat, unusedFloat, {}};
+    const ArgumentDescriptor bins{"bins", ArgumentType::Integer, true, false, minBins, true, true, minBins, maxBins, {}};
+    Metadata metadata{"histogram_uniform", "histograms", {array, scalarDesc, scalarDesc, scalarDesc}, {array},
                    "finite samples; lower inclusive, upper exclusive; 1..65536 bins", false,
-                   "per-instance reusable GSL histogram; reset releases it", "invalid input, allocation or GSL numerical error"}, &makeHistogram);
+                   "per-instance reusable GSL histogram; reset releases it", "invalid input, allocation or GSL numerical error"};
+    metadata.arguments = {lower, upper, bins}; metadata.argumentValidator = &validateHistogramArguments;
+    r.add(metadata, &makeHistogram);
 }
 }
