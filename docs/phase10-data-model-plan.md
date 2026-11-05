@@ -3,7 +3,9 @@
 The existing Float64 `Input`, `Output` and operation APIs remain supported.
 The separate `numericData.h` interface provides typed views, exact same-type
 element reads and writes, and explicit exact element conversion independently
-of GSL. It is not yet wired to numerical operations or EPICS records.
+of GSL. The separate `TypedMean` adapter connects these views to GSL's
+[`gsl_stats_mean`](https://www.gnu.org/software/gsl/doc/html/statistics.html#mean-standard-deviation-and-variance).
+It is a native C++ API and is not yet exposed through EPICS records.
 
 The supported view types are Float32, Float64, Int32, Int64, Complex64 and
 Complex128. Complex elements use two consecutive real components
@@ -30,10 +32,23 @@ floating-to-integer conversion. Complex-to-real conversion requires an exactly
 zero imaginary component. All conversions are exact; nonzero imaginary values
 and lost precision are rejected. The destination value is unchanged on error.
 
+`TypedMean` accepts a nonempty view, flattens its elements in row-major index
+order and converts each exactly to Float64 before calling GSL. Complex values
+must have zero imaginary part, and Int64 values must be exactly representable
+as Float64. A caller-provided maximum element count bounds its per-instance
+scratch buffer. `reserve()` may allocate in advance; repeated calculations
+within that capacity reuse it, and `reset()` releases it. Concurrent calls on
+one instance require external synchronization. Invalid inputs and non-finite
+results preserve the output; `numericInitialize`/`initializeGsl` must run
+before calculation. This first implementation copies and validates elements;
+no performance advantage over the existing Float64 mean is claimed.
+
 The native `numericDataTest` covers all six types, complex layout and unaligned
 access, large Int64 values, empty views, invalid indices, capacity, overflow,
-overlapping writes and preservation on failure. Acceptance also requires
-numerical operation integration, additional
-analytical tests, all platform CI, and performance comparisons. The model must
+overlapping writes and preservation on failure. `numericTypedMeanTest` checks
+GSL calculations across all six types, a strided matrix, exact-conversion
+failures, initialization, capacity and reset. Acceptance also requires
+additional numerical operations, EPICS integration, all platform CI, and
+performance comparisons. The model must
 not claim NumPy compatibility or support arbitrary multidimensional layouts
 before those cases are verified.
