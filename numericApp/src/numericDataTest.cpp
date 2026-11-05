@@ -47,6 +47,9 @@ int main() {
     ElementValue d{ElementType::Float64, 0, 0.1, 0};
     CHECK(writeElement(doubleOut, nullptr, 0, d).status == Status::Ok && f64 == 0.1);
     CHECK(readElement(doubleIn, nullptr, 0, output).status == Status::Ok && output.real == 0.1);
+    f64 = std::numeric_limits<double>::quiet_NaN(); output.real = 12.0;
+    CHECK(readElement(doubleIn, nullptr, 0, output).status == Status::InvalidArgument && output.real == 12.0);
+    f64 = 0.1;
     d.real = std::numeric_limits<double>::infinity();
     CHECK(writeElement(doubleOut, nullptr, 0, d).status == Status::InvalidArgument && f64 == 0.1);
     std::int32_t i32 = 0; MutableArrayView intOut{&i32, sizeof(i32), ElementType::Int32, 0, nullptr, nullptr};

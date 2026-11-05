@@ -38,6 +38,8 @@ int main() {
     CHECK(mean.execute(empty, result).status == Status::InvalidArgument && result == 77);
     TypedMean limited(3); CHECK(limited.execute(views[0], result).status == Status::InvalidArgument && result == 77);
     TypedMean zero(0); CHECK(zero.reserve().status == Status::InvalidArgument);
+    TypedMean impossible(std::numeric_limits<std::size_t>::max());
+    CHECK(impossible.reserve().status == Status::InvalidArgument);
     mean.reset(); CHECK(mean.execute(views[0], result).status == Status::Ok && std::fabs(result - 2.5) < 1e-12);
     ArrayView scalar{d, sizeof(double), ElementType::Float64, 0, nullptr, nullptr};
     CHECK(mean.execute(scalar, result).status == Status::Ok && result == 1);
