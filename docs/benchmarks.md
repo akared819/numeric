@@ -41,7 +41,7 @@ storage is allocated before the timed calls; clock and per-call bookkeeping
 overhead are included. The samples are sequential, the system is not isolated,
 and the maximum is only the largest observed in that run. They do not establish
 a worst-case bound or hard real-time suitability. Allocation calls and CPU
-utilization were not instrumented in these measurements.
+utilization were not instrumented in these latency measurements.
 
 On an Apple M3, macOS 27.2, Apple LLVM 21.0.0, EPICS Base R7.0.11 and GSL 2.8,
 the following individual-call samples were observed for DOUBLE mean (nanoseconds):
@@ -66,6 +66,49 @@ includes local link and record processing but excludes network traffic and
 setup. The paths were measured sequentially rather than under identical
 simultaneous conditions. See the preceding baseline comparison for aggregate
 timings against the previous implementation.
+
+### Allocation probe on macOS
+
+An optional macOS-only interposer counts calls to dynamically interposed
+`malloc`, `calloc` and `realloc` across the process during separate loops of up
+to 1,000 calls, after warmup and after typed workspace reservation. The
+benchmark verifies interception of an allocation in its own executable. A
+separate probe test also verifies that a GSL RNG allocation is observed. This
+does not intercept every possible allocator or private/internal allocation
+path, and other threads can contribute calls. It does not measure allocated
+bytes, initialization, resizing, other operations or network activity. The
+aggregate and latency measurements above were taken without this interposer.
+
+On the same macOS host and dependency versions, the direct GSL, numeric core,
+typed mean and isolated IOC paths each recorded **zero intercepted calls in
+1,000 iterations** for DOUBLE arrays of lengths 64, 1,024 and 65,536. The
+GSL RNG probe recorded two allocation calls. These observations are not a
+guarantee that all execution paths allocate nothing.
+
+From the repository root, with `GSL_DIR` pointing to GSL 2.8, one way to
+reproduce the 1,024-element measurement is:
+
+```sh
+clang -std=c11 -dynamiclib tests/malloc-count-darwin.c -o /tmp/numeric-malloc-count.dylib
+clang++ -std=c++14 -I "$GSL_DIR/include" tests/allocation-probe-test.cpp -L "$GSL_DIR/lib" -lgsl -lgslcblas -o /tmp/numeric-allocation-probe-test
+DYLD_INSERT_LIBRARIES=/tmp/numeric-malloc-count.dylib /tmp/numeric-allocation-probe-test
+DYLD_INSERT_LIBRARIES=/tmp/numeric-malloc-count.dylib ./bin/darwin-aarch64/numericBenchmark 1024 10000 'hardware description'
+DYLD_INSERT_LIBRARIES=/tmp/numeric-malloc-count.dylib ./bin/darwin-aarch64/numericIocBenchmark 1024 10000 'hardware description'
+```
+
+Use the appropriate EPICS host architecture in the executable path. If
+interposition is unavailable or ignored, the probe self-test fails; do not use
+the numbers. The `timed_allocations=not_instrumented` line describes the
+aggregate timing loop; the optional `*_allocation_calls` fields describe the
+separate instrumented loop.
+
+As a coarse process-level CPU observation on the same host, `/usr/bin/time -p`
+for 65,536 elements and 1,000 iterations reported 2.18 s elapsed / 2.17 s user /
+0.00 s system for the core benchmark, and 1.11 s elapsed / 0.60 s user /
+0.00 s system for the isolated IOC benchmark. These include process setup,
+all aggregate and individual-sample loops, and shutdown; the IOC elapsed time
+also includes initialization and waits. They are not per-operation CPU usage
+or a production load measurement.
 
 ## Isolated IOC record benchmark
 

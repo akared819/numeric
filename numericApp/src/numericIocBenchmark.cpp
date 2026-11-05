@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "numericCompiler.h"
 #include "numericLatency.h"
+#include "numericAllocationProbe.h"
 #include <dbAccess.h>
 #include <dbStaticLib.h>
 #include <epicsExit.h>
@@ -67,6 +68,8 @@ int main(int argc,char** argv) {
         std::printf("ioc_process_ns_per_call=%.1f\nresult=%.17g\n",ns,value);
         const std::size_t sampleCount = std::min(iterations, static_cast<std::size_t>(10000));
         if (!numericSampleLatency("ioc_process", sampleCount, [&] { return dbPutField(&process,DBR_LONG,&one,1) == 0; })) return 1;
+        const std::size_t allocationSamples = std::min(iterations, static_cast<std::size_t>(1000));
+        if (!numericCountAllocations("ioc_process", allocationSamples, [&] { return dbPutField(&process,DBR_LONG,&one,1) == 0; })) return 1;
         if (iocShutdown()) return 1;
         dbFreeBase(pdbbase); pdbbase=nullptr; epicsExitCallAtExits();
         return 0;

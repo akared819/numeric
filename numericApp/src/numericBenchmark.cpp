@@ -3,6 +3,7 @@
 #include "numericTypedMean.h"
 #include "numericCompiler.h"
 #include "numericLatency.h"
+#include "numericAllocationProbe.h"
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_version.h>
 #include <chrono>
@@ -74,6 +75,10 @@ int main(int argc,char** argv) {
         if (!numericSampleLatency("direct_gsl", sampleCount, [&] { sink += gsl_stats_mean(data.data(),1,length); return true; }) ||
             !numericSampleLatency("numeric_core", sampleCount, [&] { const bool ok = operation->execute(&in,1,&out,1).status == numeric::Status::Ok; sink += value; return ok; }) ||
             !numericSampleLatency("numeric_typed", sampleCount, [&] { const bool ok = typedMean.execute(typedInput, typedValue).status == numeric::Status::Ok; sink += typedValue; return ok; })) return 1;
+        const std::size_t allocationSamples = std::min(iterations, static_cast<std::size_t>(1000));
+        if (!numericCountAllocations("direct_gsl", allocationSamples, [&] { sink += gsl_stats_mean(data.data(),1,length); return true; }) ||
+            !numericCountAllocations("numeric_core", allocationSamples, [&] { return operation->execute(&in,1,&out,1).status == numeric::Status::Ok; }) ||
+            !numericCountAllocations("numeric_typed", allocationSamples, [&] { return typedMean.execute(typedInput,typedValue).status == numeric::Status::Ok; })) return 1;
         return 0;
     } catch (const std::exception& e) { std::fprintf(stderr,"benchmark failed: %s\n",e.what()); return 1; }
 }
