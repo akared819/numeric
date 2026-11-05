@@ -2,9 +2,9 @@
 
 The registry exposes optional `Metadata::arguments` descriptors for
 `moving_mean`, `moving_median`, `gaussian_smooth`, and `histogram_uniform`. The original `inputs`
-and `parameters` fields and execution interface remain unchanged. An empty
-descriptor list does not yet establish that an operation has no parameters;
-the remaining operations have not been migrated.
+and `parameters` fields and execution interface remain unchanged. The
+`argumentSchemaComplete` flag distinguishes a complete, possibly empty schema
+from one that has not been migrated. The remaining operations are incomplete.
 
 An argument descriptor names its position in the descriptor list, its type,
 whether it is required, whether it has a default, inclusive bounds, and
@@ -47,8 +47,7 @@ existing aggregate initializers is retained. No database interface is changed.
 
 ## Remaining work
 
-- Define complete metadata for every built-in and distinguish an explicitly
-  empty argument list from an operation whose schema has not been migrated.
+- Define complete metadata for every built-in.
 - Specify enum names and connect argument metadata to every built-in, then
   connect these to a parameterized execution API.
 - Remove operation-name-specific parameter dispatch from record support only

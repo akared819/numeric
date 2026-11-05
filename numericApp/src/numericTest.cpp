@@ -25,7 +25,7 @@ std::unique_ptr<Operation> makeLifetime() { return std::unique_ptr<Operation>(ne
 int main() {
     Registry r; registerBuiltins(r);
     const Metadata* gaussMeta = r.find("gaussian_smooth");
-    CHECK(gaussMeta && gaussMeta->arguments.size() == 2 && gaussMeta->arguments[0].name == "window");
+    CHECK(gaussMeta && gaussMeta->argumentSchemaComplete && gaussMeta->arguments.size() == 2 && gaussMeta->arguments[0].name == "window");
     CHECK(gaussMeta->arguments[0].inputIndex == 1 && gaussMeta->arguments[1].inputIndex == 2);
     ArgumentValue args[] = {{ArgumentType::Integer, 0.0, 7}, {ArgumentType::Floating, 1.5, 0}};
     CHECK(validateArguments(gaussMeta->arguments, args, 2, gaussMeta->argumentValidator).status == Status::Ok);
@@ -61,6 +61,8 @@ int main() {
     CHECK(mapped[1].data == &slots[0] && *mapped[1].data == 7 && *mapped[2].data == 1.5);
     CHECK(setLegacyArguments(*gaussMeta, args, 2, mapped, 3, slots, 1).status == Status::InvalidArgument);
     Metadata wide = *gaussMeta; wide.arguments.resize(1); wide.argumentValidator = nullptr;
+    Metadata incomplete = wide; incomplete.argumentSchemaComplete = false;
+    CHECK(setLegacyArguments(incomplete, args, 1, mapped, 3, slots, 2).status == Status::InvalidArgument);
     wide.arguments[0].maximum.integer = std::numeric_limits<std::int64_t>::max();
     args[0].integer = INT64_C(9007199254740993); slots[0] = 17;
     CHECK(setLegacyArguments(wide, args, 1, mapped, 3, slots, 2).status == Status::InvalidArgument && slots[0] == 17);
@@ -108,7 +110,8 @@ int main() {
     badMeta.arguments[0].inputIndex = 99; CHECK(!r.add(badMeta, &makeLifetime));
     badMeta.arguments[0].inputIndex = 2; CHECK(!r.add(badMeta, &makeLifetime));
     const Metadata* histMeta = r.find("histogram_uniform");
-    CHECK(histMeta && histMeta->arguments.size() == 3);
+    CHECK(histMeta && histMeta->argumentSchemaComplete && histMeta->arguments.size() == 3);
+    CHECK(r.find("mean") && !r.find("mean")->argumentSchemaComplete);
     CHECK(histMeta->arguments[0].inputIndex == 1 && histMeta->arguments[2].inputIndex == 3);
     ArgumentValue histArgs[] = {{ArgumentType::Floating, -1.0, 0},
                                 {ArgumentType::Floating, 1.0, 0}, {ArgumentType::Integer, 0.0, 10}};

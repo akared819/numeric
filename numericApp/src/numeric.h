@@ -58,6 +58,8 @@ struct Metadata {
     std::string lifecycle; std::string errors;
     std::vector<ArgumentDescriptor> arguments;
     ArgumentValidator argumentValidator = nullptr;
+    // True means the descriptor list is complete, including an empty list.
+    bool argumentSchemaComplete = false;
 };
 // Build mapped scalar inputs using caller-owned slots. Reject integers that
 // cannot be represented exactly by the legacy double-based interface.

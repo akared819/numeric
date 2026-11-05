@@ -126,7 +126,7 @@ bool exactlyRepresentable(std::int64_t value) {
 Result setLegacyArguments(const Metadata& metadata, const ArgumentValue* values,
                           std::size_t count, Input* inputs, std::size_t inputCount,
                           double* slots, std::size_t slotCount) {
-    if (count != metadata.arguments.size() || slotCount < count ||
+    if (!metadata.argumentSchemaComplete || count != metadata.arguments.size() || slotCount < count ||
         (count && (!inputs || !slots)))
         return {Status::InvalidArgument, "invalid argument buffers or count"};
     const Result validated = validateArguments(metadata.arguments, values, count, metadata.argumentValidator);

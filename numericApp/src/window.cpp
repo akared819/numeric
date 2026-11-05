@@ -98,14 +98,14 @@ void registerWindowOperations(Registry& r) {
     Metadata mean{"moving_mean", "moving statistics", {array, scalarDesc}, {array},
                    "odd centered window 3..4095; endpoint value padding", false,
                    "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};
-    mean.arguments = {window}; mean.argumentValidator = &validateWindowArguments; r.add(mean, &moving);
+    mean.arguments = {window}; mean.argumentValidator = &validateWindowArguments; mean.argumentSchemaComplete = true; r.add(mean, &moving);
     Metadata med{"moving_median", "moving statistics", {array, scalarDesc}, {array},
                    "odd centered window 3..4095; endpoint value padding", false,
                    "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};
-    med.arguments = {window}; med.argumentValidator = &validateWindowArguments; r.add(med, &median);
+    med.arguments = {window}; med.argumentValidator = &validateWindowArguments; med.argumentSchemaComplete = true; r.add(med, &median);
     Metadata gauss{"gaussian_smooth", "filter", {array, scalarDesc, scalarDesc}, {array},
                    "odd window 3..4095; alpha 0.01..10; endpoint value padding", false,
                    "per-instance cached GSL workspace; reset frees it", "invalid buffers or parameters; allocation or numerical error"};
-    gauss.arguments = {window, alpha}; gauss.argumentValidator = &validateWindowArguments; r.add(gauss, &gaussian);
+    gauss.arguments = {window, alpha}; gauss.argumentValidator = &validateWindowArguments; gauss.argumentSchemaComplete = true; r.add(gauss, &gaussian);
 }
 }

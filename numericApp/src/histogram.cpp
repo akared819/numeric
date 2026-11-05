@@ -78,6 +78,7 @@ void registerHistogram(Registry& r) {
                    "finite samples; lower inclusive, upper exclusive; 1..65536 bins", false,
                    "per-instance reusable GSL histogram; reset releases it", "invalid input, allocation or GSL numerical error"};
     metadata.arguments = {lower, upper, bins}; metadata.argumentValidator = &validateHistogramArguments;
+    metadata.argumentSchemaComplete = true;
     r.add(metadata, &makeHistogram);
 }
 }
