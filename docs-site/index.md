@@ -55,6 +55,19 @@ caget demo:scalarMean             # 2.5
 
 The same input also feeds `demo:scalarVariance` and `demo:vectorNorm`; process the record you want before reading it. See the [scalar record reference](https://github.com/akared819/numeric/blob/main/docs/numeric-scalar.md) for input limits and alarm behavior.
 
+### Correlation of two waveforms
+
+The [multi-input example](https://github.com/akared819/numeric/blob/main/examples/multi-input.db) uses `INPA` and `INPB` to read two arrays:
+
+```sh
+caput -a demo:multiX 4 1 2 3 4
+caput -a demo:multiY 4 2 4 6 8
+caput demo:multiCorrelation.PROC 1
+caget demo:multiCorrelation       # 1
+```
+
+Write both waveforms before processing. The two links are read separately and do not guarantee an atomic snapshot of remote PVs.
+
 ### Histogram
 
 The `numericArray` histogram in [array.db](https://github.com/akared819/numeric/blob/main/examples/array.db) has four uniform bins over `[0, 1)`. The lower bound is included and the upper bound is excluded:
@@ -149,6 +162,7 @@ The `P` macro sets the PV prefix. The bundled [startup script](https://github.co
 | Database | Purpose |
 | --- | --- |
 | [mean.db](https://github.com/akared819/numeric/blob/main/examples/mean.db), [scalar.db](https://github.com/akared819/numeric/blob/main/examples/scalar.db) | Batch mean and scalar-result records |
+| [multi-input.db](https://github.com/akared819/numeric/blob/main/examples/multi-input.db) | Two-waveform correlation and waveform-plus-scalar polynomial evaluation |
 | [array.db](https://github.com/akared819/numeric/blob/main/examples/array.db), [window.db](https://github.com/akared819/numeric/blob/main/examples/window.db) | Array records, moving statistics, smoothing and histogram |
 | [fft.db](https://github.com/akared819/numeric/blob/main/examples/fft.db) | Complex and real-input FFTs |
 | [polynomial.db](https://github.com/akared819/numeric/blob/main/examples/polynomial.db), [interpolation.db](https://github.com/akared819/numeric/blob/main/examples/interpolation.db) | Polynomial evaluation and linear interpolation |

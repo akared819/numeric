@@ -31,13 +31,14 @@ bool calculate(chid input, chid process, chid output, const double* samples,
 }
 }
 int main() {
-    testPlan(13);
+    testPlan(15);
     const char* names[] = {"demo:realFftInput", "demo:realFftForward.PROC", "demo:realFftOutput",
         "demo:fftInput", "demo:fftForward.PROC", "demo:fftOutput", "demo:fftInverse.PROC", "demo:ifftOutput",
         "demo:windowInput", "demo:movingMean.PROC", "demo:movingMeanOutput", "demo:movingMedian.PROC",
         "demo:movingMedianOutput", "demo:gaussianSmooth.PROC", "demo:gaussianOutput",
         "demo:arrayInput", "demo:arrayMean.PROC", "demo:arrayMean.VAL", "demo:arrayHistogram.PROC", "demo:arrayHistogram.VAL",
-        "demo:arrayMean.ARGA", "demo:arrayMean.SEVR"};
+        "demo:arrayMean.ARGA", "demo:arrayMean.SEVR", "demo:multiX", "demo:multiY",
+        "demo:multiCorrelation.PROC", "demo:multiCorrelation.VAL", "demo:multiPolynomial.PROC", "demo:multiPolynomial.VAL"};
     chid channels[sizeof(names)/sizeof(names[0])] = {};
     bool connected = ca_context_create(ca_enable_preemptive_callback) == ECA_NORMAL;
     for (std::size_t i = 0; connected && i < sizeof(names)/sizeof(names[0]); ++i)
@@ -109,6 +110,17 @@ int main() {
     double histogramInput[] = {0,0.25,0.5,0.75,0.999}, histogramExpected[] = {1,1,1,2};
     testOk(connected && calculate(channels[15], channels[18], channels[19], histogramInput, 5, result, 4) &&
            matches(result, histogramExpected, 4), "dedicated array record computes a histogram over Channel Access");
+    double x[] = {1, 2, 3, 4}, y[] = {2, 4, 6, 8}, value = 0;
+    const bool correlation = connected && ca_array_put(DBR_DOUBLE, 4, channels[22], x) == ECA_NORMAL &&
+        ca_array_put(DBR_DOUBLE, 4, channels[23], y) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[24], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[25], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(correlation && std::fabs(value - 1.0) < 1e-12, "numericScalar correlates two waveforms over Channel Access");
+    double coefficients[] = {2, 3, 4};
+    const bool polynomial = connected && ca_array_put(DBR_DOUBLE, 3, channels[22], coefficients) == ECA_NORMAL &&
+        ca_put(DBR_LONG, channels[26], &trigger) == ECA_NORMAL && ca_get(DBR_DOUBLE, channels[27], &value) == ECA_NORMAL &&
+        ca_pend_io(10.0) == ECA_NORMAL;
+    testOk(polynomial && std::fabs(value - 24.0) < 1e-12, "numericScalar accepts waveform and scalar inputs over Channel Access");
     if (subscription) ca_clear_subscription(subscription);
     for (chid channel : channels) if (channel) ca_clear_channel(channel);
     if (ca_current_context()) ca_context_destroy();

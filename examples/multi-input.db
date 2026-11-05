@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+record(waveform, "$(P)multiX") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(waveform, "$(P)multiY") {
+    field(FTVL, "DOUBLE")
+    field(NELM, "8")
+}
+
+record(ao, "$(P)multiPoint") {
+    field(VAL, "2")
+}
+
+record(numericScalar, "$(P)multiCorrelation") {
+    field(OP, "correlation")
+    field(INPA, "$(P)multiX NPP NMS")
+    field(INPB, "$(P)multiY NPP NMS")
+    field(NMAX, "8")
+}
+
+record(numericScalar, "$(P)multiPolynomial") {
+    field(OP, "polynomial_eval")
+    field(INPA, "$(P)multiX NPP NMS")
+    field(INPB, "$(P)multiPoint NPP NMS")
+    field(NMAX, "8")
+}
