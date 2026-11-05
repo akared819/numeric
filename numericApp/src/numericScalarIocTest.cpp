@@ -35,6 +35,8 @@ MAIN(numericScalarIocTest) {
         char name[32]; std::snprintf(name, sizeof(name), "scalarMean.ARG%c", letter);
         DBADDR argumentAddress;
         testOk(dbNameToAddr(name, &argumentAddress) == 0, "%s is accessible", name);
+        std::snprintf(name, sizeof(name), "scalarMean.INP%c", letter);
+        testOk(dbNameToAddr(name, &argumentAddress) == 0, "%s is accessible", name);
     }
     testMonitor* valueMonitor = testMonitorCreate("scalarMean.VAL", DBE_VALUE | DBE_ALARM, 0);
     testMonitorSync(valueMonitor); testMonitorCount(valueMonitor, 1);

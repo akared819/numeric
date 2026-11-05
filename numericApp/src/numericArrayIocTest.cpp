@@ -36,6 +36,8 @@ MAIN(numericArrayIocTest) {
         char name[32]; std::snprintf(name, sizeof(name), "arrayMean.ARG%c", letter);
         DBADDR argumentAddress;
         testOk(dbNameToAddr(name, &argumentAddress) == 0, "%s is accessible", name);
+        std::snprintf(name, sizeof(name), "arrayMean.INP%c", letter);
+        testOk(dbNameToAddr(name, &argumentAddress) == 0, "%s is accessible", name);
     }
     testMonitor* monitor = testMonitorCreate("arrayMean.VAL", DBE_VALUE | DBE_ALARM, 0);
     testMonitorSync(monitor); testMonitorCount(monitor, 1);
