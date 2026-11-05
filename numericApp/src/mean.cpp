@@ -61,6 +61,39 @@ protected:
         return {Status::Ok, "ok"};
     }
 };
+class WeightedMean : public Operation {
+public:
+    void reset() override {}
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 2 || no != 1) return {Status::InvalidArgument, "weighted mean requires data and weights"};
+        if (out[0].type != Type::Float64 || out[0].shape != Shape::Scalar || !out[0].data || !out[0].capacity)
+            return {Status::InvalidArgument, "invalid output"};
+        if (!in[0].count || in[0].count != in[1].count) return {Status::InvalidArgument, "data and weights must have equal nonzero length"};
+        for (std::size_t j = 0; j < 2; ++j) {
+            const Input& x = in[j];
+            if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.stride ||
+                (x.count - 1) > (std::numeric_limits<std::size_t>::max() - 1) / x.stride ||
+                (x.count - 1) * x.stride >= x.capacity)
+                return {Status::InvalidArgument, "invalid input buffer, stride or capacity"};
+        }
+        double weightSum = 0;
+        for (std::size_t i = 0; i < in[0].count; ++i) {
+            const double value = in[0].data[i * in[0].stride], weight = in[1].data[i * in[1].stride];
+            if (!std::isfinite(value) || !std::isfinite(weight) || weight < 0)
+                return {Status::InvalidArgument, "data and nonnegative weights must be finite"};
+            if (weight > std::numeric_limits<double>::max() - weightSum)
+                return {Status::NumericalError, "weight sum exceeds floating-point range"};
+            weightSum += weight;
+        }
+        if (!(weightSum > 0)) return {Status::InvalidArgument, "at least one weight must be positive"};
+        const double result = gsl_stats_wmean(in[1].data, in[1].stride, in[0].data, in[0].stride, in[0].count);
+        if (!std::isfinite(result)) return {Status::NumericalError, "non-finite weighted mean"};
+        *out[0].data = result; out[0].count = 1;
+        return {Status::Ok, "ok"};
+    }
+};
 class BatchCovariance : public Operation {
     bool correlation_;
 public:
@@ -110,6 +143,7 @@ protected:
 };
 std::unique_ptr<Operation> makeCovariance() { return std::unique_ptr<Operation>(new BatchCovariance(false)); }
 std::unique_ptr<Operation> makeCorrelation() { return std::unique_ptr<Operation>(new BatchCovariance(true)); }
+std::unique_ptr<Operation> makeWeightedMean() { return std::unique_ptr<Operation>(new WeightedMean()); }
 std::unique_ptr<Operation> makeMinmax() { return std::unique_ptr<Operation>(new BatchMinmax()); }
 std::unique_ptr<Operation> makeMean() { return std::unique_ptr<Operation>(new BatchStatistic(0)); }
 std::unique_ptr<Operation> makeVariance() { return std::unique_ptr<Operation>(new BatchStatistic(1)); }
@@ -132,6 +166,9 @@ void registerFitting(Registry&);
 void registerIntegration(Registry&);
 void registerWindowOperations(Registry&);
 void registerBuiltins(Registry& r) {
+    r.addWithoutArguments(Metadata{"weighted_mean", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
+                   {{Type::Float64, Shape::Scalar}}, "data and nonnegative weights; at least one positive weight", false,
+                   "per-instance object; no workspace", "invalid input or non-finite result"}, &makeWeightedMean);
     r.addWithoutArguments(Metadata{"correlation", "statistics", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Array}},
                    {{Type::Float64, Shape::Scalar}}, "Pearson correlation; at least two paired non-constant samples", false,
                    "per-instance object; no workspace", "invalid or constant input; unsupported numeric range or non-finite result"}, &makeCorrelation);

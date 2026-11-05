@@ -2,6 +2,23 @@
 
 `numericScalar` is a synchronous EPICS record that reads numeric scalar or waveform inputs and returns one DOUBLE scalar VAL using a compatible stateless numeric registry operation. Configure OP at database load time (default `mean`); supported names include `mean`, `variance`, `stddev`, `population_variance`, `population_stddev`, [`vector_norm`](linear-algebra.md), `correlation`, `covariance`, `polynomial_eval` and `pow_int`. OP must resolve to one or more Float64 scalar or array numerical inputs, optional mapped configuration arguments, and one Float64 scalar output; it must not be stateful. OP and NMAX are not modifiable at runtime. Scalar inputs require exactly one element. Multi-output operations are unsupported.
 
+`weighted_mean` takes data in INPA and weights in INPB. Both arrays must have
+equal, nonzero lengths and finite values; weights must be nonnegative with at
+least one positive weight. Zero weights exclude the corresponding sample.
+It uses GSL's weighted mean and rejects a weight sum outside the floating-point
+range. Invalid input raises INVALID and retains the previous result. Inputs are
+read sequentially, so the IOC must coordinate updates when a paired snapshot is
+required. See [GSL weighted samples](https://www.gnu.org/software/gsl/doc/html/statistics.html#weighted-samples).
+
+```db
+record(numericScalar, "SIGNAL:WEIGHTED_MEAN") {
+    field(OP,   "weighted_mean")
+    field(INPA, "SIGNAL:DATA NPP NMS")
+    field(INPB, "SIGNAL:WEIGHTS NPP NMS")
+    field(NMAX, "4096")
+}
+```
+
 For one numerical input, configure either the existing INP or the new INPA link. For multiple numerical inputs configure contiguous INPA, INPB and subsequent links, in registry input order excluding configuration arguments. A record that specifies INP and any INPA–INPP link, omits a required link, or specifies a surplus link fails initialization. Input links must be nonconstant. For example:
 
 ```db

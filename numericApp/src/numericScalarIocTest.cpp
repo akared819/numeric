@@ -104,6 +104,16 @@ MAIN(numericScalarIocTest) {
     double multiX[] = {1, 2, 3, 4, 5}, multiY[] = {2, 4, 6, 8, 10};
     testdbPutArrFieldOk("multiX", DBF_DOUBLE, 4, multiX);
     testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, multiY);
+    testdbPutFieldOk("weightedMean.PROC", DBF_LONG, 1);
+    testOk(valueNear("weightedMean.VAL", 3.0), "weighted mean uses two input waveforms");
+    double invalidWeights[] = {0, -1, 0, 0};
+    testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, invalidWeights);
+    testdbPutFieldOk("weightedMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("weightedMean.SEVR", DBF_STRING, "INVALID");
+    testOk(valueNear("weightedMean.VAL", 3.0), "invalid weights preserve the previous result");
+    testdbPutArrFieldOk("multiY", DBF_DOUBLE, 4, multiY);
+    testdbPutFieldOk("weightedMean.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("weightedMean.SEVR", DBF_STRING, "NO_ALARM");
     testdbPutFieldOk("typedMixedCorrelation.PROC", DBF_LONG, 1);
     testOk(valueNear("typedMixedCorrelation.VAL", 1.0), "correlation accepts mixed DOUBLE and LONG inputs");
     testdbPutFieldOk("multiCorrelation.PROC", DBF_LONG, 1);

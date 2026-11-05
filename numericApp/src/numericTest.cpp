@@ -340,6 +340,36 @@ int main() {
     data[2] = std::numeric_limits<double>::infinity();
     CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::InvalidArgument);
     data[2] = 3; CHECK(minmax->execute(&in, 1, extremaOut, 2).status == Status::Ok && extrema[0] == 1 && extrema[1] == 5);
+    auto weightedMean = r.create("weighted_mean");
+    CHECK(weightedMean && r.find("weighted_mean") && r.find("weighted_mean")->inputs.size() == 2);
+    double weightedData[] = {1, 2, 3}, weights[] = {1, 2, 1}, weightedResult = 99;
+    Input weightedInputs[] = {{weightedData, 3, 3, 1, Type::Float64, Shape::Array},
+                              {weights, 3, 3, 1, Type::Float64, Shape::Array}};
+    Output weightedOutput{&weightedResult, 1, 0, Type::Float64, Shape::Scalar};
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 2);
+    weights[0] = 0; weights[1] = 0; weights[2] = 0;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument && weightedResult == 2 && weightedOutput.count == 0);
+    weights[0] = -1; weights[1] = 1;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument && weightedResult == 2);
+    weights[0] = std::numeric_limits<double>::infinity();
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument);
+    weights[0] = std::numeric_limits<double>::max(); weights[1] = weights[0];
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::NumericalError);
+    weights[0] = 1; weights[1] = 2; weights[2] = 1;
+    weightedInputs[1].count = 2;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument);
+    weightedInputs[1].count = 3; weightedData[1] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::InvalidArgument);
+    weightedData[1] = 2;
+    CHECK(weightedMean->execute(weightedInputs, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 2);
+    double weightedPacked[] = {1, 1, 2, 2, 3, 1};
+    Input weightedStrided[] = {{weightedPacked, 3, 6, 2, Type::Float64, Shape::Array},
+                               {weightedPacked + 1, 3, 5, 2, Type::Float64, Shape::Array}};
+    CHECK(weightedMean->execute(weightedStrided, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 2);
+    weightedStrided[0].count = weightedStrided[1].count = 1;
+    CHECK(weightedMean->execute(weightedStrided, 2, &weightedOutput, 1).status == Status::Ok && weightedResult == 1);
+    weightedStrided[0].count = weightedStrided[1].count = 0;
+    CHECK(weightedMean->execute(weightedStrided, 2, &weightedOutput, 1).status == Status::InvalidArgument && weightedResult == 1);
     auto covariance = r.create("covariance");
     CHECK(covariance && r.find("covariance") && r.find("covariance")->inputs.size() == 2);
     double ydata[] = {2, 4, 6};
