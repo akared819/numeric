@@ -39,8 +39,8 @@
     "parameters_ja": "metadata：操作のメタデータ。factory：nullでない生成関数。",
     "returns_en": "True on registration; false on validation failure or duplicate name.",
     "returns_ja": "登録成功ならtrue。検証失敗や名前の重複ならfalse。",
-    "errors_en": "Empty required metadata, invalid schema/mappings, duplicate name or null factory are rejected.",
-    "errors_ja": "必須情報が空、スキーマ・対応付けが無効、名前重複、factoryがnullの場合は拒否。",
+    "errors_en": "Empty required metadata, invalid schema/mappings, duplicate name or null factory are rejected. Allocation exceptions can propagate.",
+    "errors_ja": "必須情報が空、スキーマ・対応付けが無効、名前重複、factoryがnullの場合は拒否。 メモリー確保の例外が伝播する場合があります。",
     "example": "echo.name = \"example_echo_2\"; registry.add(echo, makeEcho);"
   },
   {
@@ -50,8 +50,8 @@
     "parameters_ja": "addと同じmetadata・factory。引数定義と検証関数がないこと。",
     "returns_en": "True on registration; marks the empty argument schema complete.",
     "returns_ja": "登録成功ならtrue。空の引数スキーマを完全として登録。",
-    "errors_en": "Rejects arguments, an argument validator or any add validation failure.",
-    "errors_ja": "引数・引数検証関数がある場合、またはaddの検証失敗時にfalse。",
+    "errors_en": "Rejects arguments, an argument validator or any add validation failure. Allocation exceptions can propagate.",
+    "errors_ja": "引数・引数検証関数がある場合、またはaddの検証失敗時にfalse。 メモリー確保の例外が伝播する場合があります。",
     "example": "registry.addWithoutArguments(echo, makeEcho);"
   },
   {
@@ -270,8 +270,8 @@
     "parameters_ja": "引数なし。先にGSLを初期化。",
     "returns_en": "Unique pointer owning independent stream state, or nullptr.",
     "returns_ja": "独立したストリームを所有するunique_ptr。失敗時はnullptr。",
-    "errors_en": "Returns nullptr if GSL is not initialized or the operation cannot be created.",
-    "errors_ja": "GSL未初期化または操作の生成失敗時はnullptr。",
+    "errors_en": "Returns nullptr if GSL is not initialized or the operation cannot be created; allocation exceptions can propagate.",
+    "errors_ja": "GSL未初期化または操作の生成失敗時はnullptr。メモリー確保の例外が伝播する場合があります。",
     "example": "auto stream = AcknowledgedStream::create();"
   },
   {
