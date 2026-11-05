@@ -36,6 +36,21 @@ reset or destruction. It is a high-level arithmetic operation, exposed through
 the native registry and numericArray; invalid input or overflow preserves the
 output.
 
+`welch_psd` calculates a one-sided power spectral density by averaging
+overlapping, symmetric-Hann-windowed segments using GSL radix-2 real FFTs.
+The four inputs are the real waveform, segment length N, overlap in samples,
+and sample interval in seconds. N must be a power of two of at least four,
+overlap must be an integer in `[0, N)`, and the waveform must contain at least
+N samples. The final incomplete segment is ignored and no detrending is done.
+The N/2+1 output bins cover zero through Nyquist with spacing `1/(N*dt)` Hz.
+Each segment's squared FFT is scaled by `dt/sum(window²)`, with interior
+positive-frequency bins doubled; output units are input-unit²/Hz. This is a
+composition around a GSL FFT, not a direct GSL PSD routine. The vectors are
+owned by the operation and reused; reset or destruction releases them. Invalid
+inputs, allocation failures and non-finite results preserve output values.
+numericArray supports the four inputs through INPA–INPD; updates to separate
+links are not an atomic snapshot.
+
 The registry exposes `fft_complex_radix2_forward` and `fft_complex_radix2_inverse`. Both take one FLOAT64 array input and one FLOAT64 array output. Each complex number is represented by consecutive doubles `[real, imaginary]`, in natural sample or frequency-bin order. Counts and capacities are numbers of doubles, not complex numbers. Input stride must be 1. The input count must be even and represent a positive power-of-two number of complex values (including one); both buffers must have capacity for the full count. The output count is that same number of doubles on success and zero on failure.
 
 Forward uses the negative exponential, without normalization. Inverse uses the positive exponential and divides by the complex length, so a forward/inverse pair returns the original values within floating-point error. These conventions match the [GSL FFT documentation](https://www.gnu.org/software/gsl/doc/html/fft.html). Neither complex operation computes magnitudes, frequencies, or windowing. A separate real-input operation is described below.

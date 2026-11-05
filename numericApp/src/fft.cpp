@@ -10,6 +10,54 @@
 
 namespace numeric {
 namespace {
+class WelchPsd : public Operation {
+    std::vector<double> window_, fft_, result_;
+public:
+    void reset() override { std::vector<double>().swap(window_); std::vector<double>().swap(fft_); std::vector<double>().swap(result_); }
+protected:
+    Result executeImpl(const Input* in, std::size_t ni, Output* out, std::size_t no) override {
+        if (out && no == 1) out[0].count = 0;
+        if (!in || !out || ni != 4 || no != 1) return {Status::InvalidArgument, "Welch PSD requires samples, segment length, overlap and sample interval"};
+        const Input& x = in[0]; Output& y = out[0];
+        if (x.type != Type::Float64 || x.shape != Shape::Array || !x.data || !x.count || x.stride != 1 || x.count > x.capacity ||
+            y.type != Type::Float64 || y.shape != Shape::Array || !y.data) return {Status::InvalidArgument, "invalid Welch buffers"};
+        for (std::size_t i = 1; i < 4; ++i)
+            if (in[i].type != Type::Float64 || in[i].shape != Shape::Scalar || !in[i].data || in[i].count != 1 || !in[i].capacity || !in[i].stride)
+                return {Status::InvalidArgument, "invalid Welch scalar input"};
+        const double nd = in[1].data[0], od = in[2].data[0], dt = in[3].data[0];
+        if (!std::isfinite(nd) || !std::isfinite(od) || !std::isfinite(dt) || nd < 4 || nd > static_cast<double>(x.count) ||
+            nd > 9007199254740991.0 || std::floor(nd) != nd || od < 0 || od >= nd || std::floor(od) != od || dt <= 0)
+            return {Status::InvalidArgument, "invalid Welch parameters"};
+        const std::size_t n = static_cast<std::size_t>(nd), overlap = static_cast<std::size_t>(od);
+        if ((n & (n - 1)) || y.capacity < n / 2 + 1) return {Status::InvalidArgument, "Welch length or output capacity invalid"};
+        for (std::size_t i = 0; i < x.count; ++i) if (!std::isfinite(x.data[i])) return {Status::InvalidArgument, "samples must be finite"};
+        try { window_.resize(n); fft_.resize(n); result_.assign(n / 2 + 1, 0.0); }
+        catch (...) { return {Status::NumericalError, "Welch workspace allocation failed"}; }
+        double sum = 0; const double pi = std::acos(-1.0);
+        for (std::size_t i = 0; i < n; ++i) {
+            const double w = 0.5 * (1.0 - std::cos(2.0 * pi * (static_cast<double>(i) / static_cast<double>(n - 1))));
+            window_[i] = w; sum += w * w;
+        }
+        const double scaleSquared = dt / sum;
+        if (!std::isfinite(scaleSquared) || scaleSquared <= 0) return {Status::NumericalError, "Welch normalization outside floating-point range"};
+        const double scale = std::sqrt(scaleSquared);
+        const std::size_t step = n - overlap, segments = 1 + (x.count - n) / step;
+        for (std::size_t segment = 0; segment < segments; ++segment) {
+            const std::size_t start = segment * step;
+            for (std::size_t i = 0; i < n; ++i) fft_[i] = x.data[start + i] * window_[i];
+            if (gsl_fft_real_radix2_transform(fft_.data(), 1, n) != GSL_SUCCESS) return {Status::NumericalError, "GSL Welch FFT failed"};
+            for (std::size_t k = 0; k <= n / 2; ++k) {
+                const double magnitude = k == 0 || k == n / 2 ? std::fabs(fft_[k]) : std::hypot(fft_[k], fft_[n-k]);
+                const double scaled = magnitude * scale * ((k == 0 || k == n / 2) ? 1.0 : std::sqrt(2.0));
+                const double value = scaled * scaled;
+                if (!std::isfinite(value)) return {Status::NumericalError, "Welch PSD overflow"};
+                result_[k] += (value - result_[k]) / static_cast<double>(segment + 1);
+            }
+        }
+        for (std::size_t k = 0; k < result_.size(); ++k) y.data[k] = result_[k];
+        y.count = result_.size(); return {Status::Ok, "ok"};
+    }
+};
 class PowerSpectrum : public Operation {
     std::vector<double> scratch_;
 public:
@@ -236,12 +284,16 @@ std::unique_ptr<Operation> mixedInverse() { return std::unique_ptr<Operation>(ne
 std::unique_ptr<Operation> frequencyAxis() { return std::unique_ptr<Operation>(new FrequencyAxis); }
 std::unique_ptr<Operation> hannWindow() { return std::unique_ptr<Operation>(new HannWindow); }
 std::unique_ptr<Operation> powerSpectrum() { return std::unique_ptr<Operation>(new PowerSpectrum); }
+std::unique_ptr<Operation> welchPsd() { return std::unique_ptr<Operation>(new WelchPsd); }
 std::unique_ptr<Operation> inverse() { return std::unique_ptr<Operation>(new ComplexFft(true)); }
 std::unique_ptr<Operation> realForward() { return std::unique_ptr<Operation>(new RealFft()); }
 std::unique_ptr<Operation> realInverse() { return std::unique_ptr<Operation>(new RealInverseFft()); }
 }
 void registerFft(Registry& r) {
     const std::vector<Descriptor> arrays{{Type::Float64, Shape::Array}};
+    r.addWithoutArguments(Metadata{"welch_psd", "signal processing", {{Type::Float64, Shape::Array}, {Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}, {Type::Float64, Shape::Scalar}}, arrays,
+                   "one-sided symmetric-Hann Welch PSD; segment length, overlap and sample interval", false,
+                   "per-instance reusable vectors; reset frees them", "invalid parameters, allocation or numerical failure"}, &welchPsd);
     r.addWithoutArguments(Metadata{"spectrum_power", "signal processing", arrays, arrays,
                    "squared magnitude of full interleaved complex spectrum; no normalization", false,
                    "per-instance reusable scratch; reset frees it", "invalid buffers or numerical failure"}, &powerSpectrum);

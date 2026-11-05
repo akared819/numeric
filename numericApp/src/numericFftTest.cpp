@@ -18,6 +18,23 @@ int main() {
     CHECK(f->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     CHECK(real->execute(&x, 1, &y, 1).status == Status::NotInitialized && y.count == 0);
     initializeGsl();
+    auto welch = r.create("welch_psd"); CHECK(welch);
+    double welchSamples[] = {1,1,1,1,1,1,1,1}, segmentLength = 4, overlap = 2, sampleInterval = 1, psd[3] = {};
+    Input welchInputs[] = {{welchSamples,8,8,1,Type::Float64,Shape::Array}, {&segmentLength,1,1,1,Type::Float64,Shape::Scalar},
+                           {&overlap,1,1,1,Type::Float64,Shape::Scalar}, {&sampleInterval,1,1,1,Type::Float64,Shape::Scalar}};
+    Output welchOutput{psd,3,0,Type::Float64,Shape::Array};
+    CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok && welchOutput.count == 3);
+    CHECK(std::fabs(psd[0]-2) < 1e-12 && std::fabs(psd[1]-2) < 1e-12 && std::fabs(psd[2]) < 1e-12);
+    sampleInterval = .5;
+    CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok && std::fabs(psd[0]-1) < 1e-12 && std::fabs(psd[1]-1) < 1e-12);
+    sampleInterval = 1; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok);
+    overlap = 4; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument && welchOutput.count == 0 && std::fabs(psd[0]-2) < 1e-12);
+    overlap = 2; segmentLength = 3; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument);
+    segmentLength = 4; sampleInterval = 0; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument);
+    sampleInterval = 1; welchSamples[0] = std::numeric_limits<double>::quiet_NaN();
+    CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument);
+    welchSamples[0] = 1; welchOutput.capacity = 2; CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::InvalidArgument);
+    welchOutput.capacity = 3; welch->reset(); CHECK(welch->execute(welchInputs, 4, &welchOutput, 1).status == Status::Ok);
     auto power = r.create("spectrum_power"); CHECK(power);
     double spectrumPowerData[] = {3,4, 0,-2}, powers[2] = {};
     Input powerInput{spectrumPowerData,4,4,1,Type::Float64,Shape::Array};

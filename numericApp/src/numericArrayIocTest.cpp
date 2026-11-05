@@ -56,6 +56,18 @@ MAIN(numericArrayIocTest) {
     testdbGetFieldEqual("arrayMean.NORD", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.NIN", DBF_ULONG, 5u);
     testdbGetFieldEqual("arrayMean.SEVR", DBF_STRING, "NO_ALARM");
+    double welchSamples[] = {1,1,1,1,1,1,1,1}, welchExpected[] = {2,2,0};
+    testdbPutArrFieldOk("welchSamples", DBF_DOUBLE, 8, welchSamples);
+    testdbPutFieldOk("welchPsd.PROC", DBF_LONG, 1);
+    testOk(matches("welchPsd.VAL", welchExpected, 3), "Welch PSD averages overlapping windows");
+    testdbPutFieldOk("welchOverlap.VAL", DBF_DOUBLE, 4.0);
+    testdbPutFieldOk("welchPsd.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("welchPsd.SEVR", DBF_STRING, "INVALID");
+    testOk(matches("welchPsd.VAL", welchExpected, 3), "invalid Welch parameters preserve output");
+    testdbPutFieldOk("welchOverlap.VAL", DBF_DOUBLE, 2.0);
+    testdbGetFieldEqual("welchOverlap.VAL", DBF_DOUBLE, 2.0);
+    testdbPutFieldOk("welchPsd.PROC", DBF_LONG, 1);
+    testdbGetFieldEqual("welchPsd.SEVR", DBF_STRING, "NO_ALARM");
     double hannSamples[] = {1,1,1,1,1}, hannExpected[] = {0,.5,1,.5,0};
     testdbPutArrFieldOk("hannInput", DBF_DOUBLE, 5, hannSamples);
     testdbPutFieldOk("hannWindow.PROC", DBF_LONG, 1);
@@ -71,7 +83,7 @@ MAIN(numericArrayIocTest) {
     double axisExpected[] = {0, .5, -1, -.5};
     testdbPutFieldOk("frequencyAxis.PROC", DBF_LONG, 1);
     testOk(matches("frequencyAxis.VAL", axisExpected, 4), "frequency axis uses sample count and interval");
-    testdbPutFieldOk("axisInterval.VAL", DBF_DOUBLE, 0);
+    testdbPutFieldOk("axisInterval.VAL", DBF_DOUBLE, 0.0);
     testdbPutFieldOk("frequencyAxis.PROC", DBF_LONG, 1);
     testdbGetFieldEqual("frequencyAxis.SEVR", DBF_STRING, "INVALID");
     testOk(matches("frequencyAxis.VAL", axisExpected, 4), "invalid interval preserves frequency axis");

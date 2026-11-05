@@ -11,6 +11,7 @@
 | `fft_frequency_axis` | Scalar sample count and interval to signed frequency-bin array | None |
 | `window_hann` | Real waveform multiplied by a symmetric Hann window | None |
 | `spectrum_power` | Full interleaved complex spectrum to raw squared magnitude per bin | None |
+| `welch_psd` | Waveform plus scalar segment length, overlap and sample interval to one-sided PSD | None |
 | `fft_real_radix2_forward` | Real input to full interleaved complex spectrum | None |
 | `fft_real_radix2_inverse` | Conjugate-symmetric full interleaved spectrum to real output | None |
 | `histogram_uniform` | Real samples to uniform bin counts | HMIN, HMAX and NBIN: lower/upper range and bin count |
