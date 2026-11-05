@@ -187,6 +187,8 @@ caget demo:SPECTRAL:PSD.SEVR
 
 これらは専用レコードから利用できる操作です。状態を持つストリーミング統計や、C++の関数を渡すソルバーは異なるインターフェースを使います。Pythonの関数や生の関数ポインターを`ARG`フィールドに設定することはできません。[ストリーミング](https://github.com/akared819/numeric/blob/main/docs/streaming.md)、[ネイティブAPI](https://github.com/akared819/numeric/blob/main/docs/numerical-differentiation.md)も参照してください。
 
+例えば、複数の出力を返す`minmax`、状態を持つ`running_mean`や`running_stats`は上の専用レコード表に含まれません。用途に合う[最小・最大のaSub](https://github.com/akared819/numeric/blob/main/docs/asub-mean.md)や[ストリーミング](https://github.com/akared819/numeric/blob/main/docs/streaming.md)のインターフェースを使用してください。
+
 <h2 id="troubleshooting">困ったとき</h2>
 
 1. 値が変わらないときは、まず正しいレコードの`.PROC`を処理したか確認します。
