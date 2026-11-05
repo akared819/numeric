@@ -108,6 +108,11 @@ NUMERIC_API Result findRootBrent(ScalarCallback callback, void* context, double 
 NUMERIC_API Result minimizeBrent(ScalarCallback callback, void* context, double lower, double initial, double upper,
                                  double absoluteTolerance, double relativeTolerance, std::size_t maxIterations,
                                  double& minimum, double& bracketError);
+using OdeCallback = bool (*)(double time, const double* state, double* derivative, std::size_t dimension, void* context);
+NUMERIC_API Result solveOdeRkf45(OdeCallback callback, void* context, double start, double finish,
+                                  const double* initial, std::size_t dimension, double initialStep,
+                                  double absoluteTolerance, double relativeTolerance, std::size_t maxSteps,
+                                  double* output, std::size_t outputCapacity);
 // Independent deterministic GSL MT19937 stream; instances are not thread-safe.
 class NUMERIC_API UniformRandomStream {
 public:

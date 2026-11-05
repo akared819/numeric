@@ -6,6 +6,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 #include <gsl/gsl_min.h>
+#include <gsl/gsl_odeiv2.h>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -14,6 +15,20 @@
 namespace numeric {
 namespace {
 struct CallbackData { ScalarCallback callback; void* context; bool failed; };
+struct OdeCallbackData { OdeCallback callback; void* context; std::size_t dimension; bool failed; };
+int invokeOde(double time, const double state[], double derivative[], void* raw) {
+    OdeCallbackData& data = *static_cast<OdeCallbackData*>(raw);
+    if (!std::isfinite(time)) { data.failed = true; return GSL_EBADFUNC; }
+    for (std::size_t i = 0; i < data.dimension; ++i) {
+        if (!std::isfinite(state[i])) { data.failed = true; return GSL_EBADFUNC; }
+        derivative[i] = std::numeric_limits<double>::quiet_NaN();
+    }
+    try {
+        if (!data.callback(time, state, derivative, data.dimension, data.context)) { data.failed = true; return GSL_EBADFUNC; }
+    } catch (...) { data.failed = true; return GSL_EBADFUNC; }
+    for (std::size_t i = 0; i < data.dimension; ++i) if (!std::isfinite(derivative[i])) { data.failed = true; return GSL_EBADFUNC; }
+    return GSL_SUCCESS;
+}
 double invokeCallback(double x, void* raw) {
     CallbackData& data = *static_cast<CallbackData*>(raw);
     if (!std::isfinite(x)) { data.failed = true; return std::numeric_limits<double>::quiet_NaN(); }
@@ -146,6 +161,33 @@ Result minimizeBrent(ScalarCallback callback, void* context, double lower, doubl
         if (status != GSL_CONTINUE) return {Status::NumericalError, "minimum convergence test failed"};
     }
     return {Status::NumericalError, "minimizer did not converge"};
+}
+Result solveOdeRkf45(OdeCallback callback, void* context, double start, double finish,
+                     const double* initial, std::size_t dimension, double initialStep,
+                     double absTol, double relTol, std::size_t maxSteps, double* output, std::size_t capacity) {
+    if (!isGslInitialized()) return {Status::NotInitialized, "GSL policy not initialized"};
+    if (!callback || !initial || !output || !dimension || dimension > 1024 || capacity < dimension ||
+        !std::isfinite(start) || !std::isfinite(finish) || start >= finish || !std::isfinite(finish-start) ||
+        !std::isfinite(initialStep) || initialStep <= 0 || !std::isfinite(absTol) || !std::isfinite(relTol) ||
+        absTol < 0 || relTol < 0 || (absTol == 0 && relTol == 0) || !maxSteps || maxSteps > 1000000)
+        return {Status::InvalidArgument, "invalid ODE inputs"};
+    for (std::size_t i = 0; i < dimension; ++i) if (!std::isfinite(initial[i])) return {Status::InvalidArgument, "initial state must be finite"};
+    std::vector<double> state;
+    try { state.assign(initial, initial + dimension); }
+    catch (...) { return {Status::NumericalError, "ODE state allocation failed"}; }
+    OdeCallbackData data{callback, context, dimension, false};
+    gsl_odeiv2_system system{&invokeOde, nullptr, dimension, &data};
+    std::unique_ptr<gsl_odeiv2_driver, decltype(&gsl_odeiv2_driver_free)> driver(
+        gsl_odeiv2_driver_alloc_y_new(&system, gsl_odeiv2_step_rkf45, initialStep, absTol, relTol), &gsl_odeiv2_driver_free);
+    if (!driver) return {Status::NumericalError, "ODE driver allocation failed"};
+    if (gsl_odeiv2_driver_set_nmax(driver.get(), static_cast<unsigned long>(maxSteps)) != GSL_SUCCESS)
+        return {Status::NumericalError, "ODE step limit failed"};
+    double time = start;
+    if (gsl_odeiv2_driver_apply(driver.get(), &time, finish, state.data()) != GSL_SUCCESS || data.failed || time != finish)
+        return {Status::NumericalError, "ODE solver did not reach target"};
+    for (double value : state) if (!std::isfinite(value)) return {Status::NumericalError, "non-finite ODE result"};
+    for (std::size_t i = 0; i < dimension; ++i) output[i] = state[i];
+    return {Status::Ok, "ok"};
 }
 void registerIntegration(Registry& r) {
     const Descriptor array{Type::Float64, Shape::Array}, scalarDesc{Type::Float64, Shape::Scalar};

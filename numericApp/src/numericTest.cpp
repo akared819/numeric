@@ -19,6 +19,12 @@ double throwingCallback(double, void*) { throw 1; }
 double sqrtCallback(double x, void*) { return std::sqrt(x); }
 double rootCallback(double x, void*) { return x*x-2; }
 double minimumCallback(double x, void*) { return (x-2)*(x-2); }
+bool odeExp(double, const double* state, double* derivative, std::size_t n, void*) {
+    if (n != 2) return false;
+    derivative[0] = state[0]; derivative[1] = -state[1]; return true;
+}
+bool odeBad(double, const double*, double*, std::size_t, void*) { return true; }
+bool odeThrow(double, const double*, double*, std::size_t, void*) { throw 1; }
 int destroyed = 0;
 class Lifetime : public Operation {
 public:
@@ -200,6 +206,8 @@ int main() {
     CHECK(integrateAdaptive(&squareCallback, &multiplier, 0, 2, 1e-9, 1e-9, 100, derivative, derivativeError).status == Status::NotInitialized);
     CHECK(findRootBrent(&rootCallback, nullptr, 0, 2, 1e-12, 1e-12, 100, derivative, derivativeError).status == Status::NotInitialized);
     CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NotInitialized);
+    double odeInitial[] = {1,1}, odeOutput[] = {7,8};
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NotInitialized);
     initializeGsl(); initializeGsl(); gsl_error("test", __FILE__, __LINE__, GSL_EDOM);
     CHECK(random.initialize(123).status == Status::Ok && random.fill(samples,4,4).status == Status::Ok);
     gsl_rng* referenceRng = gsl_rng_alloc(gsl_rng_mt19937); CHECK(referenceRng); gsl_rng_set(referenceRng, 123);
@@ -257,6 +265,12 @@ int main() {
     CHECK(minimizeBrent(&minimumCallback, nullptr, 0, .5, 1, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::InvalidArgument && derivative == 7 && derivativeError == 8);
     CHECK(minimizeBrent(&minimumCallback, nullptr, 0, 1, 4, 1e-15, 1e-15, 1, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
     CHECK(minimizeBrent(&throwingCallback, nullptr, 0, 1, 4, 1e-6, 1e-6, 100, derivative, derivativeError).status == Status::NumericalError && derivative == 7 && derivativeError == 8);
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::Ok && std::fabs(odeOutput[0]-std::exp(1.0)) < 1e-7 && std::fabs(odeOutput[1]-std::exp(-1.0)) < 1e-7);
+    odeOutput[0] = 7; odeOutput[1] = 8;
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 1).status == Status::InvalidArgument && odeOutput[0] == 7);
+    CHECK(solveOdeRkf45(&odeBad, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
+    CHECK(solveOdeRkf45(&odeThrow, nullptr, 0, 1, odeInitial, 2, .01, 1e-9, 1e-9, 1000, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
+    CHECK(solveOdeRkf45(&odeExp, nullptr, 0, 1, odeInitial, 2, .01, 1e-14, 1e-14, 1, odeOutput, 2).status == Status::NumericalError && odeOutput[0] == 7 && odeOutput[1] == 8);
     auto spline = r.create("interp_cspline"); CHECK(spline);
     double sx[] = {0,1,2}, sy[] = {0,1,0}, sq = .5, sv = 9;
     Input splineInputs[] = {{sx,3,3,1,Type::Float64,Shape::Array}, {sy,3,3,1,Type::Float64,Shape::Array}, {&sq,1,1,1,Type::Float64,Shape::Scalar}};

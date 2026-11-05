@@ -52,3 +52,16 @@ nonconvergence leaves both outputs unchanged. The bound assumes the callback
 and initial bracket meet the minimizer's mathematical assumptions; it does not
 establish a global minimum. The temporary workspace is freed after the call.
 See [GSL minimization](https://www.gnu.org/software/gsl/doc/html/min.html).
+
+`numeric::solveOdeRkf45` solves a first-order system over a finite increasing
+time interval using GSL's adaptive RKF45 driver. The native callback receives
+time, a read-only state vector, a derivative output buffer, the dimension, and
+caller-owned context. It must fill every derivative with a finite value and
+return true; false, exceptions or missing/non-finite values fail the solve.
+Dimensions are limited to 1–1024, the step and tolerances must be valid, and
+the caller specifies a maximum of 1–1,000,000 steps. Initial and output arrays
+may overlap. The solver copies the initial state, owns temporary GSL resources,
+and writes the final state only after reaching the requested time; failure leaves
+the output unchanged. No intermediate trajectory or stiff-system solver is
+provided. A step limit does not bound time spent in the callback. See
+[GSL ODEs](https://www.gnu.org/software/gsl/doc/html/ode-initval.html).
